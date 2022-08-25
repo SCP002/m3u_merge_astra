@@ -1,0 +1,228 @@
+# For details, see https://github.com/SCP002/m3u_merge_astra/blob/master/README.md#program-config-settings
+
+# -------------------------------------------------------------------------------------------------------------------
+# General settings of the program.
+general:
+  # Use name transliteration to detect which M3U channel corresponds a stream?
+  full_translit: true
+
+  # Source to destination character mapping.
+  # All symbols are lowercase as comparsion function will convert every character in a name to lowercase.
+  # Key: From. Value: To.
+  full_translit_map:
+    # Cyrillic: Latin:
+    а: 'a'
+    б: 'b'
+    в: 'v'
+    г: 'g'
+    д: 'd'
+    е: 'e'
+    ё: 'yo'
+    ж: 'zh'
+    з: 'z'
+    и: 'i'
+    й: 'j'
+    к: 'k'
+    л: 'l'
+    м: 'm'
+    н: 'n'
+    о: 'o'
+    п: 'p'
+    р: 'r'
+    с: 's'
+    т: 't'
+    у: 'u'
+    ф: 'f'
+    х: 'x'
+    ц: 'c'
+    ч: 'ch'
+    ш: 'sh'
+    щ: 'shh'
+    ъ: ''
+    ы: 'y'
+    ь: ''
+    э: 'eh'
+    ю: 'yu'
+    я: 'ya'
+
+  # Use name transliteration between visually similar characters to detect
+  # which M3U channel corresponds a stream?
+  similar_translit: true
+
+  # Source to destination character mapping.
+  # All symbols are lowercase as comparsion function will convert every character in a name to lowercase.
+  # Key: From. Value: To.
+  similar_translit_map:
+    # Cyrillic: Latin or numbers:
+    а: 'a'
+    б: '6'
+    в: 'b'
+    е: 'e'
+    з: '3'
+    к: 'k'
+    м: 'm'
+    н: 'h'
+    о: 'o'
+    р: 'p'
+    с: 'c'
+    т: 't'
+    у: 'y'
+    х: 'x'
+
+# -------------------------------------------------------------------------------------------------------------------
+# M3U related settings of the program.
+m3u:
+  # M3U playlist URL response timeout in seconds.
+  resp_timeout: '10s'
+
+  # List of regular expressions.
+  # If any expression match name of a channel, this channel will be removed from M3U input before merging.
+  chann_name_blacklist:
+    # - 'Nonsense TV'
+    # - '^Test.*'
+
+  # List of regular expressions.
+  # If any expression match group of a channel, this channel will be removed from M3U input before merging.
+  # It runs after replacing groups by 'chann_group_map' so enter the appropriate values.
+  chann_group_blacklist:
+    # - '18\+'
+    # - 'Cooking'
+
+  # List of regular expressions.
+  # If any expression match URL of a channel, this channel will be removed from M3U input before merging.
+  chann_url_blacklist:
+    # - 'https?://filter_me\.com'
+    # - '192\.168\.88\.14/play'
+
+  # Invalid to valid M3U channel group mapping.
+  # Key: From. Value: To.
+  chann_group_map:
+    # '': 'General'
+    # '-': 'General'
+    # 'For kids': 'Kids'
+
+# -------------------------------------------------------------------------------------------------------------------
+# Astra streams related settings of the program.
+streams:
+  # New stream name prefix.
+  # Safe to set to ''.
+  added_prefix: '_ADDED: '
+
+  # Add new astra streams if streams does not contain M3U channel name?
+  add_new: true
+
+  # Add new astra streams if streams contain M3U channel URL?
+  add_new_with_known_inputs: false
+
+  # Make new streams enabled?
+  make_new_enabled: false
+
+  # New stream type, can be one of two types:
+  # spts - Single-Program Transport Stream. Streaming channels to the end users over IP network.
+  # mpts - Multi-Program Transport Stream. Preparing multiplexes to DVB modulators.
+  new_type: 'spts'
+
+  # Disabled stream name prefix.
+  # Safe to set to ''.
+  disabled_prefix: '_DISABLED: '
+
+  # Remove streams without inputs?
+  # It has priority over 'disable_without_inputs'.
+  remove_without_inputs: false
+
+  # Disable streams without inputs?
+  disable_without_inputs: true
+
+  # Rename astra streams as M3U channels if their standartized names are equal?
+  rename: false
+
+  # Add new inputs to astra streams if such found in M3U channels?
+  add_new_inputs: true
+
+  # Move inputs of streams with the same names to the first stream found?
+  unite_inputs: true
+
+  # Add new inputs to astra streams even if M3U channel and stream input only differ by hash (everything after #)?
+  hash_check_on_add_new_inputs: false
+
+  # Sort inputs of astra streams?
+  sort_inputs: true
+
+  # Mapping of how high stream input should appear in the list after sorting.
+  # Any unspecified input will have weight of 'unknown_input_weight'.
+  input_weight_to_type_map:
+    # 1: '192.\168\.88\.' # Always first.
+    # 99: 'least_reliable\.tv' # Always last.
+
+  # Default weight of unknown inputs.
+  unknown_input_weight: 50
+
+  # List of regular expressions.
+  # If any expression match URL of a stream's input, this input will be removed from astra streams before adding new
+  # ones.
+  input_blacklist:
+    # - 'https?://filter_me\.com'
+    # - '192\.168\.88\.14/play'
+
+  # Remove inputs of astra streams which already present in config?
+  remove_duplicated_inputs: true
+
+  # Remove inputs of astra streams which do not respond?
+  # Currently supports only HTTP(S).
+  remove_dead_inputs: false
+
+  # List of regular expressions.
+  # If any expression match URL of a stream's input, this input will not be checked for availability.
+  dead_inputs_check_blacklist:
+    # - 'https?://dont-check\.com/play'
+    # - '192\.168\.88\.'
+
+  # Maximum amount of simultaneous connections to validate inputs of astra streams.
+  # Use more than 1 with caution. It may result in false positives if server consider frequent requests as spam.
+  input_max_conns: 1
+
+  # Astra stream input response timeout.
+  input_resp_timeout: '10s'
+
+  # List of regular expression pairs.
+  # If any 'from' expression match URL of astra stream's input, it will be replaced with URL from according M3U
+  # channel if it matches the 'to' expression.
+  # Only first matching input will be updated per M3U channel.
+  #
+  # In most cases specified 'from' and 'to' should be identical.
+  input_update_map:
+    # - from: '127\.0\.0\.1'
+    #   to: '127\.0\.0\.1'
+    # - from: 'some_url\.com'
+    #   to: 'some_url\.com'
+
+  # Update inputs of astra streams with M3U channels according to 'input_update_map'?
+  update_inputs: false
+
+  # Keep old input hash on updating inputs of astra streams?
+  keep_input_hash: true
+
+  # Remove inputs of astra streams which match at least one 'input_update_map.from' expression but
+  # not in M3U channels?
+  remove_inputs_by_update_map: false
+
+  # Mapping of stream name regular expression to stream input hash which should be added.
+  name_to_input_hash_map:
+    # - by: '[- _]HD$'
+    #   hash: 'buffer_time=10'
+    # - by: '[- _]FM$'
+    #   hash: 'no_sync'
+
+  # Mapping of stream group regular expression to stream input hash which should be added.
+  group_to_input_hash_map:
+    # - by: 'HD Channels'
+    #   hash: 'buffer_time=10'
+    # - by: 'Radio'
+    #   hash: 'no_sync'
+
+  # Mapping of stream input regular expression to stream input hash which should be added.
+  input_to_input_hash_map:
+    # - by: ':8080'
+    #   hash: 'ua=VLC/3.0.9 LibVLC/3.0.9'
+    # - by: '^rts?p://'
+    #   hash: 'no_reload'

@@ -1,0 +1,21 @@
+#EXTM3U url-tvg="http://tvg/url/1"
+#EXTINF:-1 tvg-logo="http://tvg/logo/1" group-title=" Group 1",, Channel 1
+http://channel/url/1
+#EXTINF:0,,:It,"s, - a difficult name |
+#EXTGRP:Ext Group
+ftp://channel/url/2
+http://channel/url/10
+
+
+#EXTINF:10  group-title="Group 10",Channel 10  
+
+#EXTINF:1  group-title="Group 11"  group-title="Group 3" ,Channel 3  
+#UNKNOWN_DIRECTIVE:#EXTINF:11 group-title="Group 11",Channel 11
+ /path/to/file/3 
+
+#EXTINF:2 , Channel 4
+file:///channel/url/4
+
+#EXTINF: 3 , Channel 5
+ #EXTGRP:#EXTGRP: Ext Group 2
+file:///C:/channel/url/5
