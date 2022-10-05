@@ -111,6 +111,9 @@ streams:
   # Add new astra streams if streams does not contain M3U channel name?
   add_new: true
 
+  # Add groups to new astra streams?
+  add_groups_to_new: false
+
   # Add new astra streams if streams contain M3U channel URL?
   add_new_with_known_inputs: false
 

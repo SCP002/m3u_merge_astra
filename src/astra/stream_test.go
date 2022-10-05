@@ -51,10 +51,15 @@ func TestNewStream(t *testing.T) {
 		Type:           string(cfg.NewType),
 		ID:             "0000",
 		Name:           cfg.AddedPrefix + "Name",
-		StreamGroups:   StreamGroups{All: "Group"},
 		Inputs:         []string{"http://url"},
 		DisabledInputs: make([]string, 0),
 	}
+	assert.Exactly(t, expected, s, "should create this stream")
+
+	cfg.AddGroupsToNew = true
+	s = NewStream(cfg, "0000", "Name", "Group", []string{"http://url"})
+
+	expected.StreamGroups = StreamGroups{All: "Group"}
 	assert.Exactly(t, expected, s, "should create this stream")
 }
 

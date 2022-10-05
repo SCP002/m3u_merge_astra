@@ -55,6 +55,7 @@ func TestInit(t *testing.T) {
 		Streams: Streams{
 			AddedPrefix:             "",
 			AddNew:                  true,
+			AddGroupsToNew:          true,
 			AddNewWithKnownInputs:   false,
 			MakeNewEnabled:          true,
 			NewType:                 MPTS,
@@ -81,8 +82,8 @@ func TestInit(t *testing.T) {
 				*regexp.MustCompile(`https?://dont-check\.com/play`),
 				*regexp.MustCompile(`192\.168\.88\.`),
 			},
-			InputMaxConns:           10,
-			InputRespTimeout:        time.Minute,
+			InputMaxConns:    10,
+			InputRespTimeout: time.Minute,
 			InputUpdateMap: []UpdateRecord{
 				{From: *regexp.MustCompile(`127\.0\.0\.1`), To: *regexp.MustCompile(`127\.0\.0\.1`)},
 				{From: *regexp.MustCompile(`some_url\.com`), To: *regexp.MustCompile(`some_url\.com`)},

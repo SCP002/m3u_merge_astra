@@ -78,7 +78,7 @@ func NewStream(cfg cfg.Streams, id, name, group string, inputs []string) Stream 
 		ID:           id,
 		Inputs:       inputs,
 		Name:         cfg.AddedPrefix + name,
-		StreamGroups: StreamGroups{All: group},
+		StreamGroups: lo.Ternary(cfg.AddGroupsToNew, StreamGroups{All: group}, StreamGroups{}),
 		Type:         string(cfg.NewType),
 	}
 }

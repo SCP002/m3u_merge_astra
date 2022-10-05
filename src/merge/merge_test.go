@@ -280,10 +280,26 @@ func TestAddNewStreams(t *testing.T) {
 		Type:           string(r.cfg.Streams.NewType),
 		ID:             sl2[2].ID,
 		Name:           r.cfg.Streams.AddedPrefix + "Other name B",
-		StreamGroups:   astra.StreamGroups{All: "Group"},
 		Inputs:         []string{"http://some/url/2"},
 		DisabledInputs: make([]string, 0),
 	}
+	assert.Exactly(t, expected, sl2[2], "should add new stream")
+
+	r.cfg.Streams.AddGroupsToNew = true
+	sl2 = r.AddNewStreams(sl1, cl1)
+
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source streams")
+	assert.Exactly(t, cl1Original, cl1, "should not modify the source channels")
+
+	assert.Len(t, sl2, 3, "should add new stream")
+
+	assert.Exactly(t, sl1[0], sl2[0], "should not change existing streams")
+
+	assert.Exactly(t, sl1[1], sl2[1], "should not change existing streams")
+
+	expected.ID = sl2[2].ID
+	expected.StreamGroups = astra.StreamGroups{All: "Group"}
 	assert.Exactly(t, expected, sl2[2], "should add new stream")
 
 	sl1 = []astra.Stream{{Name: "Other name", Inputs: []string{"http://some/url"}}}

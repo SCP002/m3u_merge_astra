@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -85,6 +86,9 @@ type Streams struct {
 
 	// AddNew specifies if new astra streams should be added if streams does not contain M3U channel name
 	AddNew bool `koanf:"add_new"`
+
+	// AddGroupsToNew specifies if groups should be added to new astra streams
+	AddGroupsToNew bool `koanf:"add_groups_to_new"`
 
 	// AddNewWithKnownInputs specifies if new astra streams should be added if streams contain M3U channel URL
 	AddNewWithKnownInputs bool `koanf:"add_new_with_known_inputs"`
@@ -268,10 +272,14 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 			DecodeHook:       decoder,
 			Result:           &root,
 			ErrorUnused:      true,
+			ErrorUnset:       true,
 			ZeroFields:       true,
 			WeaklyTypedInput: true,
 		},
 	})
+	if err, ok := err.(*mapstructure.Error); ok && strings.Contains(err.Error(), "has unset fields") {
+		log.Warning("Outdated or broken program config found. Recreate it or add missing fields manually.\n")
+	}
 	if err := errors.Wrap(err, "decode config"); err != nil {
 		log.Fatal(err)
 	}
@@ -322,6 +330,7 @@ func NewDefCfg() Root {
 		Streams: Streams{
 			AddedPrefix:              "_ADDED: ",
 			AddNew:                   true,
+			AddGroupsToNew:           false,
 			AddNewWithKnownInputs:    false,
 			MakeNewEnabled:           false,
 			NewType:                  SPTS,
