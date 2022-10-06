@@ -5,43 +5,13 @@ import (
 	"os"
 
 	"m3u_merge_astra/astra"
-	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/m3u"
 	"m3u_merge_astra/util/rnd"
 	"m3u_merge_astra/util/slice"
-	"m3u_merge_astra/util/tw"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
-	"github.com/sirupsen/logrus"
 )
-
-// repo represents dependencies holder for this package
-type repo struct {
-	log *logrus.Logger
-	tw  tw.Writer
-	cfg cfg.Root
-}
-
-// NewRepo returns new dependencies holder for this package
-func NewRepo(log *logrus.Logger, tw tw.Writer, cfg cfg.Root) repo {
-	return repo{log: log, tw: tw, cfg: cfg}
-}
-
-// Log used to satisfy deps.Global interface
-func (r repo) Log() *logrus.Logger {
-	return r.log
-}
-
-// TW used to satisfy deps.Global interface
-func (r repo) TW() tw.Writer {
-	return r.tw
-}
-
-// Cfg used to satisfy deps.Global interface
-func (r repo) Cfg() cfg.Root {
-	return r.cfg
-}
 
 // RenameStreams returns copy of <streams> with names taken from <channels> if their standardized names are equal
 func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
@@ -51,7 +21,7 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 	for _, s := range streams {
 		ch, _, chFound := slice.FindNamed(r.cfg.General, channels, s.Name)
 		if chFound && s.Name != ch.Name {
-			r.tw.AppendRow(table.Row{s.Name, ch.Name, s.StreamGroups.All})
+			r.tw.AppendRow(table.Row{s.Name, ch.Name, s.FirstGroup()})
 			s.Name = ch.Name
 		}
 		out = append(out, s)

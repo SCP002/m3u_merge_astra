@@ -5,41 +5,13 @@ import (
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/m3u"
 	"m3u_merge_astra/util/copier"
-	"m3u_merge_astra/util/logger"
-	"m3u_merge_astra/util/tw"
 	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/samber/lo"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
-
-// newDefRepo returns new repository initialized with defaults
-func newDefRepo() repo {
-	return NewRepo(logger.New(logrus.DebugLevel), tw.New(), cfg.NewDefCfg())
-}
-
-func TestNewRepo(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
-	tw := tw.New()
-	cfg := cfg.NewDefCfg()
-
-	assert.Exactly(t, newDefRepo(), NewRepo(log, tw, cfg))
-}
-
-func TestLog(t *testing.T) {
-	assert.Exactly(t, logger.New(logrus.DebugLevel), newDefRepo().Log())
-}
-
-func TestTW(t *testing.T) {
-	assert.Exactly(t, tw.New(), newDefRepo().TW())
-}
-
-func TestCfg(t *testing.T) {
-	assert.Exactly(t, cfg.NewDefCfg(), newDefRepo().Cfg())
-}
 
 func TestRenameStreams(t *testing.T) {
 	r := newDefRepo()
@@ -299,7 +271,7 @@ func TestAddNewStreams(t *testing.T) {
 	assert.Exactly(t, sl1[1], sl2[1], "should not change existing streams")
 
 	expected.ID = sl2[2].ID
-	expected.StreamGroups = astra.StreamGroups{All: "Group"}
+	expected.Groups = map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Group"}
 	assert.Exactly(t, expected, sl2[2], "should add new stream")
 
 	sl1 = []astra.Stream{{Name: "Other name", Inputs: []string{"http://some/url"}}}

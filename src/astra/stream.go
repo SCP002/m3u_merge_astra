@@ -14,59 +14,25 @@ import (
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
-	"m3u_merge_astra/util/tw"
 
 	"github.com/alitto/pond"
 	"github.com/cockroachdb/errors"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
 	"github.com/schollz/progressbar/v3"
-	"github.com/sirupsen/logrus"
 )
-
-// repo represents dependencies holder for this package
-type repo struct {
-	log *logrus.Logger
-	tw  tw.Writer
-	cfg cfg.Root
-}
-
-// NewRepo returns new dependencies holder for this package
-func NewRepo(log *logrus.Logger, tw tw.Writer, cfg cfg.Root) repo {
-	return repo{log: log, tw: tw, cfg: cfg}
-}
-
-// Log used to satisfy deps.Global interface
-func (r repo) Log() *logrus.Logger {
-	return r.log
-}
-
-// TW used to satisfy deps.Global interface
-func (r repo) TW() tw.Writer {
-	return r.tw
-}
-
-// Cfg used to satisfy deps.Global interface
-func (r repo) Cfg() cfg.Root {
-	return r.cfg
-}
 
 // Stream represents astra stream object
 type Stream struct {
 	DisabledInputs []string       `json:"_input,omitempty"`
 	Enabled        bool           `json:"enable"`
+	Groups         map[string]any `json:"groups,omitempty"`
 	HTTPKeepActive string         `json:"http_keep_active,omitempty"`
 	ID             string         `json:"id,omitempty"`
 	Inputs         []string       `json:"input,omitempty"`
 	Name           string         `json:"name,omitempty"`
-	StreamGroups   StreamGroups   `json:"groups,omitempty"`
 	Type           string         `json:"type,omitempty"`
 	Unknown        map[string]any `json:"-" jsonex:"true"` // All unknown fields go here.
-}
-
-// StreamGroups represents stream group
-type StreamGroups struct {
-	All string `json:"All,omitempty"`
 }
 
 // NewStream returns new stream with default config
@@ -74,18 +40,26 @@ func NewStream(cfg cfg.Streams, id, name, group string, inputs []string) Stream 
 	return Stream{
 		DisabledInputs: []string{},
 		Enabled:        cfg.MakeNewEnabled,
+		Groups:         lo.Ternary(cfg.AddGroupsToNew, map[string]any{cfg.GroupsCategoryForNew: group}, nil),
 		// HTTPKeepActive: "5",
-		ID:           id,
-		Inputs:       inputs,
-		Name:         cfg.AddedPrefix + name,
-		StreamGroups: lo.Ternary(cfg.AddGroupsToNew, StreamGroups{All: group}, StreamGroups{}),
-		Type:         string(cfg.NewType),
+		ID:     id,
+		Inputs: inputs,
+		Name:   cfg.AddedPrefix + name,
+		Type:   string(cfg.NewType),
 	}
 }
 
 // GetName used to satisfy util/slice.Named interface
 func (s Stream) GetName() string {
 	return s.Name
+}
+
+// FirstGroup returns first "category: group" pair or empty string if not found
+func (s Stream) FirstGroup() string {
+	if len(s.Groups) > 0 {
+		return fmt.Sprintf("%v: %v", lo.Keys(s.Groups)[0], lo.Values(s.Groups)[0])
+	}
+	return ""
 }
 
 // UpdateInput updates first encountered input if both it and <newURL> match the InputUpdateMap from config in <r>.
@@ -139,7 +113,7 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 func (s Stream) AddInput(r deps.Global, url string, print bool) Stream {
 	if print {
 		note := lo.Ternary(s.Enabled, "", "Stream is disabled")
-		r.TW().AppendRow(table.Row{s.Name, s.StreamGroups.All, url, note})
+		r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), url, note})
 	}
 	s.Inputs = slice.Prepend(s.Inputs, url)
 	return s
@@ -160,7 +134,7 @@ func (s Stream) KnownInputs(r deps.Global) []string {
 func (s Stream) RemoveInputs(r deps.Global, tInp string, print bool) Stream {
 	rejectFn := func(cInp string, _ int) bool {
 		if print && cInp == tInp {
-			r.TW().AppendRow(table.Row{s.Name, s.StreamGroups.All, tInp})
+			r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), tInp})
 		}
 		return cInp == tInp
 	}
@@ -182,7 +156,7 @@ func (s Stream) disable(r deps.Global) Stream {
 		updated = true
 	}
 	if updated {
-		r.TW().AppendRow(table.Row{s.Name, s.StreamGroups.All})
+		r.TW().AppendRow(table.Row{s.Name, s.FirstGroup()})
 	}
 	s.Name = newName
 	return s
@@ -205,7 +179,7 @@ func (s Stream) enable(r deps.Global, onlyPrefixed bool) Stream {
 		updated = true
 	}
 	if updated {
-		r.TW().AppendRow(table.Row{s.Name, newName, s.StreamGroups.All})
+		r.TW().AppendRow(table.Row{s.Name, newName, s.FirstGroup()})
 	}
 	s.Name = newName
 	return s
@@ -216,7 +190,7 @@ func (s Stream) removeBlockedInputs(r deps.Global) Stream {
 	rejectFn := func(input string, _ int) bool {
 		reject := slice.RxAnyMatch(r.Cfg().Streams.InputBlacklist, input)
 		if reject {
-			r.TW().AppendRow(table.Row{s.Name, s.StreamGroups.All, input})
+			r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), input})
 		}
 		return reject
 	}
@@ -279,7 +253,7 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	for _, s := range streams {
 		for _, inp := range s.Inputs {
 			if _, duplicate := inputsMap[inp]; duplicate {
-				r.tw.AppendRow(table.Row{s.Name, s.StreamGroups.All, inp})
+				r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), inp})
 				s.Inputs = slice.RemoveLast(s.Inputs, inp)
 			} else {
 				inputsMap[inp] = true
@@ -401,7 +375,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 					reason := getReason(inp)
 					if reason != "" {
 						mut.Lock()
-						r.tw.AppendRow(table.Row{s.Name, s.StreamGroups.All, inp, reason})
+						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), inp, reason})
 						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
 						mut.Unlock()
 					}
@@ -441,7 +415,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 						r.log.Debug(err)
 					}
 					if changed {
-						r.tw.AppendRow(table.Row{s.Name, s.StreamGroups.All, rule.Hash, inp})
+						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})
 					}
 				}
 			}
@@ -454,20 +428,20 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 						r.log.Debug(err)
 					}
 					if changed {
-						r.tw.AppendRow(table.Row{s.Name, s.StreamGroups.All, rule.Hash, inp})
+						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})
 					}
 				}
 			}
 			// By group
 			for _, rule := range r.cfg.Streams.GroupToInputHashMap {
-				if rule.By.MatchString(s.StreamGroups.All) {
+				if rule.By.MatchString(s.FirstGroup()) {
 					var err error
 					inp, changed, err = conv.AddHash(rule.Hash, inp)
 					if err != nil {
 						r.log.Debug(err)
 					}
 					if changed {
-						r.tw.AppendRow(table.Row{s.Name, s.StreamGroups.All, rule.Hash, inp})
+						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})
 					}
 				}
 			}
@@ -487,7 +461,7 @@ func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 
 	out = lo.Reject(streams, func(s Stream, _ int) bool {
 		if s.hasNoInputs() {
-			r.tw.AppendRow(table.Row{s.Name, s.StreamGroups.All})
+			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup()})
 		}
 		return s.hasNoInputs()
 	})

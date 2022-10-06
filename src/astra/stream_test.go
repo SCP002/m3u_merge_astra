@@ -3,9 +3,7 @@ package astra
 import (
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/copier"
-	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
-	"m3u_merge_astra/util/tw"
 	"net/http"
 	"regexp"
 	"strings"
@@ -13,34 +11,8 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
-
-// newDefRepo returns new repository initialized with defaults
-func newDefRepo() repo {
-	return NewRepo(logger.New(logrus.DebugLevel), tw.New(), cfg.NewDefCfg())
-}
-
-func TestNewRepo(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
-	tw := tw.New()
-	cfg := cfg.NewDefCfg()
-
-	assert.Exactly(t, newDefRepo(), NewRepo(log, tw, cfg))
-}
-
-func TestLog(t *testing.T) {
-	assert.Exactly(t, logger.New(logrus.DebugLevel), newDefRepo().Log())
-}
-
-func TestTW(t *testing.T) {
-	assert.Exactly(t, tw.New(), newDefRepo().TW())
-}
-
-func TestCfg(t *testing.T) {
-	assert.Exactly(t, cfg.NewDefCfg(), newDefRepo().Cfg())
-}
 
 func TestNewStream(t *testing.T) {
 	cfg := newDefRepo().cfg.Streams
@@ -59,13 +31,20 @@ func TestNewStream(t *testing.T) {
 	cfg.AddGroupsToNew = true
 	s = NewStream(cfg, "0000", "Name", "Group", []string{"http://url"})
 
-	expected.StreamGroups = StreamGroups{All: "Group"}
+	expected.Groups = map[string]any{cfg.GroupsCategoryForNew: "Group"}
 	assert.Exactly(t, expected, s, "should create this stream")
 }
 
 func TestGetName(t *testing.T) {
 	s := Stream{Name: "Name"}
 	assert.Exactly(t, s.Name, s.GetName(), "should return this name")
+}
+
+func TestFirstGroup(t *testing.T) {
+	s := Stream{}
+	assert.Empty(t, s.FirstGroup(), "should return empty group")
+	s = Stream{Groups: map[string]any{"Category 1": "Group 1", "Category 2": "Group 2"}}
+	assert.Exactly(t, "Group 1", s.FirstGroup(), "should return first group name")
 }
 
 func TestUpdateStreamInput(t *testing.T) {
@@ -644,49 +623,49 @@ func TestAddHashes(t *testing.T) {
 
 	sl1 := []Stream{
 		{ // Index 0. Known input 1
-			Name:         "Other name",
-			StreamGroups: StreamGroups{All: "Other group"},
-			Inputs:       []string{"http://known/input/1#x", "http://other/input/1"},
+			Name:   "Other name",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://known/input/1#x", "http://other/input/1"},
 		},
 		{ // Index 1. Known name 1
-			Name:         "Known name 1",
-			StreamGroups: StreamGroups{All: "Other group"},
-			Inputs:       []string{"http://other/input/1#a", "http://other/input/2#x"},
+			Name:   "Known name 1",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://other/input/1#a", "http://other/input/2#x"},
 		},
 		{ // Index 2. Known group 2
-			Name:         "Other name",
-			StreamGroups: StreamGroups{All: "Known group 2"},
-			Inputs:       []string{"http://other/input/1#a&d", "http://other/input/2"},
+			Name:   "Other name",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+			Inputs: []string{"http://other/input/1#a&d", "http://other/input/2"},
 		},
 		{ // Index 3. Known inputs 2 and 1
-			Name:         "Other name",
-			StreamGroups: StreamGroups{All: "Other group"},
-			Inputs:       []string{"http://known/input/2#x", "http://known/input/1"},
+			Name:   "Other name",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://known/input/2#x", "http://known/input/1"},
 		},
 		{ // Index 4. Known name 2
-			Name:         "Known name 2",
-			StreamGroups: StreamGroups{All: "Other group"},
-			Inputs:       []string{"http://other/input/1"},
+			Name:   "Known name 2",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://other/input/1"},
 		},
 		{ // Index 5. Known group 1
-			Name:         "Other name",
-			StreamGroups: StreamGroups{All: "Known group 1"},
-			Inputs:       []string{"http://other/input/1#c", "http://other/input/2#x"},
+			Name:   "Other name",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+			Inputs: []string{"http://other/input/1#c", "http://other/input/2#x"},
 		},
 		{ // Index 6. No matches
-			Name:         "Other name",
-			StreamGroups: StreamGroups{All: "Other group"},
-			Inputs:       []string{"http://other/input/2", "http://other/input/1#a"},
+			Name:   "Other name",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://other/input/2", "http://other/input/1#a"},
 		},
 		{ // Index 7. Matches by every parameter
-			Name:         "Known name 1",
-			StreamGroups: StreamGroups{All: "Known group 2"},
-			Inputs:       []string{"http://known/input/2#x", "http://other/input/1", "http://known/input/1"},
+			Name:   "Known name 1",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+			Inputs: []string{"http://known/input/2#x", "http://other/input/1", "http://known/input/1"},
 		},
 		{ // Index 8. Matches by group 1 and input 1
-			Name:         "Other name",
-			StreamGroups: StreamGroups{All: "Known group 1"},
-			Inputs:       []string{"http://known/input/1", "http://other/input/1"},
+			Name:   "Other name",
+			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+			Inputs: []string{"http://known/input/1", "http://other/input/1"},
 		},
 	}
 	sl1Original := copier.TDeep(t, sl1)
@@ -698,45 +677,45 @@ func TestAddHashes(t *testing.T) {
 	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
 
 	expected := Stream{ // Index 0. Known input 1
-		Name:         "Other name",
-		StreamGroups: StreamGroups{All: "Other group"},
-		Inputs:       []string{"http://known/input/1#x&e", "http://other/input/1"},
+		Name:   "Other name",
+		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		Inputs: []string{"http://known/input/1#x&e", "http://other/input/1"},
 	}
 	assert.Exactly(t, expected, sl2[0], "inputs matching only by StreamInputToInputHashMap should get hashes only for"+
 		"the exact inputs")
 
 	expected = Stream{ // Index 1. Known name 1
-		Name:         "Known name 1",
-		StreamGroups: StreamGroups{All: "Other group"},
-		Inputs:       []string{"http://other/input/1#a", "http://other/input/2#x&a"},
+		Name:   "Known name 1",
+		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		Inputs: []string{"http://other/input/1#a", "http://other/input/2#x&a"},
 	}
 	assert.Exactly(t, expected, sl2[1], "should add hash to every matching input")
 
 	expected = Stream{ // Index 2. Known group 2
-		Name:         "Other name",
-		StreamGroups: StreamGroups{All: "Known group 2"},
-		Inputs:       []string{"http://other/input/1#a&d", "http://other/input/2#d"},
+		Name:   "Other name",
+		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+		Inputs: []string{"http://other/input/1#a&d", "http://other/input/2#d"},
 	}
 	assert.Exactly(t, expected, sl2[2], "should add hash to every matching input")
 
 	expected = Stream{ // Index 3. Known inputs 2 and 1
-		Name:         "Other name",
-		StreamGroups: StreamGroups{All: "Other group"},
-		Inputs:       []string{"http://known/input/2#x&f", "http://known/input/1#e"},
+		Name:   "Other name",
+		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		Inputs: []string{"http://known/input/2#x&f", "http://known/input/1#e"},
 	}
 	assert.Exactly(t, expected, sl2[3], "should add hash to every matching input")
 
 	expected = Stream{ // Index 4. Known name 2
-		Name:         "Known name 2",
-		StreamGroups: StreamGroups{All: "Other group"},
-		Inputs:       []string{"http://other/input/1#b"},
+		Name:   "Known name 2",
+		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		Inputs: []string{"http://other/input/1#b"},
 	}
 	assert.Exactly(t, expected, sl2[4], "should add hash to matching input")
 
 	expected = Stream{ // Index 5. Known group 1
-		Name:         "Other name",
-		StreamGroups: StreamGroups{All: "Known group 1"},
-		Inputs:       []string{"http://other/input/1#c", "http://other/input/2#x&c"},
+		Name:   "Other name",
+		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+		Inputs: []string{"http://other/input/1#c", "http://other/input/2#x&c"},
 	}
 	assert.Exactly(t, expected, sl2[5], "should add hash to every matching input")
 
@@ -744,16 +723,16 @@ func TestAddHashes(t *testing.T) {
 	assert.Exactly(t, sl1[6], sl2[6], "should not modify stream with no matches")
 
 	expected = Stream{ // Index 7. Matches by every parameter
-		Name:         "Known name 1",
-		StreamGroups: StreamGroups{All: "Known group 2"},
-		Inputs:       []string{"http://known/input/2#x&f&a&d", "http://other/input/1#a&d", "http://known/input/1#e&a&d"},
+		Name:   "Known name 1",
+		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+		Inputs: []string{"http://known/input/2#x&f&a&d", "http://other/input/1#a&d", "http://known/input/1#e&a&d"},
 	}
 	assert.Exactly(t, expected, sl2[7], "should add hash to every matching input by every parameter")
 
 	expected = Stream{ // Index 8. Matches by group 1 and input 1
-		Name:         "Other name",
-		StreamGroups: StreamGroups{All: "Known group 1"},
-		Inputs:       []string{"http://known/input/1#e&c", "http://other/input/1#c"},
+		Name:   "Other name",
+		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+		Inputs: []string{"http://known/input/1#e&c", "http://other/input/1#c"},
 	}
 	assert.Exactly(t, expected, sl2[8], "should add hash to every matching input by every parameter")
 }
@@ -762,7 +741,7 @@ func TestRemoveWithoutInputs(t *testing.T) {
 	r := newDefRepo()
 
 	sl1 := []Stream{
-		{StreamGroups: StreamGroups{All: "Group"}},
+		{Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Group"}},
 		{Enabled: true, Name: "Name"},
 		{Enabled: true, Inputs: []string{"http://input/1", "http://input/2"}},
 		{Enabled: false, Name: r.cfg.Streams.DisabledPrefix + "Name"},

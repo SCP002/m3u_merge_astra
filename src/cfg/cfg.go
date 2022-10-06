@@ -90,6 +90,9 @@ type Streams struct {
 	// AddGroupsToNew specifies if groups should be added to new astra streams
 	AddGroupsToNew bool `koanf:"add_groups_to_new"`
 
+	// GroupsCategoryForNew represents category name to use for groups of new astra streams
+	GroupsCategoryForNew string `koanf:"groups_category_for_new"`
+
 	// AddNewWithKnownInputs specifies if new astra streams should be added if streams contain M3U channel URL
 	AddNewWithKnownInputs bool `koanf:"add_new_with_known_inputs"`
 
@@ -331,6 +334,7 @@ func NewDefCfg() Root {
 			AddedPrefix:              "_ADDED: ",
 			AddNew:                   true,
 			AddGroupsToNew:           false,
+			GroupsCategoryForNew:     "All",
 			AddNewWithKnownInputs:    false,
 			MakeNewEnabled:           false,
 			NewType:                  SPTS,

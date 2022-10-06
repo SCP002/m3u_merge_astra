@@ -56,6 +56,7 @@ func TestInit(t *testing.T) {
 			AddedPrefix:             "",
 			AddNew:                  true,
 			AddGroupsToNew:          true,
+			GroupsCategoryForNew:    "",
 			AddNewWithKnownInputs:   false,
 			MakeNewEnabled:          true,
 			NewType:                 MPTS,

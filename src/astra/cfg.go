@@ -5,15 +5,27 @@ import (
 	"m3u_merge_astra/cli"
 	"os"
 
+	"github.com/SCP002/clipboard"
 	json "github.com/SCP002/jsonexraw"
 	"github.com/cockroachdb/errors"
-	"github.com/SCP002/clipboard"
 )
 
 // Cfg represents astra config
 type Cfg struct {
-	Streams []Stream       `json:"make_stream"`
-	Unknown map[string]any `json:"-" jsonex:"true"` // All unknown fields go here.
+	Categories []Category     `json:"categories"`
+	Streams    []Stream       `json:"make_stream"`
+	Unknown    map[string]any `json:"-" jsonex:"true"` // All unknown fields go here.
+}
+
+// Category represents category for groups of astra streams
+type Category struct {
+	Name   string  `json:"name"`
+	Groups []Group `json:"groups"`
+}
+
+// Group represents group of astra streams
+type Group struct {
+	Name string `json:"name"`
 }
 
 // ReadCfg returns serialized astra config from <source>.

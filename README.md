@@ -130,6 +130,9 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
   * `add_groups_to_new`  
     Add groups to new astra streams?
 
+  * `groups_category_for_new`  
+    Category name to use for groups of new astra streams.
+
   * `add_new_with_known_inputs`  
     Add new astra streams if streams contain M3U channel URL?
     > Why does it exist?  
