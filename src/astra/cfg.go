@@ -1,13 +1,19 @@
 package astra
 
 import (
+	"fmt"
 	"io"
-	"m3u_merge_astra/cli"
 	"os"
+
+	"m3u_merge_astra/cli"
+	"m3u_merge_astra/util/copier"
+	"m3u_merge_astra/util/slice"
 
 	"github.com/SCP002/clipboard"
 	json "github.com/SCP002/jsonexraw"
 	"github.com/cockroachdb/errors"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/samber/lo"
 )
 
 // Cfg represents astra config
@@ -26,6 +32,28 @@ type Category struct {
 // Group represents group of astra streams
 type Group struct {
 	Name string `json:"name"`
+}
+
+// AddCategory returns copy of categories <cats> with category <cName> filled with <groups>
+func (r repo) AddCategory(cats []Category, cName string, groups []string) []Category {
+	r.log.Info("Adding new groups\n")
+	r.tw.AppendHeader(table.Row{"Category", "Group"})
+
+	cats = copier.PDeep(cats)
+	cats, _, idx := slice.FindIndexOrElse(cats, Category{Name: cName}, func(c Category) bool {
+		return c.Name == cName
+	})
+
+	cGroups := lo.Map(lo.WithoutEmpty(groups), func(name string, _ int) Group {
+		return Group{Name: name}
+	})
+	cats[idx].Groups = slice.AppendNew(cats[idx].Groups, func(g Group) {
+		r.tw.AppendRow(table.Row{cName, g.Name})
+	}, cGroups...)
+
+	r.tw.Render()
+	fmt.Fprint(os.Stderr, "\n")
+	return cats
 }
 
 // ReadCfg returns serialized astra config from <source>.

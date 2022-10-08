@@ -27,7 +27,7 @@ func main() {
 	log.Debug("Parsing command line arguments\n")
 	flags, err := cli.Parse()
 	if flags.Version {
-		fmt.Println("v1.0.0")
+		fmt.Println("v1.0.0") // TODO: Bump version
 		os.Exit(0)
 	}
 	if cli.IsErrOfType(err, goFlags.ErrHelp) {
@@ -100,7 +100,9 @@ func main() {
 		astraCfg.Streams = astraRepo.SortInputs(astraCfg.Streams)
 	}
 	if cfg.Streams.AddNew {
-		astraCfg.Streams = mergeRepo.AddNewStreams(astraCfg.Streams, m3uChannels)
+		var newGroups []string
+		astraCfg.Streams, newGroups = mergeRepo.AddNewStreams(astraCfg.Streams, m3uChannels)
+		astraCfg.Categories = astraRepo.AddCategory(astraCfg.Categories, cfg.Streams.GroupsCategoryForNew, newGroups)
 	}
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(false, cfg.Streams.InputRespTimeout)

@@ -18,6 +18,7 @@ func New() Writer {
 	tw.SetStyle(table.StyleLight)
 	tw.SetColumnConfigs([]table.ColumnConfig{
 		{Name: "From name", WidthMax: 30},
+		{Name: "Category", WidthMax: 30},
 		{Name: "Group", WidthMax: 30},
 		{Name: "Hash", WidthMax: 30},
 		{Name: "Input", WidthMax: 70},

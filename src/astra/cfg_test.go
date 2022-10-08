@@ -6,9 +6,50 @@ import (
 	"testing"
 
 	"m3u_merge_astra/cli"
+	"m3u_merge_astra/util/copier"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestAddCategory(t *testing.T) {
+	r := newDefRepo()
+
+	cl1 := []Category{
+		{Name: "Category 1", Groups: []Group{{Name: "A"}, {Name: "A"}, {Name: "B"}}},
+		{Name: "Category 2", Groups: []Group{{Name: "C"}, {Name: "D"}}},
+	}
+	cl1Original := copier.TDeep(t, cl1)
+
+	cl2 := r.AddCategory(cl1, "Category 3", []string{"A", "B", "C"})
+
+	assert.NotSame(t, &cl1, &cl2, "should return copy of categories")
+	assert.Exactly(t, cl1Original, cl1, "should not modify the source categories")
+
+	expected := []Category{
+		{Name: "Category 1", Groups: []Group{{Name: "A"}, {Name: "A"}, {Name: "B"}}},
+		{Name: "Category 2", Groups: []Group{{Name: "C"}, {Name: "D"}}},
+		{Name: "Category 3", Groups: []Group{{Name: "A"}, {Name: "B"}, {Name: "C"}}},
+	}
+	assert.Exactly(t, expected, cl2, "should add new category with the specified groups")
+
+	cl2 = r.AddCategory(cl1, "Category 2", []string{"D", "C", "B", "A"})
+
+	assert.NotSame(t, &cl1, &cl2, "should return copy of categories")
+	assert.Exactly(t, cl1Original, cl1, "should not modify the source categories")
+
+	expected = []Category{
+		{Name: "Category 1", Groups: []Group{{Name: "A"}, {Name: "A"}, {Name: "B"}}},
+		{Name: "Category 2", Groups: []Group{{Name: "C"}, {Name: "D"}, {Name: "B"}, {Name: "A"}}},
+	}
+	assert.Exactly(t, expected, cl2, "should add new groups to exising category")
+
+	cl2 = r.AddCategory(cl1, "Category 1", []string{"", "B"})
+
+	assert.NotSame(t, &cl1, &cl2, "should return copy of categories")
+	assert.Exactly(t, cl1Original, cl1, "should not modify the source categories")
+
+	assert.Exactly(t, cl1, cl2, "should not add empty or exising groups to existing category")
+}
 
 func TestWriteReadCfg(t *testing.T) {
 	c1 := Cfg{

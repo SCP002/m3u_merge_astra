@@ -8,6 +8,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestFindIndexOrElse(t *testing.T) {
+	ol1 := []string{"A", "B"}
+	ol1Original := copier.TDeep(t, ol1)
+
+	search := "B"
+	ol2, o, idx := FindIndexOrElse(ol1, search, func(o string) bool {
+		return o == search
+	})
+
+	assert.NotSame(t, &ol1, &ol2, "should return copy of objects")
+	assert.Exactly(t, ol1Original, ol1, "should not modify the source objects")
+
+	assert.Exactly(t, ol1, ol2, "should not add existing object")
+	assert.Exactly(t, search, o, "should return fallback object")
+	assert.Exactly(t, 1, idx, "should return index of the existing object")
+
+	search = "C"
+	ol2, o, idx = FindIndexOrElse(ol1, search, func(o string) bool {
+		return o == search
+	})
+
+	assert.NotSame(t, &ol1, &ol2, "should return copy of objects")
+	assert.Exactly(t, ol1Original, ol1, "should not modify the source objects")
+
+	assert.Exactly(t, []string{"A", "B", "C"}, ol2, "should add new object")
+	assert.Exactly(t, search, o, "should return fallback object")
+	assert.Exactly(t, 2, idx, "should return index of the new object")
+}
+
 func TestFindNamed(t *testing.T) {
 	cfg := cfg.General{
 		SimilarTranslit: true,

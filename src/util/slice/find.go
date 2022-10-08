@@ -7,6 +7,17 @@ import (
 	"github.com/samber/lo"
 )
 
+// FindIndexOrElse returns unmodified <list>, <list> entry and it's index if <predicate> returns true or <list> with
+// <fallback>, <fallback> and it's index (len - 1) if not found.
+func FindIndexOrElse[T any](list []T, fallback T, predicate func(elm T) bool) ([]T, T, int) {
+	elm, idx, found := lo.FindIndexOf(list, predicate)
+	if !found {
+		list = append(list, fallback)
+		return list, fallback, len(list) - 1
+	}
+	return list, elm, idx
+}
+
 // FindNamed returns <list> entry, it's index and true if .Name() of it matching the <name> or empty object, -1
 // and false if not found.
 //
