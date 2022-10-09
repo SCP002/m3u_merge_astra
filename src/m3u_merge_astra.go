@@ -100,10 +100,9 @@ func main() {
 		astraCfg.Streams = astraRepo.SortInputs(astraCfg.Streams)
 	}
 	if cfg.Streams.AddNew {
-		var newGroups []string
-		astraCfg.Streams, newGroups = mergeRepo.AddNewStreams(astraCfg.Streams, m3uChannels)
-		astraCfg.Categories = astraRepo.AddCategory(astraCfg.Categories, cfg.Streams.GroupsCategoryForNew, newGroups)
+		astraCfg.Streams = mergeRepo.AddNewStreams(astraCfg.Streams, m3uChannels)
 	}
+	astraCfg.Categories = astraRepo.AddNewGroups(astraCfg.Categories, astraCfg.Streams)
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(false, cfg.Streams.InputRespTimeout)
 		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, astraCfg.Streams, true)

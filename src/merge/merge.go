@@ -93,14 +93,12 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	return
 }
 
-// AddNewStreams returns copy of <streams> with new streams generated from <channels> if no such found in <streams> and
-// slice of new groups.
-func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) ([]astra.Stream, []string) {
+// AddNewStreams returns copy of <streams> with new streams generated from <channels> if no such found in <streams>
+func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []astra.Stream {
 	r.log.Info("Adding new streams\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
 	astraRepo := astra.NewRepo(r.log, r.tw, r.cfg)
 
-	groups := []string{}
 	for _, ch := range channels {
 		if !r.cfg.Streams.AddNewWithKnownInputs && astraRepo.HasInput(streams, ch.URL, false) {
 			continue
@@ -112,15 +110,12 @@ func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) ([]a
 			stream := astra.NewStream(r.cfg.Streams, id, ch.Name, ch.Group, []string{ch.URL})
 			r.tw.AppendRow(table.Row{ch.Name, stream.FirstGroup(), ch.URL})
 			streams = append(streams, stream)
-			if r.cfg.Streams.AddGroupsToNew {
-				groups = append(groups, ch.Group)
-			}
 		}
 	}
 
 	r.tw.Render()
 	fmt.Fprint(os.Stderr, "\n")
-	return streams, groups
+	return streams
 }
 
 // generateUID returns 4 symbols long ID unique for <streams>

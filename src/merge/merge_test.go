@@ -236,7 +236,7 @@ func TestAddNewStreams(t *testing.T) {
 
 	r.cfg.Streams.AddNewWithKnownInputs = true
 	r.cfg.Streams.AddGroupsToNew = false
-	sl2, gl := r.AddNewStreams(sl1, cl1)
+	sl2 := r.AddNewStreams(sl1, cl1)
 
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source streams")
@@ -258,11 +258,9 @@ func TestAddNewStreams(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[2], "should add new stream")
 
-	assert.Empty(t, gl, "should return empty group list as AddGroupsToNew = false")
-
 	r.cfg.Streams.AddNewWithKnownInputs = true
 	r.cfg.Streams.AddGroupsToNew = true
-	sl2, gl = r.AddNewStreams(sl1, cl1)
+	sl2 = r.AddNewStreams(sl1, cl1)
 
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source streams")
@@ -278,18 +276,14 @@ func TestAddNewStreams(t *testing.T) {
 	expected.Groups = map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Group"}
 	assert.Exactly(t, expected, sl2[2], "should add new stream")
 
-	assert.Exactly(t, []string{"Group"}, gl, "should return these added groups")
-
 	sl1 = []astra.Stream{{Name: "Other name", Inputs: []string{"http://some/url"}}}
 	cl1 = []m3u.Channel{
 		{Name: "Other name", URL: "http://some/url"},
 		{Name: "Other name", URL: "http://some/url/2"},
 	}
-	sl2, gl = r.AddNewStreams(sl1, cl1)
+	sl2 = r.AddNewStreams(sl1, cl1)
 
 	assert.Exactly(t, sl1, sl2, "should not change as M3U channels does not contain any new name")
-
-	assert.Empty(t, gl, "should return empty group list")
 
 	sl1 = []astra.Stream{
 		{Name: "Known name", Inputs: []string{"http://some/url#a"}},
@@ -303,7 +297,7 @@ func TestAddNewStreams(t *testing.T) {
 	cl1Original = copier.TDeep(t, cl1)
 
 	r.cfg.Streams.AddNewWithKnownInputs = false
-	sl2, gl = r.AddNewStreams(sl1, cl1)
+	sl2 = r.AddNewStreams(sl1, cl1)
 
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source streams")
@@ -311,8 +305,6 @@ func TestAddNewStreams(t *testing.T) {
 
 	assert.Exactly(t, sl1, sl2, "should not change as AddNewStreamsWithKnownInputs = false and hash difference should"+
 		"be ignored")
-
-	assert.Empty(t, gl, "should return empty group list")
 }
 
 func TestGenerateUID(t *testing.T) {

@@ -34,22 +34,32 @@ type Group struct {
 	Name string `json:"name"`
 }
 
-// AddCategory returns copy of categories <cats> with category <cName> filled with <groups>
-func (r repo) AddCategory(cats []Category, cName string, groups []string) []Category {
+// AddNewGroups returns copy of categories <cats> with new categories and groups from <streams>
+func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
 	r.log.Info("Adding new groups\n")
 	r.tw.AppendHeader(table.Row{"Category", "Group"})
 
 	cats = copier.PDeep(cats)
-	cats, _, idx := slice.FindIndexOrElse(cats, Category{Name: cName}, func(c Category) bool {
-		return c.Name == cName
+
+	// Transform []Stream into []Category
+	sCats := lo.FlatMap(streams, func(s Stream, _ int) []Category {
+		return lo.MapToSlice(s.Groups, func(catName string, groupName any) Category {
+			return Category{Name: catName, Groups: lo.WithoutEmpty([]Group{
+				{Name: groupName.(string)},
+			})}
+		})
 	})
 
-	cGroups := lo.Map(lo.WithoutEmpty(groups), func(name string, _ int) Group {
-		return Group{Name: name}
-	})
-	cats[idx].Groups = slice.AppendNew(cats[idx].Groups, func(g Group) {
-		r.tw.AppendRow(table.Row{cName, g.Name})
-	}, cGroups...)
+	// Update input categories with categories from []Streams
+	for _, sCat := range sCats {
+		var idx int
+		cats, _, idx = slice.FindIndexOrElse(cats, Category{Name: sCat.Name}, func(c Category) bool {
+			return c.Name == sCat.Name
+		})
+		cats[idx].Groups = slice.AppendNew(cats[idx].Groups, func(g Group) {
+			r.tw.AppendRow(table.Row{sCat.Name, g.Name})
+		}, sCat.Groups...)
+	}
 
 	r.tw.Render()
 	fmt.Fprint(os.Stderr, "\n")
