@@ -1,4 +1,4 @@
-# m3u-merge-astra
+# m3u_merge_astra
 
 ## What is this?
 
