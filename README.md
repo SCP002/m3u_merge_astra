@@ -2,7 +2,7 @@
 
 ## What is this?
 
-Heavily configurable CLI tool to add channels from M3U playlist into Cesbo Astra config.
+Heavily configurable CLI tool to add channels from M3U playlist into Cesbo Astra 5 config.
 
 ## Why was it made?
 
