@@ -185,3 +185,5 @@ streams:
       hash: 'ua=VLC/3.0.9 LibVLC/3.0.9'
     - by: '^rts?p://'
       hash: 'no_reload'
+    # - by: '/some_path/'
+    #   hash: 'some_hash'
