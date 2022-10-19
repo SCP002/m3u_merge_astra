@@ -21,6 +21,8 @@ general:
   # All symbols are lowercase as comparsion function will convert every character in a name to lowercase.
   # Key: From. Value: To.
   similar_translit_map:
+    # а: 'a'
+    # б: '6'
 
 # -------------------------------------------------------------------------------------------------------------------
 # M3U related settings of the program.
