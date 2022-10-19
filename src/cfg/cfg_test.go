@@ -45,7 +45,7 @@ func TestInit(t *testing.T) {
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,
 			ChannNameBlacklist:  []regexp.Regexp{*regexp.MustCompile(`Nonsense TV`), *regexp.MustCompile(`^Test.*`)},
-			ChannGroupBlacklist: []regexp.Regexp{*regexp.MustCompile(`18\+`), *regexp.MustCompile(`Cooking`)},
+			ChannGroupBlacklist: nil,
 			ChannURLBlacklist: []regexp.Regexp{
 				*regexp.MustCompile(`https?://filter_me\.com`),
 				*regexp.MustCompile(`192\.168\.88\.14/play`),
