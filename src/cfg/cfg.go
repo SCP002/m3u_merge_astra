@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -270,21 +269,23 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		mapstructure.StringToSliceHookFunc(","),
 	)
 
+	metadata := mapstructure.Metadata{}
 	err := ko.UnmarshalWithConf("", &root, koanf.UnmarshalConf{
 		DecoderConfig: &mapstructure.DecoderConfig{
 			DecodeHook:       decoder,
-			Result:           &root,
 			ErrorUnused:      true,
-			ErrorUnset:       true,
-			ZeroFields:       true,
+			Metadata:         &metadata,
+			Result:           &root,
 			WeaklyTypedInput: true,
+			ZeroFields:       true,
 		},
 	})
-	if err, ok := err.(*mapstructure.Error); ok && strings.Contains(err.Error(), "has unset fields") {
-		log.Warning("Outdated or broken program config found. Recreate it or add missing fields manually.\n")
-	}
 	if err := errors.Wrap(err, "decode config"); err != nil {
 		log.Fatal(err)
+	}
+	// TODO: This
+	if len(metadata.Unset) > 0 {
+		log.Info(metadata.Unset)
 	}
 
 	return root, false
