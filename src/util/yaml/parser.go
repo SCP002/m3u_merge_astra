@@ -2,6 +2,8 @@ package yaml
 
 import (
 	"fmt"
+	"m3u_merge_astra/util/scan"
+	"regexp"
 	"strings"
 
 	"github.com/samber/lo"
@@ -27,48 +29,69 @@ func (e PathNotFoundError) Error() string {
 	return fmt.Sprintf("Can not find the specified path: %v", e.Path)
 }
 
-// ...
-func pathIndex(input []rune, path string) (int, error) {
+// insertIndex returns index of <input> pointing at the location where new item should be inserted by <path>.
+//
+// If <path> is empty, returns length of <input>.
+//
+// Returns 0 and error if given <path> is not found in <input>.
+func insertIndex(input []rune, path string) (int, error) {
+	err := PathNotFoundError{Path: path}
+
 	if len(input) == 0 {
-		return 0, PathNotFoundError{Path: path}
+		return 0, err
 	}
-	trimPath := strings.TrimRight(path, ":")
-	if trimPath == "" {
+
+	path = strings.TrimRight(path, ":")
+	if path == "" {
 		return len(input), nil // len == index + 1
 	}
 
-	folders := lo.Map(strings.Split(trimPath, "."), func(folder string, _ int) string {
+	folders := lo.Map(strings.Split(path, "."), func(folder string, _ int) string {
 		return folder + ":"
 	})
 
+	indentRx := regexp.MustCompile(`^( +).*`)
+
+	// getIndent returns amount of space characters in the beginning of the <line>
+	getIndent := func(line string) int {
+		if matches := indentRx.FindStringSubmatch(line); len(matches) > 1 {
+			return len(matches[1])
+		}
+		return 0
+	}
+
+	// nextLineWithIndent returns the starting index of the first line found in <input> beginning from the <startIdx>
+	// if it's indent equals to <tIndent> or 0 and error if not found.
+	nextLineWithIndent := func(startIdx, tIndent int) (int, error) {
+		sc := scan.New(input, startIdx)
+		for sc.Lines() {
+			if getIndent(sc.Line) == tIndent {
+				return sc.LineStartIdx + 1, nil
+			}
+		}
+		return 0, err
+	}
+
 	folderIdx := 0
-	line := ""
-	for read, char := range input {
-		line += string(char)
+	sc := scan.New(input, 0)
+	for sc.Lines() {
+		indent := getIndent(sc.Line)
+		sc.Line = strings.TrimSpace(sc.Line)
 
-		if char != '\n' {
+		if strings.HasPrefix(sc.Line, "#") { // Guard in case if path folder starts with #
 			continue
 		}
 
-		line = strings.Trim(line, " ")
-
-		if strings.HasPrefix(line, "#") {
-			line = ""
-			continue
-		}
-
-		if strings.HasPrefix(line, folders[folderIdx]) {
+		if strings.HasPrefix(sc.Line, folders[folderIdx]) {
 			if folderIdx == len(folders)-1 {
-				return read + 1, nil // read == index, add 1
+				return nextLineWithIndent(sc.RuneIdx+1, indent)
 			} else {
 				folderIdx++
 			}
 		}
-
-		line = ""
 	}
 
-	return 0, PathNotFoundError{Path: path}
+	return 0, err
 }
 
 // Insert returns copy of the YAML bytes <input> with <headComment>, <key> and <values> pasted <afterPath>.
