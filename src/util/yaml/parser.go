@@ -85,7 +85,7 @@ func insertIndex(input []rune, path string) (int, error) {
 			continue
 		}
 
-		// TODO: Explain
+		// If folder with correct name is found and it's indent is bigger than previous
 		if strings.HasPrefix(sc.Line, folders[folderIdx]) && lastIndent < indent {
 			if folderIdx == len(folders)-1 {
 				return sectionEndIdx(sc.RuneIdx, indent), nil

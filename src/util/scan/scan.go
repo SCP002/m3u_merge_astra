@@ -19,7 +19,9 @@ func New(data []rune, startIdx int) *Scanner {
 	return &Scanner{data: data, RuneIdx: startIdx}
 }
 
-// Lines returns true for every line of text in the data given to Scanner
+// Lines returns true for every line of text in the data given to Scanner.
+//
+// Unlike bufio.Scanner, it does not trim /r, /n and space character from line.
 func (s *Scanner) Lines() bool {
 	s.Line = ""
 	s.LineStartIdx = s.RuneIdx
