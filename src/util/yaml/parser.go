@@ -60,19 +60,22 @@ func insertIndex(input []rune, path string) (int, error) {
 		return 0
 	}
 
-	// nextLineWithIndent returns the starting index of the first line found in <input> beginning from the <startIdx>
-	// if it's indent equals to <tIndent> or 0 and error if not found.
-	nextLineWithIndent := func(startIdx, tIndent int) (int, error) {
+	// sectionEndIdx returns the starting index of the first line found in <input> beginning from the <startIdx> if it's
+	// indent equals to or lower than <tIndent>.
+	//
+	// Return ending index of the last line encountered if no appropriate index found.
+	sectionEndIdx := func(startIdx, tIndent int) int {
 		sc := scan.New(input, startIdx)
 		for sc.Lines() {
-			if getIndent(sc.Line) == tIndent {
-				return sc.LineStartIdx + 1, nil
+			if getIndent(sc.Line) <= tIndent {
+				return sc.LineStartIdx + 1
 			}
 		}
-		return 0, err
+		return sc.LineEndIdx + 1
 	}
 
 	folderIdx := 0
+	lastIndent := -1
 	sc := scan.New(input, 0)
 	for sc.Lines() {
 		indent := getIndent(sc.Line)
@@ -82,12 +85,13 @@ func insertIndex(input []rune, path string) (int, error) {
 			continue
 		}
 
-		if strings.HasPrefix(sc.Line, folders[folderIdx]) {
+		// TODO: Explain
+		if strings.HasPrefix(sc.Line, folders[folderIdx]) && lastIndent < indent {
 			if folderIdx == len(folders)-1 {
-				return nextLineWithIndent(sc.RuneIdx+1, indent)
-			} else {
-				folderIdx++
+				return sectionEndIdx(sc.RuneIdx, indent), nil
 			}
+			lastIndent = indent
+			folderIdx++
 		}
 	}
 

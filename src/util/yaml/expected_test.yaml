@@ -4,6 +4,16 @@ key: 'value_1'
 # New comment
 new_key: 'value_1'
 
+key_2: 'value_2'
+
+#Comment
+nested_section:
+  nested_section_2:
+    #Comment line 1
+    # Comment line 2
+    nested_section_3:
+      key: 'value_1'
+
 # Comment
 sequences_section:
   # New comment line 1
