@@ -36,9 +36,10 @@ func (s *Scanner) Lines() bool {
 
 		char := s.data[s.RuneIdx]
 		s.Line += string(char)
+		s.LineEndIdx = s.RuneIdx
 
+		// Line break character at index from previous run or empty line, continue
 		if strings.Trim(s.Line, "\r\n") == "" {
-			s.LineEndIdx = s.RuneIdx
 			s.LineStartIdx = s.RuneIdx
 			s.Line = ""
 			if s.RuneIdx == len(s.data)-1 {
@@ -47,12 +48,10 @@ func (s *Scanner) Lines() bool {
 			continue
 		}
 		if s.RuneIdx == len(s.data)-1 {
-			s.LineEndIdx = s.RuneIdx
 			s.done = true
 			return true
 		}
 		if char == '\n' {
-			s.LineEndIdx = s.RuneIdx
 			return true
 		}
 	}
