@@ -5,6 +5,8 @@ key_2: 'value_2'
 
 #Comment
 nested_section:
+  - key_1: 'value_1'
+    val_1: 'value_2'
   nested_section_2:
     #Comment line 1
     # Comment line 2
