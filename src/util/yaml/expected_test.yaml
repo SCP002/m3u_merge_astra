@@ -15,6 +15,8 @@ nested_section:
     # Comment line 2
     nested_section_3:
       key: 'value_1'
+      key_2: 'value_2'
+      key_3: 'value_3'
 
 # Comment
 sequences_section:
