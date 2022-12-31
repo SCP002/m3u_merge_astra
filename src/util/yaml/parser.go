@@ -31,10 +31,12 @@ func (e PathNotFoundError) Error() string {
 
 // insertIndex returns index of <input> pointing at the location where new item should be inserted by <path>.
 //
+// If <sectionEnd> is true, returns index of the indented section end.
+//
 // If <path> is empty, returns length of <input>.
 //
 // Returns 0 and error if given <path> is not found in <input>.
-func insertIndex(input []rune, path string) (int, error) {
+func insertIndex(input []rune, path string, sectionEnd bool) (int, error) {
 	err := PathNotFoundError{Path: path}
 
 	if len(input) == 0 {
@@ -88,7 +90,7 @@ func insertIndex(input []rune, path string) (int, error) {
 		// If folder with correct name is found and it's indent is bigger than previous
 		if strings.HasPrefix(sc.Line, folders[folderIdx]) && lastIndent < indent {
 			if folderIdx == len(folders)-1 {
-				return sectionEndIdx(sc.RuneIdx, indent), nil
+				return lo.Ternary(sectionEnd, sectionEndIdx(sc.RuneIdx, indent), sc.LineEndIdx + 1), nil
 			}
 			lastIndent = indent
 			folderIdx++
