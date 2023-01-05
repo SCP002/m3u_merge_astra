@@ -17,6 +17,8 @@ nested_section:
       key: 'value_1'
       key_2: 'value_2'
       key_3: 'value_3'
+  nested_section_4:
+    key: 'value_1'
 
 # Comment
 sequences_section:
@@ -90,16 +92,16 @@ lists_section:
     # - 'item_1'
 
   empty_list_with_comments:
-      # - 'item_1'
+    # - 'item_1'
   new_empty_list_with_comments_2:
     # - 'item_1'
 
 scalar_section:
-    bool_item: true
-    # Comment
-    new_int_item: 1
-    str_item: "# value"
-    new_bool_item: false
+  bool_item: true
+  # Comment
+  new_int_item: 1
+  str_item: "# value"
+  new_bool_item: false
 
 # New comment
 new_map_section:

@@ -1,0 +1,59 @@
+# Comment
+key: 'value_1'
+
+key_2: 'value_2'
+
+#Comment
+nested_section:
+  - key_1: 'value_1'
+    val_1: 'value_2'
+  nested_section_2:
+    #Comment line 1
+    # Comment line 2
+    nested_section_3:
+      key: 'value_1'
+      key_2: 'value_2'
+      key_3: 'value_3'
+  nested_section_4:
+    key: 'value_1'
+
+# Comment
+sequences_section:
+  # Comment line 1
+  # Comment line 2
+  sequence:
+    - key_1: 'value_1'
+      val_1: 'value_2'
+    - key_2: 'value_1'
+      val_2: 'value_2'
+  sequence_with_comments:
+    # - key_1: 'value_1'
+    #   val_1: 'value_2'
+    - key_1: '价值_3'
+      val_1: '价值_4'
+
+
+  # Comment
+  empty_sequence_with_comments:
+    # - key_1: 'value_1'
+    #   val_1: 'value_2'
+
+# Comment line 1
+
+# Comment line 2
+lists_section:
+
+  list:
+    - 'item_1'
+    - 'item_2'
+
+  # Comment
+  list_with_comments:
+    # - 'item_1'
+    - 'item_2'
+    # - 'item_3'
+  empty_list_with_comments:
+    # - 'item_1'
+scalar_section:
+  bool_item: true
+  str_item: "# value"

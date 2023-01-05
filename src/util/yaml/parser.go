@@ -2,8 +2,9 @@ package yaml
 
 import (
 	"fmt"
+	"m3u_merge_astra/util/parse"
 	"m3u_merge_astra/util/scan"
-	"regexp"
+	"m3u_merge_astra/util/slice"
 	"strings"
 
 	"github.com/samber/lo"
@@ -29,14 +30,70 @@ func (e PathNotFoundError) Error() string {
 	return fmt.Sprintf("Can not find the specified path: %v", e.Path)
 }
 
+// setIndent returns copy of <input> with the specified <tIndent> set
+func setIndent(input []rune, tIndent int) []rune {
+	// indentPair represents integer pair
+	type indentPair struct {
+		old int
+		new int
+	}
+
+	var sectionHeadersIndents []indentPair
+
+	// getParentIndent returns new indent of the parent of the <line> 
+	getParentIndent := func(line string) int {
+		// Find closest section header which old indent is lower than <line> has
+		indent, _ := lo.Find(sectionHeadersIndents, func(headerIndent indentPair) bool {
+			return headerIndent.old < parse.GetIndent(line)
+		})
+		return indent.new
+	}
+
+	var output []rune
+	prevLineHyphenPrefix := false
+
+	sc := scan.New(input, 0)
+	for sc.Lines(false) {
+		trimLine := strings.TrimSpace(sc.Line)
+		isSectionHeader := strings.HasSuffix(trimLine, ":")
+		hasHyphenPrefix := strings.HasPrefix(trimLine, "-")
+		isComment := strings.HasPrefix(trimLine, "#")
+		isSequenceValue := !isSectionHeader && !isComment && !hasHyphenPrefix && prevLineHyphenPrefix
+
+		cIndent := parse.GetIndent(sc.Line)
+		newIndent := 0
+
+		if cIndent > 0 {
+			newIndent = getParentIndent(sc.Line) + tIndent
+			if isSequenceValue {
+				newIndent += 2 // Add 2 to align sequence keys and values
+			}
+		}
+		if isSectionHeader {
+			sectionHeadersIndents = slice.Prepend(sectionHeadersIndents, indentPair{old: cIndent, new: newIndent})
+		}
+
+		sc.Line = strings.Repeat(" ", newIndent) + strings.TrimLeft(sc.Line, " ")
+		output = append(output, []rune(sc.Line)...)
+
+		prevLineHyphenPrefix = hasHyphenPrefix
+	}
+
+	return output
+}
+
+// TODO: Make tests pass
+// TODO: Add quote check?
 // insertIndex returns index of <input> pointing at the location where new item should be inserted by <path>.
 //
 // If <sectionEnd> is true, returns index of the indented section end.
 //
 // If <path> is empty, returns length of <input>.
 //
+// To work properly, indentation used in <input> should be specified as <tIndent> (run setIndent() function).
+//
 // Returns 0 and error if given <path> is not found in <input>.
-func insertIndex(input []rune, path string, sectionEnd bool) (int, error) {
+func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, error) {
 	err := PathNotFoundError{Path: path}
 
 	if len(input) == 0 {
@@ -52,24 +109,14 @@ func insertIndex(input []rune, path string, sectionEnd bool) (int, error) {
 		return folder + ":"
 	})
 
-	indentRx := regexp.MustCompile(`^( +).*`)
-
-	// getIndent returns amount of space characters in the beginning of the <line>
-	getIndent := func(line string) int {
-		if matches := indentRx.FindStringSubmatch(line); len(matches) > 1 {
-			return len(matches[1])
-		}
-		return 0
-	}
-
 	// sectionEndIdx returns the starting index of the first line found in <input> beginning from the <startIdx> if it's
-	// indent equals to or lower than <tIndent>.
+	// indent equals to or lower than <indent>.
 	//
 	// Return ending index of the last line encountered if no appropriate index found.
-	sectionEndIdx := func(startIdx, tIndent int) int {
+	sectionEndIdx := func(startIdx, indent int) int {
 		sc := scan.New(input, startIdx)
-		for sc.Lines() {
-			if getIndent(sc.Line) <= tIndent {
+		for sc.Lines(true) {
+			if parse.GetIndent(sc.Line) <= indent {
 				return sc.LineStartIdx + 1
 			}
 		}
@@ -77,22 +124,22 @@ func insertIndex(input []rune, path string, sectionEnd bool) (int, error) {
 	}
 
 	folderIdx := 0
-	lastIndent := -1
+	lastIndent := -tIndent // Set initial indent to negative target so first folder with indent 0 will have proper depth
 	sc := scan.New(input, 0)
-	for sc.Lines() {
-		indent := getIndent(sc.Line)
+	for sc.Lines(true) {
+		cIndent := parse.GetIndent(sc.Line)
 		sc.Line = strings.TrimSpace(sc.Line)
 
 		if strings.HasPrefix(sc.Line, "#") { // Guard in case if path folder starts with #
 			continue
 		}
 
-		// If folder with correct name is found and it's indent is bigger than previous
-		if strings.HasPrefix(sc.Line, folders[folderIdx]) && lastIndent < indent {
-			if folderIdx == len(folders)-1 {
-				return lo.Ternary(sectionEnd, sectionEndIdx(sc.RuneIdx, indent), sc.LineEndIdx + 1), nil
+		// If folder with correct name is found and it's indent is equal to previous + 1 depth level
+		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent + tIndent {
+			if folderIdx == len(folders) - 1 {
+				return lo.Ternary(sectionEnd, sectionEndIdx(sc.RuneIdx, cIndent), sc.LineEndIdx + 1), nil
 			}
-			lastIndent = indent
+			lastIndent = cIndent
 			folderIdx++
 		}
 	}
