@@ -45,6 +45,11 @@ func TestInsertIndex(t *testing.T) {
 	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for not full paths")
 	assert.Exactly(t, 0, index, "should return 0 index on error")
 
+	path = "nested_section.nested_section_2.key:"
+	index, err = insertIndex(input, path, true, 2)
+	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for path keys with wrong nesting")
+	assert.Exactly(t, 0, index, "should return 0 index on error")
+
 	path = "nested_section.sequence:"
 	index, err = insertIndex(input, path, true, 2)
 	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for path keys with wrong nesting")

@@ -38,13 +38,13 @@ func setIndent(input []rune, tIndent int) []rune {
 		new int
 	}
 
-	var sectionHeadersIndents []indentPair
+	var foldersIndents []indentPair
 
 	// getParentIndent returns new indent of the parent of the <line> 
 	getParentIndent := func(line string) int {
-		// Find closest section header which old indent is lower than <line> has
-		indent, _ := lo.Find(sectionHeadersIndents, func(headerIndent indentPair) bool {
-			return headerIndent.old < parse.GetIndent(line)
+		// Find closest folder (section header) which old indent is lower than <line> has
+		indent, _ := lo.Find(foldersIndents, func(folderIndent indentPair) bool {
+			return folderIndent.old < parse.GetIndent(line)
 		})
 		return indent.new
 	}
@@ -55,22 +55,22 @@ func setIndent(input []rune, tIndent int) []rune {
 	sc := scan.New(input, 0)
 	for sc.Lines(false) {
 		trimLine := strings.TrimSpace(sc.Line)
-		isSectionHeader := strings.HasSuffix(trimLine, ":")
+		isFolder := strings.HasSuffix(trimLine, ":")
 		hasHyphenPrefix := strings.HasPrefix(trimLine, "-")
 		isComment := strings.HasPrefix(trimLine, "#")
-		isSequenceValue := !isSectionHeader && !isComment && !hasHyphenPrefix && prevLineHyphenPrefix
+		isSeqValue := !isFolder && !isComment && !hasHyphenPrefix && prevLineHyphenPrefix
 
 		cIndent := parse.GetIndent(sc.Line)
 		newIndent := 0
 
 		if cIndent > 0 {
 			newIndent = getParentIndent(sc.Line) + tIndent
-			if isSequenceValue {
+			if isSeqValue {
 				newIndent += 2 // Add 2 to align sequence keys and values
 			}
 		}
-		if isSectionHeader {
-			sectionHeadersIndents = slice.Prepend(sectionHeadersIndents, indentPair{old: cIndent, new: newIndent})
+		if isFolder {
+			foldersIndents = slice.Prepend(foldersIndents, indentPair{old: cIndent, new: newIndent})
 		}
 
 		sc.Line = strings.Repeat(" ", newIndent) + strings.TrimLeft(sc.Line, " ")
@@ -82,7 +82,6 @@ func setIndent(input []rune, tIndent int) []rune {
 	return output
 }
 
-// TODO: Make tests pass
 // TODO: Add quote check?
 // insertIndex returns index of <input> pointing at the location where new item should be inserted by <path>.
 //
@@ -130,8 +129,13 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 		cIndent := parse.GetIndent(sc.Line)
 		sc.Line = strings.TrimSpace(sc.Line)
 
-		if strings.HasPrefix(sc.Line, "#") { // Guard in case if path folder starts with #
+		// If comment, continue. Guard in case if path folder starts with #.
+		if strings.HasPrefix(sc.Line, "#") {
 			continue
+		}
+		// If folder and depth not grew
+		if strings.HasSuffix(sc.Line, ":") && cIndent <= lastIndent {
+			return 0, err
 		}
 
 		// If folder with correct name is found and it's indent is equal to previous + 1 depth level
