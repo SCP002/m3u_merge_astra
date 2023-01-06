@@ -64,12 +64,12 @@ func TestInsertIndex(t *testing.T) {
 	path = ""
 	index, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1018, index, "should return last index")
+	assert.Exactly(t, 1016, index, "should return last index")
 	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
 
 	index, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1018, index, "should return last index")
+	assert.Exactly(t, 1016, index, "should return last index")
 	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
 
 	path = "key:"
@@ -86,78 +86,78 @@ func TestInsertIndex(t *testing.T) {
 	path = "nested_section.nested_section_2.nested_section_3.key:"
 	index, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 229, index, "should return that index")
+	assert.Exactly(t, 227, index, "should return that index")
 	assert.Exactly(t, "1'\r\n    ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	index, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 229, index, "should return that index")
+	assert.Exactly(t, 227, index, "should return that index")
 	assert.Exactly(t, "1'\r\n    ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	path = "sequences_section.sequence_with_comments:"
 	index, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 625, index, "should return that index")
+	assert.Exactly(t, 623, index, "should return that index")
 	assert.Exactly(t, "\r\n\r\n  # ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	index, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 527, index, "should return that index")
+	assert.Exactly(t, 525, index, "should return that index")
 	assert.Exactly(t, "s:\r\n    ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	path = "lists_section:"
 	index, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 959, index, "should return that index")
+	assert.Exactly(t, 957, index, "should return that index")
 	assert.Exactly(t, "1'\r\nscal", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	index, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 779, index, "should return that index")
+	assert.Exactly(t, 777, index, "should return that index")
 	assert.Exactly(t, "n:\r\n\r\n  ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	path = "lists_section.empty_list_with_comments:"
 	index, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 959, index, "should return that index")
+	assert.Exactly(t, 957, index, "should return that index")
 	assert.Exactly(t, "1'\r\nscal", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	index, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 941, index, "should return that index")
+	assert.Exactly(t, 939, index, "should return that index")
 	assert.Exactly(t, "s:\r\n    ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	path = "scalar_section:"
 	index, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1018, index, "should return that index")
+	assert.Exactly(t, 1016, index, "should return that index")
 	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
 
 	index, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 976, index, "should return that index")
-	assert.Exactly(t, "n:\r\n  bo", string(input[index-4:index+4]), "should be last 4 characters")
+	assert.Exactly(t, 974, index, "should return that index")
+	assert.Exactly(t, "n:\r\n  bo", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	path = "scalar_section.bool_item:"
 	index, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 995, index, "should return that index")
-	assert.Exactly(t, "ue\r\n  st", string(input[index-4:index+4]), "should be last 4 characters")
+	assert.Exactly(t, 993, index, "should return that index")
+	assert.Exactly(t, "ue\r\n  st", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	index, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 995, index, "should return that index")
-	assert.Exactly(t, "ue\r\n  st", string(input[index-4:index+4]), "should be last 4 characters")
+	assert.Exactly(t, 993, index, "should return that index")
+	assert.Exactly(t, "ue\r\n  st", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	path = "scalar_section.str_item:"
 	index, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1018, index, "should return that index")
+	assert.Exactly(t, 1016, index, "should return that index")
 	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
 
 	index, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1018, index, "should return that index")
+	assert.Exactly(t, 1016, index, "should return that index")
 	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
 }
 

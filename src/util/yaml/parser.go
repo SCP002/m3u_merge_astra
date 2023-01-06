@@ -82,7 +82,6 @@ func setIndent(input []rune, tIndent int) []rune {
 	return output
 }
 
-// TODO: Add quote check?
 // insertIndex returns index of <input> pointing at the location where new item should be inserted by <path>.
 //
 // If <sectionEnd> is true, returns index of the indented section end.
@@ -137,6 +136,9 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 		if strings.HasSuffix(sc.Line, ":") && cIndent <= lastIndent {
 			return 0, err
 		}
+
+		sc.Line = strings.ReplaceAll(sc.Line, `"`, ``)
+		sc.Line = strings.ReplaceAll(sc.Line, `'`, ``)
 
 		// If folder with correct name is found and it's indent is equal to previous + 1 depth level
 		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent + tIndent {

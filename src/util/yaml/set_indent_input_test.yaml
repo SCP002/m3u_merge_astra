@@ -5,12 +5,12 @@ key_2: 'value_2'
 
 #Comment
 nested_section:
-  - key_1: 'value_1'
-    val_1: 'value_2'
-    nested_section_2:
+    key: 'value_1'
+    key_2: 'value_2'
+    'nested_section_2':
       #Comment line 1
       # Comment line 2
-      nested_section_3:
+      "nested_section_3":
         key: 'value_1'
         key_2: 'value_2'
         key_3: 'value_3'
