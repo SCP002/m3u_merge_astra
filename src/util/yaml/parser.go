@@ -30,6 +30,30 @@ func (e PathNotFoundError) Error() string {
 	return fmt.Sprintf("Can not find the specified path: %v", e.Path)
 }
 
+// Node represents YAML comment, key and value
+type Node struct {
+	HeadComment []string
+	Key         string
+	ValType     ValType // Determines if value will be inserted at the new line after the key and it's indentations
+	Values      []string
+}
+
+// Insert returns copy of the YAML bytes <input> with <node> inserted <afterPath>.
+//
+// <afterPath> is formatted as "key.subkey:".
+//
+// If <sectionEnd> is true, insert after the indented section end, not first line.
+func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) { // TODO: This
+	output := []rune(string(input))
+
+	indent := 2
+	output = setIndent(output, indent)
+
+	//
+
+	return []byte(string(output)), nil
+}
+
 // setIndent returns copy of <input> with the specified <tIndent> set
 func setIndent(input []rune, tIndent int) []rune {
 	// indentPair represents integer pair
@@ -40,7 +64,7 @@ func setIndent(input []rune, tIndent int) []rune {
 
 	var foldersIndents []indentPair
 
-	// getParentIndent returns new indent of the parent of the <line> 
+	// getParentIndent returns new indent of the parent of the <line>
 	getParentIndent := func(line string) int {
 		// Find closest folder (section header) which old indent is lower than <line> has
 		indent, _ := lo.Find(foldersIndents, func(folderIndent indentPair) bool {
@@ -151,18 +175,4 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 	}
 
 	return 0, err
-}
-
-// Insert returns copy of the YAML bytes <input> with <headComment>, <key> and <values> pasted <afterPath>.
-//
-// <afterPath> is formatted as "key.subkey:".
-//
-// <valType> determines if value will be pasted at the new line after the key and it's indentations.
-func Insert(input []byte,
-	afterPath string,
-	headComment []string,
-	key string,
-	valType ValType,
-	values ...string) ([]byte, error) { // TODO: This
-	return input, nil
 }
