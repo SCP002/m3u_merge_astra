@@ -38,7 +38,7 @@ func TestIndexOrElse(t *testing.T) {
 	assert.Exactly(t, 2, idx, "should return index of the new object")
 }
 
-func TestFindNamed(t *testing.T) {
+func TestNamed(t *testing.T) {
 	cfg := cfg.General{
 		SimilarTranslit:    true,
 		SimilarTranslitMap: cfg.DefSimilarTranslitMap(),
