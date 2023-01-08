@@ -7,7 +7,7 @@ import (
 	"m3u_merge_astra/astra"
 	"m3u_merge_astra/m3u"
 	"m3u_merge_astra/util/rnd"
-	"m3u_merge_astra/util/slice"
+	"m3u_merge_astra/util/slice/find"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
@@ -19,7 +19,7 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
 
 	for _, s := range streams {
-		ch, _, chFound := slice.FindNamed(r.cfg.General, channels, s.Name)
+		ch, _, chFound := find.Named(r.cfg.General, channels, s.Name)
 		if chFound && s.Name != ch.Name {
 			r.tw.AppendRow(table.Row{s.Name, ch.Name, s.FirstGroup()})
 			s.Name = ch.Name
@@ -39,7 +39,7 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	r.tw.AppendHeader(table.Row{"Name", "Old URL", "New URL"})
 
 	for _, s := range streams {
-		slice.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
+		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
 			if !s.HasInput(r, ch.URL, true) {
 				s = s.UpdateInput(r, ch.URL)
 			}
@@ -60,7 +60,7 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 	m3uRepo := m3u.NewRepo(r.log, r.tw, r.cfg)
 
 	for _, s := range streams {
-		similarChannels := slice.GetSimilar(r.cfg.General, channels, s.Name)
+		similarChannels := find.GetSimilar(r.cfg.General, channels, s.Name)
 		for _, knownInp := range s.KnownInputs(r) {
 			if !m3uRepo.HasURL(similarChannels, knownInp, false) {
 				s = s.RemoveInputs(r, knownInp, true)
@@ -80,7 +80,7 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	r.tw.AppendHeader(table.Row{"Name", "Group", "URL", "Note"})
 
 	for _, s := range streams {
-		slice.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
+		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
 			if !s.HasInput(r, ch.URL, r.cfg.Streams.HashCheckOnAddNewInputs) {
 				s = s.AddInput(r, ch.URL, true)
 			}
@@ -105,7 +105,7 @@ func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []as
 		}
 		nameWithAddedPrefix := r.cfg.Streams.AddedPrefix + ch.Name
 		nameWithDisabledPrefix := r.cfg.Streams.DisabledPrefix + ch.Name
-		if !slice.HasAnySimilar(r.cfg.General, streams, ch.Name, nameWithAddedPrefix, nameWithDisabledPrefix) {
+		if !find.HasAnySimilar(r.cfg.General, streams, ch.Name, nameWithAddedPrefix, nameWithDisabledPrefix) {
 			id := generateUID(streams)
 			stream := astra.NewStream(r.cfg.Streams, id, ch.Name, ch.Group, []string{ch.URL})
 			r.tw.AppendRow(table.Row{ch.Name, stream.FirstGroup(), ch.URL})

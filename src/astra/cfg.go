@@ -8,6 +8,7 @@ import (
 	"m3u_merge_astra/cli"
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/slice"
+	"m3u_merge_astra/util/slice/find"
 
 	"github.com/SCP002/clipboard"
 	json "github.com/SCP002/jsonexraw"
@@ -53,7 +54,7 @@ func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
 	// Update input categories with categories from []Streams
 	for _, sCat := range sCats {
 		var idx int
-		cats, _, idx = slice.FindIndexOrElse(cats, Category{Name: sCat.Name}, func(c Category) bool {
+		cats, _, idx = find.IndexOrElse(cats, Category{Name: sCat.Name}, func(c Category) bool {
 			return c.Name == sCat.Name
 		})
 		cats[idx].Groups = slice.AppendNew(cats[idx].Groups, func(g Group) {

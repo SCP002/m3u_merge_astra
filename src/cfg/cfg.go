@@ -14,6 +14,8 @@ import (
 	"github.com/knadh/koanf/providers/file"
 	"github.com/mitchellh/mapstructure"
 	"github.com/sirupsen/logrus"
+
+	yamlUtil "m3u_merge_astra/util/yaml"
 )
 
 //go:embed default.yaml
@@ -285,6 +287,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 	}
 	// TODO: This
 	if len(metadata.Unset) > 0 {
+		_ = yamlUtil.Node{}
 		log.Info(metadata.Unset)
 	}
 
