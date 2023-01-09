@@ -15,26 +15,33 @@ func TestInsert(t *testing.T) {
 
 	// Error cases (path can not be found)
 	afterPath := "unknown_root_path:"
-	node := Node{HeadComment: []string{}, Key: "new_key", ValType: Scalar, Values: []string{"true"}}
+	node := Node{Key: "new_key", ValType: Scalar, Values: []string{"true"}}
 	output, err := Insert(input, afterPath, false, node)
 	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, err, "should return unknown path error")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "sequences_section.unknown_subkey:"
-	node = Node{HeadComment: []string{}, Key: "new_key", ValType: Sequence, Values: []string{"- a: 'b'", "c: 'd'"}}
+	node = Node{Key: "new_key", ValType: Sequence, Values: []string{"- a: 'b'", "c: 'd'"}}
 	output, err = Insert(input, afterPath, false, node)
 	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, err, "should return unknown path error")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "lists_section.list.item_2:"
-	node = Node{HeadComment: []string{}, Key: "new_key", ValType: Scalar, Values: []string{"true"}}
+	node = Node{Key: "new_key", ValType: Scalar, Values: []string{"true"}}
 	output, err = Insert(input, afterPath, false, node)
 	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, err, "should not resolve node value as proper path")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	// Regular behavior
 	// First change
-	node = Node{HeadComment: []string{"New comment"}, Key: "new_key", ValType: Scalar, Values: []string{"'value_1'"}}
+	node = Node{
+		StartNewline: true,
+		HeadComment:  []string{"New comment"},
+		Key:          "new_key",
+		ValType:      Scalar,
+		Values:       []string{"'value_1'"},
+		EndNewline:   true,
+	}
 	output, err = Insert(input, "key:", false, node)
 	assert.NoError(t, err, "should not return error")
 
@@ -47,33 +54,38 @@ func TestInsert(t *testing.T) {
 		Key:         "new_seqence",
 		ValType:     Sequence,
 		Values:      []string{"- key_1: 'value_1'", "val_1: 'value_2'", "- key_2: 'value_1'", "val_2: 'value_2'"},
+		EndNewline:  true,
 	}
 	output, err = Insert(output, "sequences_section:", false, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		HeadComment: []string{"New comment"},
-		Key:         "new_empty_sequence_with_comments",
-		ValType:     Sequence,
-		Values:      []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'"},
+		StartNewline: true,
+		HeadComment:  []string{"New comment"},
+		Key:          "new_empty_sequence_with_comments",
+		ValType:      Sequence,
+		Values:       []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'"},
+		EndNewline:   true,
 	}
 	output, err = Insert(output, "sequences_section.sequence:", true, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		HeadComment: []string{},
-		Key:         "new_sequence_with_comments",
-		ValType:     Sequence,
-		Values:      []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'", "- key_1: 'value_3'", "val_1: 'value_4'"},
+		Key:        "new_sequence_with_comments",
+		ValType:    Sequence,
+		Values:     []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'", "- key_1: 'value_3'", "val_1: 'value_4'"},
+		EndNewline: true,
 	}
 	output, err = Insert(output, "sequences_section.sequence_with_comments:", true, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		HeadComment: []string{"New comment line 1", "New comment line 2"},
-		Key:         "new_empty_sequence_with_comments_2",
-		ValType:     Sequence,
-		Values:      []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'"},
+		StartNewline: true,
+		HeadComment:  []string{"New comment line 1", "New comment line 2"},
+		Key:          "new_empty_sequence_with_comments_2",
+		ValType:      Sequence,
+		Values:       []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'"},
+		EndNewline:   true,
 	}
 	output, err = Insert(output, "sequences_section.empty_sequence_with_comments:", true, node)
 	assert.NoError(t, err, "should not return error")
@@ -84,33 +96,37 @@ func TestInsert(t *testing.T) {
 		Key:         "new_list",
 		ValType:     List,
 		Values:      []string{"- 0"},
+		EndNewline:  true,
 	}
-	output, err = Insert(output, "lists_section:", true, node)
+	output, err = Insert(output, "lists_section:", false, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		HeadComment: []string{},
-		Key:         "new_list_with_comments",
-		ValType:     List,
-		Values:      []string{"- 'item_1'", "- 'item_2'", "# - 'item_3'"},
+		StartNewline: true,
+		Key:          "new_list_with_comments",
+		ValType:      List,
+		Values:       []string{"- 'item_1'", "- 'item_2'", "# - 'item_3'"},
+		EndNewline:   true,
 	}
 	output, err = Insert(output, "lists_section.list_with_comments:", true, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		HeadComment: []string{},
-		Key:         "new_empty_list_with_comments",
-		ValType:     List,
-		Values:      []string{"# - 'item_1'"},
+		StartNewline: true,
+		Key:          "new_empty_list_with_comments",
+		ValType:      List,
+		Values:       []string{"# - 'item_1'"},
+		EndNewline:   true,
 	}
 	output, err = Insert(output, "lists_section.new_list_with_comments:", true, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		HeadComment: []string{},
-		Key:         "new_empty_list_with_comments_2",
-		ValType:     List,
-		Values:      []string{"# - 'item_1'"},
+		StartNewline: true,
+		Key:          "new_empty_list_with_comments_2",
+		ValType:      List,
+		Values:       []string{"# - 'item_1'"},
+		EndNewline:   true,
 	}
 	output, err = Insert(output, "lists_section.empty_list_with_comments:", true, node)
 	assert.NoError(t, err, "should not return error")
@@ -126,10 +142,10 @@ func TestInsert(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		HeadComment: []string{},
-		Key:         "new_bool_item",
-		ValType:     Scalar,
-		Values:      []string{"false"},
+		Key:        "new_bool_item",
+		ValType:    Scalar,
+		Values:     []string{"false"},
+		EndNewline: true,
 	}
 	output, err = Insert(output, "scalar_section.str_item:", false, node)
 	assert.NoError(t, err, "should not return error")
@@ -145,20 +161,19 @@ func TestInsert(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		HeadComment: []string{},
-		Key:         "new_map",
-		ValType:     Map,
-		Values:      []string{"# key_1: 'value_1'", "key_2: 'value_2'", "key_3: 'value_3'"},
+		Key:        "new_map",
+		ValType:    Map,
+		Values:     []string{"# key_1: 'value_1'", "key_2: 'value_2'", "key_3: 'value_3'"},
+		EndNewline: true,
 	}
 	output, err = Insert(output, "new_map_section:", false, node)
 	assert.NoError(t, err, "should not return error")
 
 	// Add new empty section to the end
 	node = Node{
-		HeadComment: []string{},
-		Key:         "new_empty_section",
-		ValType:     Scalar,
-		Values:      []string{},
+		Key:     "new_empty_section",
+		ValType: Scalar,
+		Values:  []string{},
 	}
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")

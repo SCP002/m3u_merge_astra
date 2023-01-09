@@ -32,10 +32,12 @@ func (e PathNotFoundError) Error() string {
 
 // Node represents YAML comment, key and value
 type Node struct {
-	HeadComment []string
-	Key         string
-	ValType     ValType // Determines if value will be inserted at the new line after the key and it's indentations
-	Values      []string
+	StartNewline bool // Add blank line before content?
+	HeadComment  []string
+	Key          string
+	ValType      ValType // Determines if value will be inserted at the new line after the key and it's indentations
+	Values       []string
+	EndNewline   bool // Add blank line after content?
 }
 
 // Insert returns copy of the YAML bytes <input> with <node> inserted <afterPath>.
