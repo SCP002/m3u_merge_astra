@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"golang.org/x/exp/slices"
 )
 
 // ValType represents YAML value type
@@ -30,6 +31,18 @@ func (e PathNotFoundError) Error() string {
 	return fmt.Sprintf("Can not find the specified path: %v", e.Path)
 }
 
+// BadValueError represents error thrown if specified Node.ValType is incompatible with Node.Values
+type BadValueError struct {
+	ValType ValType
+	Values  []string
+	Reason  string
+}
+
+// Error is used to satisfy golang error interface
+func (e BadValueError) Error() string {
+	return e.Reason
+}
+
 // Node represents YAML comment, key and value
 type Node struct {
 	StartNewline bool // Add blank line before content?
@@ -45,13 +58,71 @@ type Node struct {
 // <afterPath> is formatted as "key.subkey:".
 //
 // If <sectionEnd> is true, insert after the indented section end, not first line.
-func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) { // TODO: This
+func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) {
+	if node.ValType == Scalar && len(node.Values) > 1 {
+		errMsg := "Scalar value type can't have more than 1 value"
+		return input, BadValueError{ValType: node.ValType, Values: node.Values, Reason: errMsg}
+	}
+
 	output := []rune(string(input))
 
-	indent := 2
-	output = setIndent(output, indent)
+	step := 2
+	output = setIndent(output, step)
+	insertIdx, err := insertIndex(output, afterPath, sectionEnd, step)
+	if err != nil {
+		return input, err
+	}
 
-	//
+	// FIXME: Proper depth depends on where to insert
+	depth := len(strings.Split(afterPath, "."))
+	indent := strings.Repeat(" ", step*depth)
+	newlineSeq := "\r\n"
+	chunk := ""
+
+	// Add top newline
+	if node.StartNewline {
+		chunk += newlineSeq
+	}
+
+	// Add comment
+	for _, line := range node.HeadComment {
+		chunk += indent + "# " + line + newlineSeq
+	}
+
+	// Add key
+	chunk += indent + node.Key + ":"
+
+	// Add values
+	switch node.ValType {
+	case Scalar:
+		chunk += " "
+	case Sequence:
+		chunk += newlineSeq
+		node.Values = lo.Map(node.Values, func(line string, _ int) string {
+			if strings.HasPrefix(line, "-") {
+				return indent + strings.Repeat(" ", step) + line
+			}
+			// If sequence value, add 2 spaces to align keys and values
+			return "  " + indent + strings.Repeat(" ", step) + line
+		})
+	case List, Map:
+		chunk += newlineSeq
+		node.Values = lo.Map(node.Values, func(line string, _ int) string {
+			return indent + strings.Repeat(" ", step) + line
+		})
+	}
+
+	for _, line := range node.Values {
+		chunk += line + newlineSeq
+	}
+
+	// Add bottom newline
+	if node.EndNewline {
+		chunk += newlineSeq
+	}
+
+	// Insert chunk into output
+	output = slices.Insert(output, insertIdx, []rune(chunk)...)
 
 	return []byte(string(output)), nil
 }

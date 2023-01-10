@@ -2,21 +2,38 @@ package yaml
 
 import (
 	"m3u_merge_astra/util/copier"
+	"m3u_merge_astra/util/slice"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func TestPathNotFoundError(t *testing.T) {
+	err := error(PathNotFoundError{Path: "a.b.c"})
+	assert.Exactly(t, "Can not find the specified path: a.b.c", err.Error())
+}
+
+func TestBadValueError(t *testing.T) {
+	err := error(BadValueError{Reason: "unknown"})
+	assert.Exactly(t, "unknown", err.Error())
+}
+
 func TestInsert(t *testing.T) {
 	input, err := os.ReadFile("insert_input_test.yaml")
 	assert.NoError(t, err, "should read input file")
 	inputOriginal := copier.TDeep(t, input)
 
-	// Error cases (path can not be found)
-	afterPath := "unknown_root_path:"
-	node := Node{Key: "new_key", ValType: Scalar, Values: []string{"true"}}
+	// Error cases (bad value or path can not be found)
+	afterPath := "nested_section:"
+	node := Node{Key: "new_key", ValType: Scalar, Values: []string{"a", "b"}}
 	output, err := Insert(input, afterPath, false, node)
+	assert.ErrorAs(t, err, &BadValueError{}, "should return bad value error")
+	assert.Exactly(t, input, output, "on error, output should stay the same as input")
+
+	afterPath = "unknown_root_path:"
+	node = Node{Key: "new_key", ValType: Scalar, Values: []string{"true"}}
+	output, err = Insert(input, afterPath, false, node)
 	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, err, "should return unknown path error")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
@@ -31,6 +48,11 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(input, afterPath, false, node)
 	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, err, "should not resolve node value as proper path")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
+
+	// Overflow check, should not panic
+	node = Node{Key: "new_key", ValType: List, Values: slice.Filled("- a", 10000)}
+	_, err = Insert(input, "", false, node)
+	assert.NoError(t, err, "should not return error")
 
 	// Regular behavior
 	// First change
