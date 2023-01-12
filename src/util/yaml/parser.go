@@ -68,13 +68,11 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 
 	step := 2
 	output = setIndent(output, step)
-	insertIdx, err := insertIndex(output, afterPath, sectionEnd, step)
+	insertIdx, depth, err := insertIndex(output, afterPath, sectionEnd, step)
 	if err != nil {
 		return input, err
 	}
 
-	// FIXME: Proper depth depends on where to insert
-	depth := len(strings.Split(afterPath, "."))
 	indent := strings.Repeat(" ", step*depth)
 	newlineSeq := "\r\n"
 	chunk := ""
@@ -93,9 +91,12 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	chunk += indent + node.Key + ":"
 
 	// Add values
+	// TODO: Optimize by reducing amount of ValType's?
 	switch node.ValType {
 	case Scalar:
-		chunk += " "
+		if len(node.Values) > 0 {
+			chunk += " "
+		}
 	case Sequence:
 		chunk += newlineSeq
 		node.Values = lo.Map(node.Values, func(line string, _ int) string {
@@ -179,7 +180,8 @@ func setIndent(input []rune, tIndent int) []rune {
 	return output
 }
 
-// insertIndex returns index of <input> pointing at the location where new item should be inserted by <path>.
+// insertIndex returns index of <input> pointing at the location where new item should be inserted by <path> and it's
+// depth as the second value.
 //
 // If <sectionEnd> is true, returns index of the indented section end.
 //
@@ -187,17 +189,17 @@ func setIndent(input []rune, tIndent int) []rune {
 //
 // To work properly, indentation used in <input> should be specified as <tIndent> (run setIndent() function).
 //
-// Returns 0 and error if given <path> is not found in <input>.
-func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, error) {
+// Returns 0, 0 and error if given <path> is not found in <input>.
+func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, int, error) {
 	err := PathNotFoundError{Path: path}
 
 	if len(input) == 0 {
-		return 0, err
+		return 0, 0, err
 	}
 
 	path = strings.TrimRight(path, ":")
 	if path == "" {
-		return len(input), nil // len == index + 1
+		return len(input), 0, nil // len == index + 1
 	}
 
 	folders := lo.Map(strings.Split(path, "."), func(folder string, _ int) string {
@@ -218,6 +220,7 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 		return sc.LineEndIdx + 1
 	}
 
+	depth := 0
 	folderIdx := 0
 	lastIndent := -tIndent // Set initial indent to negative target so first folder with indent 0 will have proper depth
 	sc := scan.New(input, 0)
@@ -229,23 +232,30 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 		if strings.HasPrefix(sc.Line, "#") {
 			continue
 		}
+		isFolder := strings.HasSuffix(sc.Line, ":")
 		// If folder and depth not grew
-		if strings.HasSuffix(sc.Line, ":") && cIndent <= lastIndent {
-			return 0, err
+		if isFolder && cIndent <= lastIndent {
+			return 0, 0, err
 		}
 
 		sc.Line = strings.ReplaceAll(sc.Line, `"`, ``)
 		sc.Line = strings.ReplaceAll(sc.Line, `'`, ``)
 
 		// If folder with correct name is found and it's indent is equal to previous + 1 depth level
-		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent + tIndent {
-			if folderIdx == len(folders) - 1 {
-				return lo.Ternary(sectionEnd, sectionEndIdx(sc.RuneIdx, cIndent), sc.LineEndIdx + 1), nil
+		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent+tIndent {
+			if isFolder { // TODO: Optimize depth logic?
+				depth++
+			}
+			if folderIdx == len(folders)-1 {
+				if sectionEnd && depth > 0 {
+					depth--
+				}
+				return lo.Ternary(sectionEnd, sectionEndIdx(sc.RuneIdx, cIndent), sc.LineEndIdx+1), depth, nil
 			}
 			lastIndent = cIndent
 			folderIdx++
 		}
 	}
 
-	return 0, err
+	return 0, 0, err
 }

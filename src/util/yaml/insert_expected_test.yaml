@@ -49,6 +49,7 @@ sequences_section:
     - key_1: '价值_3'
       val_1: '价值_4'
 
+
   new_sequence_with_comments:
     # - key_1: 'value_1'
     #   val_1: 'value_2'
@@ -83,7 +84,7 @@ lists_section:
     # - 'item_1'
     - 'item_2'
     # - 'item_3'
-  
+
   new_list_with_comments:
     - 'item_1'
     - 'item_2'
@@ -94,7 +95,7 @@ lists_section:
 
   empty_list_with_comments:
     # - 'item_1'
-  
+
   new_empty_list_with_comments_2:
     # - 'item_1'
 
