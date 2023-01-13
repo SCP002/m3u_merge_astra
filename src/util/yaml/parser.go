@@ -73,7 +73,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 		return input, err
 	}
 
-	indent := strings.Repeat(" ", step*depth)
+	indent := strings.Repeat(" ", step * depth)
 	newlineSeq := "\r\n"
 	chunk := ""
 
@@ -241,16 +241,17 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 		sc.Line = strings.ReplaceAll(sc.Line, `"`, ``)
 		sc.Line = strings.ReplaceAll(sc.Line, `'`, ``)
 
-		// If folder with correct name is found and it's indent is equal to previous + 1 depth level
-		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent+tIndent {
-			if isFolder { // TODO: Optimize depth logic?
+		// If path entry with correct name is found and it's indent is equal to previous + 1 depth level
+		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent + tIndent {
+			if isFolder {
 				depth++
 			}
-			if folderIdx == len(folders)-1 {
+			// If last path entry
+			if folderIdx == len(folders) - 1 {
 				if sectionEnd && depth > 0 {
 					depth--
 				}
-				return lo.Ternary(sectionEnd, sectionEndIdx(sc.RuneIdx, cIndent), sc.LineEndIdx+1), depth, nil
+				return lo.Ternary(sectionEnd, sectionEndIdx(sc.RuneIdx, cIndent), sc.LineEndIdx + 1), depth, nil
 			}
 			lastIndent = cIndent
 			folderIdx++
