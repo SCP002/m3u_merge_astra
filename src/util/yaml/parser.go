@@ -15,7 +15,8 @@ import (
 type ValType uint8
 
 const (
-	Scalar ValType = iota
+	None ValType = iota // Should be used to declare empty sections
+	Scalar
 	Sequence
 	List
 	Map
@@ -59,8 +60,16 @@ type Node struct {
 //
 // If <sectionEnd> is true, insert after the indented section end, not first line.
 func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) {
+	if node.ValType == None && len(node.Values) > 0 {
+		errMsg := "None value type can't have values"
+		return input, BadValueError{ValType: node.ValType, Values: node.Values, Reason: errMsg}
+	}
 	if node.ValType == Scalar && len(node.Values) > 1 {
 		errMsg := "Scalar value type can't have more than 1 value"
+		return input, BadValueError{ValType: node.ValType, Values: node.Values, Reason: errMsg}
+	}
+	if node.ValType != None && len(node.Values) == 0 {
+		errMsg := "Only None value type can be used without values"
 		return input, BadValueError{ValType: node.ValType, Values: node.Values, Reason: errMsg}
 	}
 
@@ -91,12 +100,11 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	chunk += indent + node.Key + ":"
 
 	// Add values
-	// TODO: Optimize by reducing amount of ValType's?
 	switch node.ValType {
+	case None:
+		chunk += newlineSeq
 	case Scalar:
-		if len(node.Values) > 0 {
-			chunk += " "
-		}
+		chunk += " "
 	case Sequence:
 		chunk += newlineSeq
 		node.Values = lo.Map(node.Values, func(line string, _ int) string {
@@ -251,7 +259,10 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 				if sectionEnd && depth > 0 {
 					depth--
 				}
-				return lo.Ternary(sectionEnd, sectionEndIdx(sc.RuneIdx, cIndent), sc.LineEndIdx + 1), depth, nil
+				if sectionEnd {
+					return sectionEndIdx(sc.RuneIdx, cIndent), depth, nil
+				}
+				return sc.LineEndIdx + 1, depth, nil
 			}
 			lastIndent = cIndent
 			folderIdx++

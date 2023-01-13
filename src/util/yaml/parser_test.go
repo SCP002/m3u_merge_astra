@@ -25,10 +25,22 @@ func TestInsert(t *testing.T) {
 	inputOriginal := copier.TDeep(t, input)
 
 	// Error cases (bad value or path can not be found)
-	afterPath := "nested_section:"
-	node := Node{Key: "new_key", ValType: Scalar, Values: []string{"a", "b"}}
+	afterPath := ""
+	node := Node{Key: "new_key", ValType: None, Values: []string{"a"}}
 	output, err := Insert(input, afterPath, false, node)
-	assert.ErrorAs(t, err, &BadValueError{}, "should return bad value error")
+	assert.ErrorAs(t, err, &BadValueError{}, "should return bad value error if None type has value")
+	assert.Exactly(t, input, output, "on error, output should stay the same as input")
+
+	afterPath = "key:"
+	node = Node{Key: "new_key", ValType: Scalar, Values: []string{"a", "b"}}
+	output, err = Insert(input, afterPath, false, node)
+	assert.ErrorAs(t, err, &BadValueError{}, "should return bad value error if Scalar has more than 1 value")
+	assert.Exactly(t, input, output, "on error, output should stay the same as input")
+
+	afterPath = "nested_section:"
+	node = Node{Key: "new_key", ValType: Map}
+	output, err = Insert(input, afterPath, false, node)
+	assert.ErrorAs(t, err, &BadValueError{}, "should return bad value error if not None type has no values")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "unknown_root_path:"
@@ -172,8 +184,7 @@ func TestInsert(t *testing.T) {
 	node = Node{
 		HeadComment: []string{"New comment"},
 		Key:         "new_map_section",
-		ValType:     Map,
-		Values:      []string{},
+		ValType:     None,
 	}
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
@@ -190,8 +201,7 @@ func TestInsert(t *testing.T) {
 	// Add new empty section to the end
 	node = Node{
 		Key:     "new_empty_section",
-		ValType: Map,
-		Values:  []string{},
+		ValType: None,
 	}
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
