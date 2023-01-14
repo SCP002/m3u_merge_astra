@@ -214,6 +214,7 @@ func TestInsert(t *testing.T) {
 	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
 }
 
+// TODO: Add " -1" / " - 1" check
 func TestSetIndent(t *testing.T) {
 	inputBytes, err := os.ReadFile("set_indent_input_test.yaml")
 	assert.NoError(t, err, "should read input file")

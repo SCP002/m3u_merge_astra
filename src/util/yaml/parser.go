@@ -109,7 +109,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	case Sequence:
 		chunk += newlineSeq
 		node.Values = lo.Map(node.Values, func(line string, _ int) string {
-			if strings.HasPrefix(line, "-") {
+			if strings.HasPrefix(line, "- ") {
 				return indent + strings.Repeat(" ", step) + line
 			}
 			// If sequence value, add 2 spaces to align keys and values
@@ -163,7 +163,7 @@ func setIndent(input []rune, tIndent int) []rune {
 	for sc.Lines(false) {
 		trimLine := strings.TrimSpace(sc.Line)
 		isFolder := strings.HasSuffix(trimLine, ":")
-		hasHyphenPrefix := strings.HasPrefix(trimLine, "-")
+		hasHyphenPrefix := strings.HasPrefix(trimLine, "- ")
 		isComment := strings.HasPrefix(trimLine, "#")
 		isSeqValue := !isFolder && !isComment && !hasHyphenPrefix && prevLineHyphenPrefix
 

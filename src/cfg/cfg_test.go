@@ -55,8 +55,8 @@ func TestInit(t *testing.T) {
 		Streams: Streams{
 			AddedPrefix:             "",
 			AddNew:                  true,
-			AddGroupsToNew:          true,
-			GroupsCategoryForNew:    "",
+			AddGroupsToNew:          false,
+			GroupsCategoryForNew:    "All",
 			AddNewWithKnownInputs:   false,
 			MakeNewEnabled:          true,
 			NewType:                 MPTS,

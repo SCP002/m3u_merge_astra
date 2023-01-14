@@ -13,6 +13,7 @@ import (
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/mitchellh/mapstructure"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 
 	yamlUtil "m3u_merge_astra/util/yaml"
@@ -234,9 +235,9 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 
 	ko := koanf.New(".")
 
-	readConfig := func() error {
+	loadConfig := func() error {
 		err := ko.Load(file.Provider(cfgFilePath), yaml.Parser())
-		return errors.Wrap(err, "Read config")
+		return errors.Wrap(err, "Load config")
 	}
 
 	writeDefConfig := func() error {
@@ -246,7 +247,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 
 	// Load config file into koanf or create a new if not exist
 	var root Root
-	if err := readConfig(); err != nil {
+	if err := loadConfig(); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			log.Info("Config file not found, creating a default\n")
 			if err := writeDefConfig(); err != nil {
@@ -289,36 +290,41 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 
 	// TODO: Tests
 	// Add known missing fields
-	cfgBytes := ko.Bytes("")
-	for _, unsetPath := range metadata.Unset {
-		switch unsetPath {
-		// v1.0.0 to v1.1.0
-		case "streams.add_groups_to_new:":
-			log.Infof("Adding missing field to config: %v\n", unsetPath)
-			node := yamlUtil.Node{
-				Key:        "add_groups_to_new",
-				ValType:    yamlUtil.Scalar,
-				Values:     []string{"false"},
-				EndNewline: true,
-			}
-			if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", true, node); err != nil {
-				log.Fatal(errors.Wrap(err, "Add missing field to config"))
-			}
-			root.Streams.AddGroupsToNew = false
-		// v1.0.0 to v1.1.0
-		case "streams.groups_category_for_new:":
-			log.Infof("Adding missing field to config: %v\n", unsetPath)
-			node := yamlUtil.Node{
-				Key:        "groups_category_for_new",
-				ValType:    yamlUtil.Scalar,
-				Values:     []string{"All"},
-				EndNewline: true,
-			}
-			if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", true, node); err != nil {
-				log.Fatal(errors.Wrap(err, "Add missing field to config"))
-			}
-			root.Streams.GroupsCategoryForNew = "All"
+	cfgBytes, err := os.ReadFile(cfgFilePath) // Broken if read with ko.Bytes("")
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "Read config"))
+	}
+	// v1.0.0 to v1.1.0
+	knownField := "streams.add_groups_to_new"
+	if lo.Contains(metadata.Unset, knownField) {
+		log.Infof("Adding missing field to config: %v\n", knownField)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Add groups to new astra streams?"},
+			Key:          "add_groups_to_new",
+			ValType:      yamlUtil.Scalar,
+			Values:       []string{"false"},
 		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", false, node); err != nil {
+			log.Fatal(errors.Wrap(err, "Add missing field to config"))
+		}
+		root.Streams.AddGroupsToNew = false
+	}
+	// v1.0.0 to v1.1.0
+	knownField = "streams.groups_category_for_new"
+	if lo.Contains(metadata.Unset, knownField) {
+		log.Infof("Adding missing field to config: %v\n", knownField)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Category name to use for groups of new astra streams."},
+			Key:          "groups_category_for_new",
+			ValType:      yamlUtil.Scalar,
+			Values:       []string{"'All'"},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", false, node); err != nil {
+			log.Fatal(errors.Wrap(err, "Add missing field to config"))
+		}
+		root.Streams.GroupsCategoryForNew = "All"
 	}
 	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
 		log.Fatal(errors.Wrap(err, "Write modified config"))
