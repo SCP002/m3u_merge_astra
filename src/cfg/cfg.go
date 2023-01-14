@@ -19,7 +19,7 @@ import (
 )
 
 //go:embed default.yaml
-var defCfg []byte
+var defCfgBytes []byte
 
 // Root represents root settings of the program
 type Root struct {
@@ -236,14 +236,15 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 
 	readConfig := func() error {
 		err := ko.Load(file.Provider(cfgFilePath), yaml.Parser())
-		return errors.Wrap(err, "read config")
+		return errors.Wrap(err, "Read config")
 	}
 
 	writeDefConfig := func() error {
-		err := os.WriteFile(cfgFilePath, defCfg, 0644)
-		return errors.Wrap(err, "write default config")
+		err := os.WriteFile(cfgFilePath, defCfgBytes, 0644)
+		return errors.Wrap(err, "Write default config")
 	}
 
+	// Load config file into koanf or create a new if not exist
 	var root Root
 	if err := readConfig(); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -257,6 +258,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		}
 	}
 
+	// Decode loaded config file into structure
 	decoder := mapstructure.ComposeDecodeHookFunc(
 		// Compile regular expressions
 		func(from, to reflect.Type, fromData any) (any, error) {
@@ -270,7 +272,6 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		mapstructure.StringToTimeDurationHookFunc(),
 		mapstructure.StringToSliceHookFunc(","),
 	)
-
 	metadata := mapstructure.Metadata{}
 	err := ko.UnmarshalWithConf("", &root, koanf.UnmarshalConf{
 		DecoderConfig: &mapstructure.DecoderConfig{
@@ -282,13 +283,45 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 			ZeroFields:       true,
 		},
 	})
-	if err := errors.Wrap(err, "decode config"); err != nil {
+	if err := errors.Wrap(err, "Decode config"); err != nil {
 		log.Fatal(err)
 	}
-	// TODO: This
-	if len(metadata.Unset) > 0 {
-		_ = yamlUtil.Node{}
-		log.Info(metadata.Unset)
+
+	// TODO: Tests
+	// Add known missing fields
+	cfgBytes := ko.Bytes("")
+	for _, unsetPath := range metadata.Unset {
+		switch unsetPath {
+		// v1.0.0 to v1.1.0
+		case "streams.add_groups_to_new:":
+			log.Infof("Adding missing field to config: %v\n", unsetPath)
+			node := yamlUtil.Node{
+				Key:        "add_groups_to_new",
+				ValType:    yamlUtil.Scalar,
+				Values:     []string{"false"},
+				EndNewline: true,
+			}
+			if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", true, node); err != nil {
+				log.Fatal(errors.Wrap(err, "Add missing field to config"))
+			}
+			root.Streams.AddGroupsToNew = false
+		// v1.0.0 to v1.1.0
+		case "streams.groups_category_for_new:":
+			log.Infof("Adding missing field to config: %v\n", unsetPath)
+			node := yamlUtil.Node{
+				Key:        "groups_category_for_new",
+				ValType:    yamlUtil.Scalar,
+				Values:     []string{"All"},
+				EndNewline: true,
+			}
+			if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", true, node); err != nil {
+				log.Fatal(errors.Wrap(err, "Add missing field to config"))
+			}
+			root.Streams.GroupsCategoryForNew = "All"
+		}
+	}
+	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
+		log.Fatal(errors.Wrap(err, "Write modified config"))
 	}
 
 	return root, false

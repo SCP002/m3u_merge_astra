@@ -7,6 +7,7 @@ import (
 	"m3u_merge_astra/util/slice"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
 )
@@ -56,21 +57,21 @@ type Node struct {
 
 // Insert returns copy of the YAML bytes <input> with <node> inserted <afterPath>.
 //
-// <afterPath> is formatted as "key.subkey:".
+// <afterPath> is formatted as "key.subkey".
 //
 // If <sectionEnd> is true, insert after the indented section end, not first line.
 func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) {
 	if node.ValType == None && len(node.Values) > 0 {
-		errMsg := "None value type can't have values"
-		return input, BadValueError{ValType: node.ValType, Values: node.Values, Reason: errMsg}
+		msg := "None value type can't have values"
+		return input, errors.Wrap(BadValueError{ValType: node.ValType, Values: node.Values, Reason: msg}, "Bad value")
 	}
 	if node.ValType == Scalar && len(node.Values) > 1 {
-		errMsg := "Scalar value type can't have more than 1 value"
-		return input, BadValueError{ValType: node.ValType, Values: node.Values, Reason: errMsg}
+		msg := "Scalar value type can't have more than 1 value"
+		return input, errors.Wrap(BadValueError{ValType: node.ValType, Values: node.Values, Reason: msg}, "Bad value")
 	}
 	if node.ValType != None && len(node.Values) == 0 {
-		errMsg := "Only None value type can be used without values"
-		return input, BadValueError{ValType: node.ValType, Values: node.Values, Reason: errMsg}
+		msg := "Only None value type can be used without values"
+		return input, errors.Wrap(BadValueError{ValType: node.ValType, Values: node.Values, Reason: msg}, "Bad value")
 	}
 
 	output := []rune(string(input))
@@ -79,7 +80,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	output = setIndent(output, step)
 	insertIdx, depth, err := insertIndex(output, afterPath, sectionEnd, step)
 	if err != nil {
-		return input, err
+		return input, errors.Wrap(err, "Get insert location")
 	}
 
 	indent := strings.Repeat(" ", step * depth)
@@ -204,8 +205,6 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 	if len(input) == 0 {
 		return 0, 0, err
 	}
-
-	path = strings.TrimRight(path, ":")
 	if path == "" {
 		return len(input), 0, nil // len == index + 1
 	}

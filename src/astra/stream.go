@@ -384,7 +384,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 				if bar {
 					err := progBar.Add(1)
 					if err != nil {
-						r.log.Debugf("Unable to increase: %v", errors.Wrap(err, "progress bar"))
+						r.log.Debugf("Unable to increase: %v", errors.Wrap(err, "Progress bar"))
 					}
 				}
 			})
