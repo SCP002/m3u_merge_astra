@@ -15,7 +15,8 @@ nested_section:
       key_2: 'value_2'
       key_3: 'value_3'
   nested_section_4:
-    key: 'value_1'
+    -1: 1
+    99: 'abc'
 
 # Comment
 sequences_section:

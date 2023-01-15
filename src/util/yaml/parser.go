@@ -202,9 +202,6 @@ func setIndent(input []rune, tIndent int) []rune {
 func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, int, error) {
 	err := PathNotFoundError{Path: path}
 
-	if len(input) == 0 {
-		return 0, 0, err
-	}
 	if path == "" {
 		return len(input), 0, nil // len == index + 1
 	}
