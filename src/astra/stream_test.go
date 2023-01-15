@@ -40,11 +40,23 @@ func TestGetName(t *testing.T) {
 	assert.Exactly(t, s.Name, s.GetName(), "should return this name")
 }
 
-func TestFirstGroup(t *testing.T) {
+func TestFirstGroup(t *testing.T) { // FIXME: Make it pass. Should Groups be []map[string]string{}?
 	s := Stream{}
 	assert.Empty(t, s.FirstGroup(), "should return empty group")
-	s = Stream{Groups: map[string]any{"Category 1": "Group 1", "Category 2": "Group 2"}}
-	assert.Exactly(t, "Group 1", s.FirstGroup(), "should return first group name")
+	s = Stream{
+		Groups: map[string]any{
+			"Category 1": "Group 1",
+			"Category 2": "Group 2",
+			"Category 3": "Group 3",
+			"Category 4": "Group 4",
+			"Category 5": "Group 5",
+		},
+	}
+	for i := 0; i < 10000; i++ { // Test if logic relies on unstable iteration over maps
+		if ok := assert.Exactly(t, "Category 1: Group 1", s.FirstGroup(), "should return first group"); !ok {
+			t.FailNow()
+		}
+	}
 }
 
 func TestUpdateStreamInput(t *testing.T) {

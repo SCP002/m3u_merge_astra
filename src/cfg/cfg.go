@@ -119,6 +119,10 @@ type Streams struct {
 	// DisableWithoutInputs specifies if streams without inputs should be disabled.
 	DisableWithoutInputs bool `koanf:"disable_without_inputs"`
 
+	// TODO: Logic related to this field
+	// // EnableOnInputUpdate specifies if ...
+	// EnableOnInputUpdate bool `koanf:"enable_on_input_update"`
+
 	// Rename specifies if astra streams should be renamed as M3U channels if their standartized names are equal
 	Rename bool `koanf:"rename"`
 

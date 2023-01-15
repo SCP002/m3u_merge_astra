@@ -57,12 +57,14 @@ func (s Stream) GetName() string {
 
 // FirstGroup returns first "category: group" pair or empty string if not found
 func (s Stream) FirstGroup() string {
-	if len(s.Groups) > 0 {
-		return fmt.Sprintf("%v: %v", lo.Keys(s.Groups)[0], lo.Values(s.Groups)[0])
+	for cat, grp := range s.Groups {
+		return fmt.Sprintf("%v: %v", cat, grp)
 	}
 	return ""
 }
 
+// TODO: Add "Stream is disabled" warning if auto enable is not true
+// TODO: Add auto enable if specified in config and note about it
 // UpdateInput updates first encountered input if both it and <newURL> match the InputUpdateMap from config in <r>.
 //
 // If KeepInputHash is enabled in config, it also adds old input URL hash to <newURL>.
@@ -108,6 +110,8 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	})
 }
 
+// TODO: Add "Stream is disabled" warning if auto enable is not true
+// TODO: Add auto enable if specified in config and note about it
 // AddInput adds new <url> to stream inputs.
 //
 // If <print> is true, print added input.
@@ -268,6 +272,8 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	return
 }
 
+// TODO: Add "Stream is disabled" warning if auto enable is not true
+// TODO: Add auto enable if specified in config and note about it
 // UniteInputs returns copy of <streams> with inputs of every equally named stream moved to the first stream found
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Uniting inputs of streams\n")

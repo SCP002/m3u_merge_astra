@@ -32,6 +32,8 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 	return
 }
 
+// TODO: Add "Stream is disabled" warning if auto enable is not true
+// TODO: Add auto enable if specified in config and note about it
 // UpdateInputs returns copy of <streams> with every first matching input of every stream replaced with matching URL's
 // of m3u channels according to cfg.Streams.InputUpdateMap.
 func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
@@ -74,6 +76,8 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 	return
 }
 
+// TODO: Add "Stream is disabled" warning if auto enable is not true
+// TODO: Add auto enable if specified in config and note about it
 // AddNewInputs returns copy of <streams> with new inputs if such found in <channels>
 func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Adding new inputs\n")
