@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"m3u_merge_astra/util/file"
 	"m3u_merge_astra/util/logger"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ import (
 func TestInit(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 
-	path := filepath.Join(os.TempDir(), "m3u_merge_astra_test.yaml")
+	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
 	defer os.Remove(path)
 
 	// Test creation of the default config
@@ -32,8 +33,11 @@ func TestInit(t *testing.T) {
 	assert.Exactly(t, expected, actual, "should return default config")
 	assert.False(t, isNewCfg, "should return false")
 
-	// Test reading exising non-default config
-	actual, isNewCfg = Init(log, "test.yaml")
+	// Test reading exising non-default config and adding missing fields
+	err := file.Copy("init_input_test.yaml", path)
+	assert.NoError(t, err, "should copy and overwrite previous test file")
+
+	actual, isNewCfg = Init(log, path)
 
 	expected = Root{
 		General: General{
@@ -55,8 +59,8 @@ func TestInit(t *testing.T) {
 		Streams: Streams{
 			AddedPrefix:             "",
 			AddNew:                  true,
-			AddGroupsToNew:          false,
-			GroupsCategoryForNew:    "All",
+			AddGroupsToNew:          false, // New field in v1.1.0
+			GroupsCategoryForNew:    "All", // New field in v1.1.0
 			AddNewWithKnownInputs:   false,
 			MakeNewEnabled:          true,
 			NewType:                 MPTS,
@@ -107,6 +111,15 @@ func TestInit(t *testing.T) {
 		},
 	}
 
-	assert.Exactly(t, expected, actual, "should read this config")
+	assert.Exactly(t, expected, actual, "should return this config instance")
 	assert.False(t, isNewCfg, "should return false")
+
+	// Check if missing fields were added to config file
+	actualBytes, err := os.ReadFile(path)
+	assert.NoError(t, err, "should read actual config bytes")
+
+	expectedBytes, err := os.ReadFile("init_expected_test.yaml")
+	assert.NoError(t, err, "should read expected config bytes")
+
+	assert.Exactly(t, expectedBytes, actualBytes, "should add missing fields to config file")
 }

@@ -288,7 +288,6 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		log.Fatal(err)
 	}
 
-	// TODO: Tests
 	// Add known missing fields
 	cfgBytes, err := os.ReadFile(cfgFilePath) // Broken if read with ko.Bytes("")
 	if err != nil {
