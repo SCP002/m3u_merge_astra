@@ -4,3 +4,13 @@ package slice
 type Named interface {
 	GetName() string
 }
+
+// Interface for testing purposes
+type TestNamedStruct struct {
+	Name string
+	Slice []int
+}
+
+func (o TestNamedStruct) GetName() string {
+	return o.Name
+}

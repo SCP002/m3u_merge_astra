@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -14,11 +13,14 @@ import (
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/mitchellh/mapstructure"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
+
+	yamlUtil "m3u_merge_astra/util/yaml"
 )
 
 //go:embed default.yaml
-var defCfg []byte
+var defCfgBytes []byte
 
 // Root represents root settings of the program
 type Root struct {
@@ -233,18 +235,19 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 
 	ko := koanf.New(".")
 
-	readConfig := func() error {
+	loadConfig := func() error {
 		err := ko.Load(file.Provider(cfgFilePath), yaml.Parser())
-		return errors.Wrap(err, "read config")
+		return errors.Wrap(err, "Load config")
 	}
 
 	writeDefConfig := func() error {
-		err := os.WriteFile(cfgFilePath, defCfg, 0644)
-		return errors.Wrap(err, "write default config")
+		err := os.WriteFile(cfgFilePath, defCfgBytes, 0644)
+		return errors.Wrap(err, "Write default config")
 	}
 
+	// Load config file into koanf or create a new if not exist
 	var root Root
-	if err := readConfig(); err != nil {
+	if err := loadConfig(); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			log.Info("Config file not found, creating a default\n")
 			if err := writeDefConfig(); err != nil {
@@ -256,6 +259,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		}
 	}
 
+	// Decode loaded config file into structure
 	decoder := mapstructure.ComposeDecodeHookFunc(
 		// Compile regular expressions
 		func(from, to reflect.Type, fromData any) (any, error) {
@@ -269,22 +273,60 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		mapstructure.StringToTimeDurationHookFunc(),
 		mapstructure.StringToSliceHookFunc(","),
 	)
-
+	metadata := mapstructure.Metadata{}
 	err := ko.UnmarshalWithConf("", &root, koanf.UnmarshalConf{
 		DecoderConfig: &mapstructure.DecoderConfig{
 			DecodeHook:       decoder,
-			Result:           &root,
 			ErrorUnused:      true,
-			ErrorUnset:       true,
-			ZeroFields:       true,
+			Metadata:         &metadata,
+			Result:           &root,
 			WeaklyTypedInput: true,
+			ZeroFields:       true,
 		},
 	})
-	if err, ok := err.(*mapstructure.Error); ok && strings.Contains(err.Error(), "has unset fields") {
-		log.Warning("Outdated or broken program config found. Recreate it or add missing fields manually.\n")
-	}
-	if err := errors.Wrap(err, "decode config"); err != nil {
+	if err := errors.Wrap(err, "Decode config"); err != nil {
 		log.Fatal(err)
+	}
+
+	// Add known missing fields
+	cfgBytes, err := os.ReadFile(cfgFilePath) // Broken if read with ko.Bytes("")
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "Read config"))
+	}
+	// v1.0.0 to v1.1.0
+	knownField := "streams.add_groups_to_new"
+	if lo.Contains(metadata.Unset, knownField) {
+		log.Infof("Adding missing field to config: %v\n", knownField)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Add groups to new astra streams?"},
+			Key:          "add_groups_to_new",
+			ValType:      yamlUtil.Scalar,
+			Values:       []string{"false"},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", false, node); err != nil {
+			log.Fatal(errors.Wrap(err, "Add missing field to config"))
+		}
+		root.Streams.AddGroupsToNew = false
+	}
+	// v1.0.0 to v1.1.0
+	knownField = "streams.groups_category_for_new"
+	if lo.Contains(metadata.Unset, knownField) {
+		log.Infof("Adding missing field to config: %v\n", knownField)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Category name to use for groups of new astra streams."},
+			Key:          "groups_category_for_new",
+			ValType:      yamlUtil.Scalar,
+			Values:       []string{"'All'"},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", false, node); err != nil {
+			log.Fatal(errors.Wrap(err, "Add missing field to config"))
+		}
+		root.Streams.GroupsCategoryForNew = "All"
+	}
+	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
+		log.Fatal(errors.Wrap(err, "Write modified config"))
 	}
 
 	return root, false

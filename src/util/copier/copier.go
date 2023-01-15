@@ -27,6 +27,6 @@ func PDeep[T any](inp T) T {
 // deep returns deep copy of <inp>
 func deep[T any](inp T) (out T, err error) {
 	err = copier.CopyWithOption(&out, &inp, copier.Option{DeepCopy: true, IgnoreEmpty: true})
-	err = errors.Wrap(err, "copier")
+	err = errors.Wrap(err, "Copier")
 	return
 }

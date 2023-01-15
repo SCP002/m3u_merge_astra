@@ -14,6 +14,7 @@ import (
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
+	"m3u_merge_astra/util/slice/find"
 
 	"github.com/alitto/pond"
 	"github.com/cockroachdb/errors"
@@ -275,7 +276,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	out = copier.PDeep(streams)
 	for currIdx, currStream := range out {
 		note := lo.Ternary(currStream.Enabled, "", "Stream is disabled")
-		slice.EverySimilar(r.cfg.General, out, currStream.Name, currIdx+1, func(nextStream Stream, nextIdx int) {
+		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx+1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
 					note})
@@ -383,7 +384,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 				if bar {
 					err := progBar.Add(1)
 					if err != nil {
-						r.log.Debugf("Unable to increase: %v", errors.Wrap(err, "progress bar"))
+						r.log.Debugf("Unable to increase: %v", errors.Wrap(err, "Progress bar"))
 					}
 				}
 			})

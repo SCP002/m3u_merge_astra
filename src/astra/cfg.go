@@ -8,6 +8,7 @@ import (
 	"m3u_merge_astra/cli"
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/slice"
+	"m3u_merge_astra/util/slice/find"
 
 	"github.com/SCP002/clipboard"
 	json "github.com/SCP002/jsonexraw"
@@ -53,7 +54,7 @@ func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
 	// Update input categories with categories from []Streams
 	for _, sCat := range sCats {
 		var idx int
-		cats, _, idx = slice.FindIndexOrElse(cats, Category{Name: sCat.Name}, func(c Category) bool {
+		cats, _, idx = find.IndexOrElse(cats, Category{Name: sCat.Name}, func(c Category) bool {
 			return c.Name == sCat.Name
 		})
 		cats[idx].Groups = slice.AppendNew(cats[idx].Groups, func(g Group) {
@@ -78,21 +79,21 @@ func ReadCfg(source string) (Cfg, error) {
 	case string(cli.Clipboard):
 		cfgRawStr, err := clipboard.ReadAll()
 		if err != nil {
-			return cfg, errors.Wrap(err, "read astra config from clipboard")
+			return cfg, errors.Wrap(err, "Read astra config from clipboard")
 		}
 		cfgRaw = []byte(cfgRawStr)
 	case string(cli.Stdio):
 		if cfgRaw, err = io.ReadAll(os.Stdin); err != nil {
-			return cfg, errors.Wrap(err, "read astra config from stdin")
+			return cfg, errors.Wrap(err, "Read astra config from StdIn")
 		}
 	default:
 		if cfgRaw, err = os.ReadFile(source); err != nil {
-			return cfg, errors.Wrap(err, "read astra config from file")
+			return cfg, errors.Wrap(err, "Read astra config from file")
 		}
 	}
 
 	if err = json.Unmarshal([]byte(cfgRaw), &cfg); err != nil {
-		return cfg, errors.Wrap(err, "serialize astra config")
+		return cfg, errors.Wrap(err, "Serialize astra config")
 	}
 
 	return cfg, err
@@ -104,21 +105,21 @@ func ReadCfg(source string) (Cfg, error) {
 func WriteCfg(cfg Cfg, dest string) error {
 	cfgRaw, err := json.MarshalIndent(cfg, "", "    ")
 	if err != nil {
-		return errors.Wrap(err, "deserialize astra config")
+		return errors.Wrap(err, "Deserialize astra config")
 	}
 
 	switch dest {
 	case string(cli.Clipboard):
 		if err = clipboard.WriteAll(string(cfgRaw)); err != nil {
-			return errors.Wrap(err, "write astra config to clipboard")
+			return errors.Wrap(err, "Write astra config to clipboard")
 		}
 	case string(cli.Stdio):
 		if _, err := os.Stdout.Write(cfgRaw); err != nil {
-			return errors.Wrap(err, "write astra config to stdout")
+			return errors.Wrap(err, "Write astra config to StdOut")
 		}
 	default:
 		if err := os.WriteFile(dest, cfgRaw, 0644); err != nil {
-			return errors.Wrap(err, "write astra config to file")
+			return errors.Wrap(err, "Write astra config to file")
 		}
 	}
 

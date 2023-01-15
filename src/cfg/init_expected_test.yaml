@@ -67,10 +67,10 @@ streams:
   add_new: true
 
   # Add groups to new astra streams?
-  add_groups_to_new: true
+  add_groups_to_new: false
 
   # Category name to use for groups of new astra streams.
-  groups_category_for_new: ''
+  groups_category_for_new: 'All'
 
   # Add new astra streams if streams contain M3U channel URL?
   add_new_with_known_inputs: false

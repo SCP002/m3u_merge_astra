@@ -35,3 +35,12 @@ func RemoveLast[T any](inp []T, tElm T) (out []T) {
 	}
 	return
 }
+
+// Filled returns new slice of <times> amount of <elm>
+func Filled[T any](elm T, times int) []T {
+	out := []T{}
+	for i := 0; i < times; i++ {
+		out = append(out, elm)		
+	}
+	return out
+}

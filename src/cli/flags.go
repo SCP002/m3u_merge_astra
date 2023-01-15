@@ -30,7 +30,7 @@ func Parse() (Flags, error) {
 	}
 	parser := goFlags.NewParser(&flags, goFlags.Options(goFlags.Default))
 	_, err := parser.Parse()
-	return flags, errors.Wrap(err, "parse cli arguments")
+	return flags, errors.Wrap(err, "Parse CLI arguments")
 }
 
 // IsErrOfType returns true if <err> is of type <t>

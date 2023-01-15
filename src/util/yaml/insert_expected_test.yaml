@@ -1,0 +1,117 @@
+# Comment
+key: 'value_1'
+
+# New comment
+new_key: 'value_1'
+
+key_2: 'value_2'
+
+#Comment
+nested_section:
+  key: 'value_1'
+  key_2: 'value_2'
+  'nested_section_2':
+    #Comment line 1
+    # Comment line 2
+    "nested_section_3":
+      key: 'value_1'
+      key_2: 'value_2'
+      key_3: 'value_3'
+  nested_section_4:
+    -1: 1
+    99: 'abc'
+
+# Comment
+sequences_section:
+  # New comment line 1
+  # New comment line 2
+  new_seqence:
+    - key_1: 'value_1'
+      val_1: 'value_2'
+    - key_2: 'value_1'
+      val_2: 'value_2'
+
+  # Comment line 1
+  # Comment line 2
+  sequence:
+    - key_1: 'value_1'
+      val_1: 'value_2'
+    - key_2: 'value_1'
+      val_2: 'value_2'
+
+  # New comment
+  new_empty_sequence_with_comments:
+    # - key_1: 'value_1'
+    #   val_1: 'value_2'
+
+  sequence_with_comments:
+    # - key_1: 'value_1'
+    #   val_1: 'value_2'
+    - key_1: '价值_3'
+      val_1: '价值_4'
+
+
+  new_sequence_with_comments:
+    # - key_1: 'value_1'
+    #   val_1: 'value_2'
+    - key_1: 'value_3'
+      val_1: 'value_4'
+
+  # Comment
+  empty_sequence_with_comments:
+    # - key_1: 'value_1'
+    #   val_1: 'value_2'
+
+  # New comment line 1
+  # New comment line 2
+  new_empty_sequence_with_comments_2:
+    # - key_1: 'value_1'
+    #   val_1: 'value_2'
+
+# Comment line 1
+
+# Comment line 2
+lists_section:
+  # New comment
+  new_list:
+    - 0
+
+  list:
+    - 'item_1'
+    - 'item_2'
+
+  # Comment
+  list_with_comments:
+    # - 'item_1'
+    - 'item_2'
+    # - 'item_3'
+
+  new_list_with_comments:
+    - 'item_1'
+    - 'item_2'
+    # - 'item_3'
+
+  new_empty_list_with_comments:
+    # - 'item_1'
+
+  empty_list_with_comments:
+    # - 'item_1'
+
+  new_empty_list_with_comments_2:
+    # - 'item_1'
+
+scalar_section:
+  bool_item: true
+  # Comment
+  new_int_item: 1
+  str_item: "# value"
+  new_bool_item: false
+
+# New comment
+new_map_section:
+  new_map:
+    # key_1: 'value_1'
+    key_2: 'value_2'
+    key_3: 'value_3'
+
+new_empty_section:

@@ -39,3 +39,9 @@ func TestRemoveLast(t *testing.T) {
 	expected := []string{"C", "A", "", "B"}
 	assert.Exactly(t, expected, ol2, "should remove last object for which predicate returns true")
 }
+
+func TestFilled(t *testing.T) {
+	assert.Exactly(t, []string{}, Filled("a", 0))
+	assert.Exactly(t, []string{"", ""}, Filled("", 2))
+	assert.Exactly(t, []string{"a", "a", "a"}, Filled("a", 3))
+}
