@@ -67,6 +67,7 @@ func TestInit(t *testing.T) {
 			DisabledPrefix:          "_'DISABLED': ",
 			RemoveWithoutInputs:     true,
 			DisableWithoutInputs:    false,
+			EnableOnInputUpdate:     false, // New field in v1.2.0
 			Rename:                  false,
 			AddNewInputs:            true,
 			UniteInputs:             false,

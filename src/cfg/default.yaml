@@ -139,6 +139,9 @@ streams:
   # Disable streams without inputs?
   disable_without_inputs: true
 
+  # Enable streams if they got new inputs or inputs were updated (but not removed)?
+  enable_on_input_update: false
+
   # Rename astra streams as M3U channels if their standartized names are equal?
   rename: false
 

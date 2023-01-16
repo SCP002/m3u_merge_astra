@@ -119,9 +119,9 @@ type Streams struct {
 	// DisableWithoutInputs specifies if streams without inputs should be disabled.
 	DisableWithoutInputs bool `koanf:"disable_without_inputs"`
 
-	// TODO: Logic related to this field
-	// // EnableOnInputUpdate specifies if ...
-	// EnableOnInputUpdate bool `koanf:"enable_on_input_update"`
+	// EnableOnInputUpdate specifies if streams should be enabled if they got new inputs or inputs were updated
+	// (but not removed).
+	EnableOnInputUpdate bool `koanf:"enable_on_input_update"`
 
 	// Rename specifies if astra streams should be renamed as M3U channels if their standartized names are equal
 	Rename bool `koanf:"rename"`
@@ -311,7 +311,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", false, node); err != nil {
 			log.Fatal(errors.Wrap(err, "Add missing field to config"))
 		}
-		root.Streams.AddGroupsToNew = false
+		root.Streams.AddGroupsToNew = NewDefCfg().Streams.AddGroupsToNew
 	}
 	// v1.0.0 to v1.1.0
 	knownField = "streams.groups_category_for_new"
@@ -327,7 +327,23 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", false, node); err != nil {
 			log.Fatal(errors.Wrap(err, "Add missing field to config"))
 		}
-		root.Streams.GroupsCategoryForNew = "All"
+		root.Streams.GroupsCategoryForNew = NewDefCfg().Streams.GroupsCategoryForNew
+	}
+	// v1.1.0 to v1.2.0
+	knownField = "streams.enable_on_input_update"
+	if lo.Contains(metadata.Unset, knownField) {
+		log.Infof("Adding missing field to config: %v\n", knownField)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Enable streams if they got new inputs or inputs were updated (but not removed)?"},
+			Key:          "enable_on_input_update",
+			ValType:      yamlUtil.Scalar,
+			Values:       []string{"false"},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.disable_without_inputs", false, node); err != nil {
+			log.Fatal(errors.Wrap(err, "Add missing field to config"))
+		}
+		root.Streams.EnableOnInputUpdate = NewDefCfg().Streams.EnableOnInputUpdate
 	}
 	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
 		log.Fatal(errors.Wrap(err, "Write modified config"))
@@ -358,9 +374,7 @@ func DefSimilarTranslitMap() map[string]string {
 	}
 }
 
-// NewDefCfg returns default config as written in "default.yaml" file.
-//
-// Used in tests.
+// NewDefCfg returns default config as written in "default.yaml" file
 func NewDefCfg() Root {
 	return Root{
 		General: General{
@@ -387,6 +401,7 @@ func NewDefCfg() Root {
 			DisabledPrefix:           "_DISABLED: ",
 			RemoveWithoutInputs:      false,
 			DisableWithoutInputs:     true,
+			EnableOnInputUpdate:      false,
 			Rename:                   false,
 			AddNewInputs:             true,
 			UniteInputs:              true,

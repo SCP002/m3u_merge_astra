@@ -159,6 +159,9 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
   * `disable_without_inputs`  
     Disable streams without inputs?
 
+  * `enable_on_input_update`  
+    Enable streams if they got new inputs or inputs were updated (but not removed)?
+
   * `rename`  
     Rename astra streams as M3U channels if their standartized names are equal?
     > Why does it exist?  
