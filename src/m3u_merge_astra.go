@@ -19,6 +19,8 @@ import (
 	"github.com/utahta/go-openuri"
 )
 
+// TODO: Reduce the amount of <print> boolean arguments and passing TableWriter to minimum?
+
 func main() {
 	// Init logger
 	log := logger.New(logrus.InfoLevel)

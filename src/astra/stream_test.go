@@ -179,6 +179,22 @@ func TestRemoveInputs(t *testing.T) {
 	assert.Exactly(t, expected, s2.Inputs, "should have these inputs")
 }
 
+func TestInputsUpdateNote(t *testing.T) {
+	r := newDefRepo()
+
+	s := Stream{}
+	assert.Exactly(t, "Stream is disabled", s.inputsUpdateNote(r), "should return this note")
+	s = Stream{Enabled: true}
+	assert.Exactly(t, "", s.inputsUpdateNote(r), "should not return a note if enabled")
+
+	r.cfg.Streams.EnableOnInputUpdate = true
+
+	s = Stream{}
+	assert.Exactly(t, "Enabling the stream", s.inputsUpdateNote(r), "should return this note")
+	s = Stream{Enabled: true}
+	assert.Exactly(t, "", s.inputsUpdateNote(r), "should not return a note if enabled")
+}
+
 func TestDisableStream(t *testing.T) {
 	r := newDefRepo()
 
@@ -222,7 +238,7 @@ func TestEnableStream(t *testing.T) {
 
 	s1 := Stream{Name: "Name", Enabled: false}
 	s1Original := copier.TDeep(t, s1)
-	s2 := s1.enable(r, false)
+	s2 := s1.enable(r, false, false)
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
@@ -230,39 +246,39 @@ func TestEnableStream(t *testing.T) {
 	assert.Exactly(t, expected, s2, "should set Enabled field to true")
 
 	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	s2 = s1.enable(r, false)
+	s2 = s1.enable(r, false, false)
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should remove disabled prefix and set Enabled field to true")
 
 	s1 = Stream{Name: "Name", Enabled: true}
-	s2 = s1.enable(r, false)
+	s2 = s1.enable(r, false, false)
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should stay unchanged")
 
 	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: true}
-	s2 = s1.enable(r, false)
+	s2 = s1.enable(r, false, false)
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should remove disabled prefix")
 
 	s1 = Stream{Name: "Name", Enabled: false}
 	s1Original = copier.TDeep(t, s1)
-	s2 = s1.enable(r, true)
+	s2 = s1.enable(r, true, false)
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
 	assert.Exactly(t, s1, s2, "should stay unchanged")
 
 	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	s2 = s1.enable(r, true)
+	s2 = s1.enable(r, true, false)
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should remove disabled prefix and set Enabled field to true")
 
 	s1 = Stream{Name: "Name", Enabled: true}
-	s2 = s1.enable(r, true)
+	s2 = s1.enable(r, true, false)
 	assert.Exactly(t, s1, s2, "should stay unchanged")
 
 	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: true}
-	s2 = s1.enable(r, true)
+	s2 = s1.enable(r, true, false)
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should remove disabled prefix")
 }

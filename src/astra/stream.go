@@ -71,8 +71,7 @@ func (s Stream) FirstGroup() string {
 	return ""
 }
 
-// TODO: Add "Stream is disabled" warning if auto enable is not true
-// TODO: Add auto enable if specified in config and note about it
+// TODO: Tests
 // UpdateInput updates first encountered input if both it and <newURL> match the InputUpdateMap from config in <r>.
 //
 // If KeepInputHash is enabled in config, it also adds old input URL hash to <newURL>.
@@ -96,8 +95,11 @@ func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
 					continue
 				}
 				// Update first encountered matching input.
-				r.TW().AppendRow(table.Row{s.Name, oldURL, newURL})
+				r.TW().AppendRow(table.Row{s.Name, oldURL, newURL, s.inputsUpdateNote(r)})
 				s.Inputs[inpIdx] = newURL
+				if r.Cfg().Streams.EnableOnInputUpdate {
+					s = s.enable(r, false, false)
+				}
 				return s
 			}
 		}
@@ -118,17 +120,18 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	})
 }
 
-// TODO: Add "Stream is disabled" warning if auto enable is not true
-// TODO: Add auto enable if specified in config and note about it
+// TODO: Tests
 // AddInput adds new <url> to stream inputs.
 //
 // If <print> is true, print added input.
 func (s Stream) AddInput(r deps.Global, url string, print bool) Stream {
 	if print {
-		note := lo.Ternary(s.Enabled, "", "Stream is disabled")
-		r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), url, note})
+		r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), url, s.inputsUpdateNote(r)})
 	}
 	s.Inputs = slice.Prepend(s.Inputs, url)
+	if r.Cfg().Streams.EnableOnInputUpdate {
+		s = s.enable(r, false, false)
+	}
 	return s
 }
 
@@ -156,6 +159,18 @@ func (s Stream) RemoveInputs(r deps.Global, tInp string, print bool) Stream {
 	return s
 }
 
+// inputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
+func (s Stream) inputsUpdateNote(r deps.Global) string {
+	if !s.Enabled {
+		if r.Cfg().Streams.EnableOnInputUpdate {
+			return "Enabling the stream"
+		} else {
+			return "Stream is disabled"
+		}
+	}
+	return ""
+}
+
 // Disable disables stream and adds name prefix if not already contain any
 func (s Stream) disable(r deps.Global) Stream {
 	newName := s.Name
@@ -178,7 +193,9 @@ func (s Stream) disable(r deps.Global) Stream {
 // enable enables stream and removes name prefix.
 //
 // If <onlyPrefixed> is true, enable stream only if it's name contains DisabledPrefix in config from <r>.
-func (s Stream) enable(r deps.Global, onlyPrefixed bool) Stream {
+//
+// If <print> is true, print old name, new name and group of the stream.
+func (s Stream) enable(r deps.Global, onlyPrefixed bool, print bool) Stream {
 	newName := s.Name
 	updated := false
 	if strings.Contains(s.Name, r.Cfg().Streams.DisabledPrefix) && r.Cfg().Streams.DisabledPrefix != "" {
@@ -191,7 +208,7 @@ func (s Stream) enable(r deps.Global, onlyPrefixed bool) Stream {
 		s.Enabled = true
 		updated = true
 	}
-	if updated {
+	if updated && print {
 		r.TW().AppendRow(table.Row{s.Name, newName, s.FirstGroup()})
 	}
 	s.Name = newName
@@ -233,7 +250,7 @@ func (r repo) Enable(streams []Stream) (out []Stream) {
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
 
 	for _, s := range streams {
-		out = append(out, s.enable(r, true))
+		out = append(out, s.enable(r, true, true))
 	}
 
 	r.tw.Render()
@@ -280,8 +297,7 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// TODO: Add "Stream is disabled" warning if auto enable is not true
-// TODO: Add auto enable if specified in config and note about it
+// TODO: Tests
 // UniteInputs returns copy of <streams> with inputs of every equally named stream moved to the first stream found
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Uniting inputs of streams\n")
@@ -289,14 +305,16 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 
 	out = copier.PDeep(streams)
 	for currIdx, currStream := range out {
-		note := lo.Ternary(currStream.Enabled, "", "Stream is disabled")
 		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx+1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
-					note})
+					currStream.inputsUpdateNote(r)})
 				if !currStream.HasInput(r, nextInput, true) {
 					currStream = currStream.AddInput(r, nextInput, false)
 					out[currIdx] = currStream
+					if r.Cfg().Streams.EnableOnInputUpdate {
+						currStream = currStream.enable(r, false, false)
+					}
 				}
 				nextStream = nextStream.RemoveInputs(r, nextInput, false)
 				out[nextIdx] = nextStream

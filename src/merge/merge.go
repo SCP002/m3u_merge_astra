@@ -32,13 +32,12 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 	return
 }
 
-// TODO: Add "Stream is disabled" warning if auto enable is not true
-// TODO: Add auto enable if specified in config and note about it
+// TODO: Tests
 // UpdateInputs returns copy of <streams> with every first matching input of every stream replaced with matching URL's
 // of m3u channels according to cfg.Streams.InputUpdateMap.
 func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Updating inputs\n")
-	r.tw.AppendHeader(table.Row{"Name", "Old URL", "New URL"})
+	r.tw.AppendHeader(table.Row{"Name", "Old URL", "New URL", "Note"})
 
 	for _, s := range streams {
 		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
@@ -76,8 +75,7 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 	return
 }
 
-// TODO: Add "Stream is disabled" warning if auto enable is not true
-// TODO: Add auto enable if specified in config and note about it
+// TODO: Tests
 // AddNewInputs returns copy of <streams> with new inputs if such found in <channels>
 func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Adding new inputs\n")
