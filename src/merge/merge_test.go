@@ -273,7 +273,7 @@ func TestAddNewStreams(t *testing.T) {
 	assert.Exactly(t, sl1[1], sl2[1], "should not change existing streams")
 
 	expected.ID = sl2[2].ID
-	expected.Groups = map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Group"}
+	expected.Groups = map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Group"}
 	assert.Exactly(t, expected, sl2[2], "should add new stream")
 
 	sl1 = []astra.Stream{{Name: "Other name", Inputs: []string{"http://some/url"}}}

@@ -20,15 +20,15 @@ func TestAddNewGroups(t *testing.T) {
 	}
 	cl1Original := copier.TDeep(t, cl1)
 	sl1 := []Stream{
-		{Groups: map[string]any{"Category 3": "A"}},
-		{Groups: map[string]any{"Category 3": "B"}},
-		{Groups: map[string]any{"Category 3": "B"}},
-		{Groups: map[string]any{"Category 1": ""}},
-		{Groups: map[string]any{"Category 1": "B"}},
-		{Groups: map[string]any{"Category 2": "D"}},
-		{Groups: map[string]any{"Category 2": "C"}},
-		{Groups: map[string]any{"Category 2": "B"}},
-		{Groups: map[string]any{"Category 2": "A"}},
+		{Groups: map[string]string{"Category 3": "A"}},
+		{Groups: map[string]string{"Category 3": "B"}},
+		{Groups: map[string]string{"Category 3": "B"}},
+		{Groups: map[string]string{"Category 1": ""}},
+		{Groups: map[string]string{"Category 1": "B"}},
+		{Groups: map[string]string{"Category 2": "D"}},
+		{Groups: map[string]string{"Category 2": "C"}},
+		{Groups: map[string]string{"Category 2": "B"}},
+		{Groups: map[string]string{"Category 2": "A"}},
 	}
 	sl1Original := copier.TDeep(t, sl1)
 
@@ -48,7 +48,15 @@ func TestAddNewGroups(t *testing.T) {
 
 func TestWriteReadCfg(t *testing.T) {
 	c1 := Cfg{
-		Streams: []Stream{{ID: "0000"}},
+		Streams: []Stream{
+			{
+				ID: "0000",
+				Groups: map[string]string{
+					"Category 1": "Group 1",
+					"Category 2": "Group 2",
+				},
+			},
+		},
 		Unknown: map[string]any{
 			"users": map[string]any{
 				"user1": map[string]any{

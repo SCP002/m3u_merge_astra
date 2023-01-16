@@ -31,7 +31,7 @@ func TestNewStream(t *testing.T) {
 	cfg.AddGroupsToNew = true
 	s = NewStream(cfg, "0000", "Name", "Group", []string{"http://url"})
 
-	expected.Groups = map[string]any{cfg.GroupsCategoryForNew: "Group"}
+	expected.Groups = map[string]string{cfg.GroupsCategoryForNew: "Group"}
 	assert.Exactly(t, expected, s, "should create this stream")
 }
 
@@ -40,16 +40,16 @@ func TestGetName(t *testing.T) {
 	assert.Exactly(t, s.Name, s.GetName(), "should return this name")
 }
 
-func TestFirstGroup(t *testing.T) { // FIXME: Make it pass. Should Groups be []map[string]string{}?
+func TestFirstGroup(t *testing.T) {
 	s := Stream{}
 	assert.Empty(t, s.FirstGroup(), "should return empty group")
 	s = Stream{
-		Groups: map[string]any{
+		Groups: map[string]string{
+			"Category 3": "Group 3",
+			"Category 5": "Group 5",
 			"Category 1": "Group 1",
 			"Category 2": "Group 2",
-			"Category 3": "Group 3",
 			"Category 4": "Group 4",
-			"Category 5": "Group 5",
 		},
 	}
 	for i := 0; i < 10000; i++ { // Test if logic relies on unstable iteration over maps
@@ -636,47 +636,47 @@ func TestAddHashes(t *testing.T) {
 	sl1 := []Stream{
 		{ // Index 0. Known input 1
 			Name:   "Other name",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://known/input/1#x", "http://other/input/1"},
 		},
 		{ // Index 1. Known name 1
 			Name:   "Known name 1",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://other/input/1#a", "http://other/input/2#x"},
 		},
 		{ // Index 2. Known group 2
 			Name:   "Other name",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 			Inputs: []string{"http://other/input/1#a&d", "http://other/input/2"},
 		},
 		{ // Index 3. Known inputs 2 and 1
 			Name:   "Other name",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://known/input/2#x", "http://known/input/1"},
 		},
 		{ // Index 4. Known name 2
 			Name:   "Known name 2",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://other/input/1"},
 		},
 		{ // Index 5. Known group 1
 			Name:   "Other name",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 			Inputs: []string{"http://other/input/1#c", "http://other/input/2#x"},
 		},
 		{ // Index 6. No matches
 			Name:   "Other name",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://other/input/2", "http://other/input/1#a"},
 		},
 		{ // Index 7. Matches by every parameter
 			Name:   "Known name 1",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 			Inputs: []string{"http://known/input/2#x", "http://other/input/1", "http://known/input/1"},
 		},
 		{ // Index 8. Matches by group 1 and input 1
 			Name:   "Other name",
-			Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 			Inputs: []string{"http://known/input/1", "http://other/input/1"},
 		},
 	}
@@ -690,7 +690,7 @@ func TestAddHashes(t *testing.T) {
 
 	expected := Stream{ // Index 0. Known input 1
 		Name:   "Other name",
-		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		Inputs: []string{"http://known/input/1#x&e", "http://other/input/1"},
 	}
 	assert.Exactly(t, expected, sl2[0], "inputs matching only by StreamInputToInputHashMap should get hashes only for"+
@@ -698,35 +698,35 @@ func TestAddHashes(t *testing.T) {
 
 	expected = Stream{ // Index 1. Known name 1
 		Name:   "Known name 1",
-		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		Inputs: []string{"http://other/input/1#a", "http://other/input/2#x&a"},
 	}
 	assert.Exactly(t, expected, sl2[1], "should add hash to every matching input")
 
 	expected = Stream{ // Index 2. Known group 2
 		Name:   "Other name",
-		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 		Inputs: []string{"http://other/input/1#a&d", "http://other/input/2#d"},
 	}
 	assert.Exactly(t, expected, sl2[2], "should add hash to every matching input")
 
 	expected = Stream{ // Index 3. Known inputs 2 and 1
 		Name:   "Other name",
-		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		Inputs: []string{"http://known/input/2#x&f", "http://known/input/1#e"},
 	}
 	assert.Exactly(t, expected, sl2[3], "should add hash to every matching input")
 
 	expected = Stream{ // Index 4. Known name 2
 		Name:   "Known name 2",
-		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		Inputs: []string{"http://other/input/1#b"},
 	}
 	assert.Exactly(t, expected, sl2[4], "should add hash to matching input")
 
 	expected = Stream{ // Index 5. Known group 1
 		Name:   "Other name",
-		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 		Inputs: []string{"http://other/input/1#c", "http://other/input/2#x&c"},
 	}
 	assert.Exactly(t, expected, sl2[5], "should add hash to every matching input")
@@ -736,14 +736,14 @@ func TestAddHashes(t *testing.T) {
 
 	expected = Stream{ // Index 7. Matches by every parameter
 		Name:   "Known name 1",
-		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 		Inputs: []string{"http://known/input/2#x&f&a&d", "http://other/input/1#a&d", "http://known/input/1#e&a&d"},
 	}
 	assert.Exactly(t, expected, sl2[7], "should add hash to every matching input by every parameter")
 
 	expected = Stream{ // Index 8. Matches by group 1 and input 1
 		Name:   "Other name",
-		Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 		Inputs: []string{"http://known/input/1#e&c", "http://other/input/1#c"},
 	}
 	assert.Exactly(t, expected, sl2[8], "should add hash to every matching input by every parameter")
@@ -753,7 +753,7 @@ func TestRemoveWithoutInputs(t *testing.T) {
 	r := newDefRepo()
 
 	sl1 := []Stream{
-		{Groups: map[string]any{r.cfg.Streams.GroupsCategoryForNew: "Group"}},
+		{Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Group"}},
 		{Enabled: true, Name: "Name"},
 		{Enabled: true, Inputs: []string{"http://input/1", "http://input/2"}},
 		{Enabled: false, Name: r.cfg.Streams.DisabledPrefix + "Name"},

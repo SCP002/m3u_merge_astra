@@ -44,9 +44,9 @@ func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
 
 	// Transform []Stream into []Category
 	sCats := lo.FlatMap(streams, func(s Stream, _ int) []Category {
-		return lo.MapToSlice(s.Groups, func(catName string, groupName any) Category {
+		return lo.MapToSlice(s.Groups, func(catName string, groupName string) Category {
 			return Category{Name: catName, Groups: lo.WithoutEmpty([]Group{
-				{Name: groupName.(string)},
+				{Name: groupName},
 			})}
 		})
 	})

@@ -25,28 +25,32 @@ import (
 
 // Stream represents astra stream object
 type Stream struct {
-	DisabledInputs []string       `json:"_input,omitempty"`
-	Enabled        bool           `json:"enable"`
-	Groups         map[string]any `json:"groups,omitempty"`
-	HTTPKeepActive string         `json:"http_keep_active,omitempty"`
-	ID             string         `json:"id,omitempty"`
-	Inputs         []string       `json:"input,omitempty"`
-	Name           string         `json:"name,omitempty"`
-	Type           string         `json:"type,omitempty"`
-	Unknown        map[string]any `json:"-" jsonex:"true"` // All unknown fields go here.
+	DisabledInputs []string          `json:"_input,omitempty"`
+	Enabled        bool              `json:"enable"`
+	Groups         map[string]string `json:"groups,omitempty"`
+	HTTPKeepActive string            `json:"http_keep_active,omitempty"`
+	ID             string            `json:"id,omitempty"`
+	Inputs         []string          `json:"input,omitempty"`
+	Name           string            `json:"name,omitempty"`
+	Type           string            `json:"type,omitempty"`
+	Unknown        map[string]any    `json:"-" jsonex:"true"` // All unknown fields go here.
 }
 
 // NewStream returns new stream with default config
 func NewStream(cfg cfg.Streams, id, name, group string, inputs []string) Stream {
+	var groups map[string]string = nil
+	if cfg.AddGroupsToNew {
+		groups = map[string]string{cfg.GroupsCategoryForNew: group}
+	}
+
 	return Stream{
 		DisabledInputs: []string{},
 		Enabled:        cfg.MakeNewEnabled,
-		Groups:         lo.Ternary(cfg.AddGroupsToNew, map[string]any{cfg.GroupsCategoryForNew: group}, nil),
-		// HTTPKeepActive: "5",
-		ID:     id,
-		Inputs: inputs,
-		Name:   cfg.AddedPrefix + name,
-		Type:   string(cfg.NewType),
+		Groups:         groups,
+		ID:             id,
+		Inputs:         inputs,
+		Name:           cfg.AddedPrefix + name,
+		Type:           string(cfg.NewType),
 	}
 }
 
@@ -55,10 +59,14 @@ func (s Stream) GetName() string {
 	return s.Name
 }
 
-// FirstGroup returns first "category: group" pair or empty string if not found
+// FirstGroup returns alphabetically first "category: group" pair or empty string if groups are empty
 func (s Stream) FirstGroup() string {
-	for cat, grp := range s.Groups {
-		return fmt.Sprintf("%v: %v", cat, grp)
+	if len(s.Groups) > 0 {
+		entries := lo.Entries(s.Groups)
+		sort.SliceStable(entries, func(i, j int) bool {
+			return entries[i].Key < entries[j].Key
+		})
+		return fmt.Sprintf("%v: %v", entries[0].Key, entries[0].Value)
 	}
 	return ""
 }
