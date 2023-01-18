@@ -102,6 +102,36 @@ func TestUpdateInputs(t *testing.T) {
 	assert.Exactly(t, sl1[1], sl2[1], "should not update to input to channel URL not in cfg.Streams.InputUpdateMap")
 
 	assert.Exactly(t, sl1[2], sl2[2], "only streams with known names should be updated")
+
+	// Test Streams.EnableOnInputUpdate
+	r.cfg.Streams.EnableOnInputUpdate = false
+	sl1 = []astra.Stream{
+		{Enabled: false, Name: "Known name", Inputs: []string{"http://known/input/1"}},
+	}
+	sl1Original = copier.TDeep(t, sl1)
+	cl1 = []m3u.Channel{
+		{Name: "Known name", URL: "http://new/known/input/1"},
+	}
+
+	sl2 = r.UpdateInputs(sl1, cl1)
+
+	assert.False(t, sl2[0].Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
+
+	r.cfg.Streams.EnableOnInputUpdate = true
+
+	sl2 = r.UpdateInputs(sl1, cl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source streams")
+
+	assert.True(t, sl2[0].Enabled, "stream should become enabled as EnableOnInputUpdate = true")
+
+	sl1 = []astra.Stream{
+		{Enabled: false, Name: "Other name", Inputs: []string{"http://known/input/1"}},
+	}
+
+	sl2 = r.UpdateInputs(sl1, cl1)
+
+	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
 }
 
 func TestRemoveInputsByUpdateMap(t *testing.T) {
@@ -217,6 +247,36 @@ func TestAddNewInputs(t *testing.T) {
 	assert.Exactly(t, expected, sl2[2], "should add unknown inputs")
 
 	assert.Exactly(t, sl1[3], sl2[3], "should not change streams with unknown names")
+	
+	// Test Streams.EnableOnInputUpdate
+	r.cfg.Streams.EnableOnInputUpdate = false
+	sl1 = []astra.Stream{
+		{Enabled: false, Name: "Known name", Inputs: []string{"http://input/1"}},
+	}
+	sl1Original = copier.TDeep(t, sl1)
+	cl1 = []m3u.Channel{
+		{Name: "Known name", URL: "http://input/2"},
+	}
+	
+	sl2 = r.AddNewInputs(sl1, cl1)
+
+	assert.False(t, sl2[0].Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
+	
+	r.cfg.Streams.EnableOnInputUpdate = true
+
+	sl2 = r.AddNewInputs(sl1, cl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source streams")
+
+	assert.True(t, sl2[0].Enabled, "stream should become enabled as EnableOnInputUpdate = true")
+
+	sl1 = []astra.Stream{
+		{Enabled: false, Name: "Other name", Inputs: []string{"http://input/1"}},
+	}
+
+	sl2 = r.AddNewInputs(sl1, cl1)
+
+	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
 }
 
 func TestAddNewStreams(t *testing.T) {

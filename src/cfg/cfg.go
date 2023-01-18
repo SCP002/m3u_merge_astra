@@ -297,10 +297,12 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 	if err != nil {
 		log.Fatal(errors.Wrap(err, "Read config"))
 	}
+	defCfg := NewDefCfg()
 	// v1.0.0 to v1.1.0
 	knownField := "streams.add_groups_to_new"
 	if lo.Contains(metadata.Unset, knownField) {
-		log.Infof("Adding missing field to config: %v\n", knownField)
+		defVal := defCfg.Streams.AddGroupsToNew
+		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Add groups to new astra streams?"},
@@ -311,12 +313,13 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", false, node); err != nil {
 			log.Fatal(errors.Wrap(err, "Add missing field to config"))
 		}
-		root.Streams.AddGroupsToNew = NewDefCfg().Streams.AddGroupsToNew
+		root.Streams.AddGroupsToNew = defVal
 	}
 	// v1.0.0 to v1.1.0
 	knownField = "streams.groups_category_for_new"
 	if lo.Contains(metadata.Unset, knownField) {
-		log.Infof("Adding missing field to config: %v\n", knownField)
+		defVal := defCfg.Streams.GroupsCategoryForNew
+		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Category name to use for groups of new astra streams."},
@@ -327,12 +330,13 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", false, node); err != nil {
 			log.Fatal(errors.Wrap(err, "Add missing field to config"))
 		}
-		root.Streams.GroupsCategoryForNew = NewDefCfg().Streams.GroupsCategoryForNew
+		root.Streams.GroupsCategoryForNew = defVal
 	}
 	// v1.1.0 to v1.2.0
 	knownField = "streams.enable_on_input_update"
 	if lo.Contains(metadata.Unset, knownField) {
-		log.Infof("Adding missing field to config: %v\n", knownField)
+		defVal := defCfg.Streams.EnableOnInputUpdate
+		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Enable streams if they got new inputs or inputs were updated (but not removed)?"},
@@ -343,7 +347,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.disable_without_inputs", false, node); err != nil {
 			log.Fatal(errors.Wrap(err, "Add missing field to config"))
 		}
-		root.Streams.EnableOnInputUpdate = NewDefCfg().Streams.EnableOnInputUpdate
+		root.Streams.EnableOnInputUpdate = defVal
 	}
 	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
 		log.Fatal(errors.Wrap(err, "Write modified config"))

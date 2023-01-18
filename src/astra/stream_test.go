@@ -108,6 +108,30 @@ func TestUpdateStreamInput(t *testing.T) {
 
 	s2 = s1.UpdateInput(r, "http://irrelevant/to")
 	assert.Exactly(t, s1, s2, "inputs should not be updated with irrelevant URL")
+
+	// Test Streams.EnableOnInputUpdate
+	r.cfg.Streams.EnableOnInputUpdate = false
+	s1 = Stream{Enabled: false, Inputs: []string{"http://update/from/1#c"}}
+	s1Original = copier.TDeep(t, s1)
+
+	s2 = s1.UpdateInput(r, "http://update/to/1")
+
+	assert.False(t, s2.Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
+
+	r.cfg.Streams.EnableOnInputUpdate = true
+
+	s2 = s1.UpdateInput(r, "http://update/to/1")
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	assert.True(t, s2.Enabled, "stream should become enabled as EnableOnInputUpdate = true")
+
+	r.cfg.Streams.EnableOnInputUpdate = true
+	s1 = Stream{Enabled: false, Inputs: []string{"http://irrelevant/from#a"}}
+
+	s2 = s1.UpdateInput(r, "http://update/to/1")
+
+	assert.Exactly(t, s1, s2, "stream should stay disabled because it was not updated")
 }
 
 func TestHasInput(t *testing.T) {
@@ -148,6 +172,23 @@ func TestAddInput(t *testing.T) {
 
 	expected := []string{"http://input/3", "http://input/1", "http://input/2"}
 	assert.Exactly(t, expected, s2.Inputs, "should have these inputs")
+
+	// Test Streams.EnableOnInputUpdate
+	r.cfg.Streams.EnableOnInputUpdate = false
+	s1 = Stream{Enabled: false, Inputs: []string{}}
+	s1Original = copier.TDeep(t, s1)
+
+	s2 = s1.AddInput(r, "http://input/1", false)
+
+	assert.False(t, s2.Enabled, "stream should stay disalbed as EnableOnInputUpdate = false")
+
+	r.cfg.Streams.EnableOnInputUpdate = true
+
+	s2 = s1.AddInput(r, "http://input/1", false)
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	assert.True(t, s2.Enabled, "stream become enabled as EnableOnInputUpdate = true")
 }
 
 func TestKnownInputs(t *testing.T) {
@@ -182,14 +223,14 @@ func TestRemoveInputs(t *testing.T) {
 func TestInputsUpdateNote(t *testing.T) {
 	r := newDefRepo()
 
-	s := Stream{}
+	r.cfg.Streams.EnableOnInputUpdate = false
+	s := Stream{Enabled: false}
 	assert.Exactly(t, "Stream is disabled", s.inputsUpdateNote(r), "should return this note")
 	s = Stream{Enabled: true}
 	assert.Exactly(t, "", s.inputsUpdateNote(r), "should not return a note if enabled")
 
 	r.cfg.Streams.EnableOnInputUpdate = true
-
-	s = Stream{}
+	s = Stream{Enabled: false}
 	assert.Exactly(t, "Enabling the stream", s.inputsUpdateNote(r), "should return this note")
 	s = Stream{Enabled: true}
 	assert.Exactly(t, "", s.inputsUpdateNote(r), "should not return a note if enabled")
@@ -367,6 +408,36 @@ func TestUniteInputs(t *testing.T) {
 
 	expected = Stream{Name: "Name_2", Inputs: make([]string, 0), DisabledInputs: make([]string, 0)}
 	assert.Exactly(t, expected, sl2[5], "should remove inputs from subsequent streams duplicated by name")
+
+	// Test Streams.EnableOnInputUpdate
+	r.cfg.Streams.EnableOnInputUpdate = false
+	sl1 = []Stream{
+		{Enabled: false, Name: "Name", Inputs: []string{"http://input/a"}},
+		{Enabled: false, Name: "Name", Inputs: []string{"http://input/b"}},
+	}
+	sl1Original = copier.TDeep(t, sl1)
+
+	sl2 = r.UniteInputs(sl1)
+
+	assert.False(t, sl2[0].Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
+	assert.False(t, sl2[1].Enabled, "stream should stay disabled as it has no new inputs")
+
+	r.cfg.Streams.EnableOnInputUpdate = true
+
+	sl2 = r.UniteInputs(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.True(t, sl2[0].Enabled, "stream should become enabled as EnableOnInputUpdate = true")
+	assert.False(t, sl2[1].Enabled, "stream should stay disabled as it has no new inputs")
+
+	sl1 = []Stream{
+		{Enabled: false, Name: "Name", Inputs: []string{"http://input/a"}},
+	}
+
+	sl2 = r.UniteInputs(sl1)
+
+	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
 }
 
 func TestSortInputs(t *testing.T) {

@@ -20,6 +20,8 @@ import (
 )
 
 // TODO: Reduce the amount of <print> boolean arguments and passing TableWriter to minimum?
+// TODO: Move functionality of Streams.EnableOnInputUpdate out of basic functions?
+// TODO: Move HasInput functionality into AddInput?
 
 func main() {
 	// Init logger

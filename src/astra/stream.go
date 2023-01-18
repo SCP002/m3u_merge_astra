@@ -71,10 +71,11 @@ func (s Stream) FirstGroup() string {
 	return ""
 }
 
-// TODO: Tests
 // UpdateInput updates first encountered input if both it and <newURL> match the InputUpdateMap from config in <r>.
 //
 // If KeepInputHash is enabled in config, it also adds old input URL hash to <newURL>.
+//
+// If EnableOnInputUpdate is enabled in config, it also enables a stream on update.
 func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
 	s = copier.PDeep(s)
 	for inpIdx, oldURL := range s.Inputs {
@@ -120,10 +121,11 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	})
 }
 
-// TODO: Tests
 // AddInput adds new <url> to stream inputs.
 //
 // If <print> is true, print added input.
+//
+// If EnableOnInputUpdate is enabled in config, it also enables a stream.
 func (s Stream) AddInput(r deps.Global, url string, print bool) Stream {
 	if print {
 		r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), url, s.inputsUpdateNote(r)})
@@ -297,7 +299,6 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// TODO: Tests
 // UniteInputs returns copy of <streams> with inputs of every equally named stream moved to the first stream found
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Uniting inputs of streams\n")
@@ -305,16 +306,13 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 
 	out = copier.PDeep(streams)
 	for currIdx, currStream := range out {
-		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx+1, func(nextStream Stream, nextIdx int) {
+		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
 					currStream.inputsUpdateNote(r)})
 				if !currStream.HasInput(r, nextInput, true) {
 					currStream = currStream.AddInput(r, nextInput, false)
 					out[currIdx] = currStream
-					if r.Cfg().Streams.EnableOnInputUpdate {
-						currStream = currStream.enable(r, false, false)
-					}
 				}
 				nextStream = nextStream.RemoveInputs(r, nextInput, false)
 				out[nextIdx] = nextStream
