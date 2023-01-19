@@ -15,7 +15,7 @@ func TestSort(t *testing.T) {
 	ol1 := []TestNamedStruct{
 		{Name: "C"}, {Name: "A"}, {}, {Name: "B"},
 	}
-	ol1Original := copier.TDeep(t, ol1)
+	ol1Original := copier.TestDeep(t, ol1)
 
 	ol2 := Sort(log, ol1, "test objects")
 	assert.NotSame(t, &ol1, &ol2, "should return copy of objects")

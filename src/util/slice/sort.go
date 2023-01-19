@@ -11,7 +11,7 @@ import (
 func Sort[T Named](log *logrus.Logger, list []T, what string) (out []T) {
 	log.Infof("Sorting %v\n", what)
 
-	out = copier.PDeep(list)
+	out = copier.MustDeep(list)
 
 	sort.SliceStable(out, func(i, j int) bool {
 		return out[i].GetName() < out[j].GetName()

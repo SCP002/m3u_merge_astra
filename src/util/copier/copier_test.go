@@ -12,9 +12,9 @@ func TestPDeep(t *testing.T) {
 	}
 
 	inp := Struct{SliceField: []int{1}}
-	assert.Panics(t, func() { PDeep(&inp) }, "should panic on error")
+	assert.Panics(t, func() { MustDeep(&inp) }, "should panic on error")
 
-	out := PDeep(inp)
+	out := MustDeep(inp)
 	assert.NotSame(t, inp, out, "should return copy")
 
 	inp.SliceField[0] = 10

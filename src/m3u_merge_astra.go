@@ -22,13 +22,12 @@ import (
 // TODO: Get rid of "print bool" function arguments (callbacks / second return values)
 // TODO: Reduce calling tablewriter AppendRow without AppendHeader to minimum (callbacks / second return values)?
 // TODO: Check if merge.AddNewInputs() works fine
-// TODO: Rename TDeep to TestDeep and PDeep to MustDeep
 // TODO: Move functionality of Streams.EnableOnInputUpdate out of basic functions?
 // TODO: Move HasInput functionality into AddInput?
 
 // TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
 // TODO: Add name aliases map feature.
-// TODO: Also remove added prefixes in astra.Enable()?
+// TODO: Remove added and disabled prefixes and use it instead of astra.Enable()?
 
 func main() {
 	// Init logger

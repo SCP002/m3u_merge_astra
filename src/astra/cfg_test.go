@@ -18,7 +18,7 @@ func TestAddNewGroups(t *testing.T) {
 		{Name: "Category 1", Groups: []Group{{Name: "A"}, {Name: "A"}, {Name: "B"}}},
 		{Name: "Category 2", Groups: []Group{{Name: "C"}, {Name: "D"}}},
 	}
-	cl1Original := copier.TDeep(t, cl1)
+	cl1Original := copier.TestDeep(t, cl1)
 	sl1 := []Stream{
 		{Groups: map[string]string{"Category 3": "A"}},
 		{Groups: map[string]string{"Category 3": "B"}},
@@ -30,7 +30,7 @@ func TestAddNewGroups(t *testing.T) {
 		{Groups: map[string]string{"Category 2": "B"}},
 		{Groups: map[string]string{"Category 2": "A"}},
 	}
-	sl1Original := copier.TDeep(t, sl1)
+	sl1Original := copier.TestDeep(t, sl1)
 
 	cl2 := r.AddNewGroups(cl1, sl1)
 

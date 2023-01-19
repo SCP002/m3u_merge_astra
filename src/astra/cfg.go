@@ -40,7 +40,7 @@ func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
 	r.log.Info("Adding new groups\n")
 	r.tw.AppendHeader(table.Row{"Category", "Group"})
 
-	cats = copier.PDeep(cats)
+	cats = copier.MustDeep(cats)
 
 	// Transform []Stream into []Category
 	sCats := lo.FlatMap(streams, func(s Stream, _ int) []Category {

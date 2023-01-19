@@ -23,7 +23,7 @@ func TestBadValueError(t *testing.T) {
 func TestInsert(t *testing.T) {
 	input, err := os.ReadFile("insert_input_test.yaml")
 	assert.NoError(t, err, "should read input file")
-	inputOriginal := copier.TDeep(t, input)
+	inputOriginal := copier.TestDeep(t, input)
 
 	// Error cases (bad value or path can not be found)
 	afterPath := ""
@@ -218,7 +218,7 @@ func TestSetIndent(t *testing.T) {
 	inputBytes, err := os.ReadFile("set_indent_input_test.yaml")
 	assert.NoError(t, err, "should read input file")
 	input := []rune(string(inputBytes))
-	inputOriginal := copier.TDeep(t, input)
+	inputOriginal := copier.TestDeep(t, input)
 
 	output := setIndent(input, 2)
 

@@ -23,7 +23,7 @@ func TestReplaceGroup(t *testing.T) {
 	}
 
 	c1 := Channel{Name: "From Group 2", Group: "From Group 2", URL: "From Group 2"}
-	c1Original := copier.TDeep(t, c1)
+	c1Original := copier.TestDeep(t, c1)
 	c2 := c1.replaceGroup(r)
 
 	assert.NotSame(t, &c1, &c2, "should return copy of channel")
@@ -33,7 +33,7 @@ func TestReplaceGroup(t *testing.T) {
 	assert.Exactly(t, expected, c2, "should replace group")
 
 	c1 = Channel{Group: "Group 1"}
-	c1Original = copier.TDeep(t, c1)
+	c1Original = copier.TestDeep(t, c1)
 	c2 = c1.replaceGroup(r)
 
 	assert.NotSame(t, &c1, &c2, "should return copy of channel")
@@ -79,7 +79,7 @@ func TestReplaceGroups(t *testing.T) {
 	cl1 := []Channel{
 		{Group: "Other"}, {Group: "From Group 2"}, {Group: "From Group 1"},
 	}
-	cl1Original := copier.TDeep(t, cl1)
+	cl1Original := copier.TestDeep(t, cl1)
 
 	cl2 := r.ReplaceGroups(cl1)
 	assert.NotSame(t, &cl1, &cl2, "should return copy of channels")
@@ -121,7 +121,7 @@ func TestRemoveBlocked(t *testing.T) {
 		/* 4 */ {Name: "Other", Group: "Other", URL: "Other"},
 		/* 5 */ {},
 	}
-	cl1Original := copier.TDeep(t, cl1)
+	cl1Original := copier.TestDeep(t, cl1)
 
 	cl2 := r.RemoveBlocked(cl1)
 	assert.NotSame(t, &cl1, &cl2, "should return copy of channels")

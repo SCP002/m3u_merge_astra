@@ -77,7 +77,7 @@ func (s Stream) FirstGroup() string {
 //
 // If EnableOnInputUpdate is enabled in config, it also enables a stream on update.
 func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
-	s = copier.PDeep(s)
+	s = copier.MustDeep(s)
 	for inpIdx, oldURL := range s.Inputs {
 		for _, updRec := range r.Cfg().Streams.InputUpdateMap {
 			if updRec.From.MatchString(oldURL) && updRec.To.MatchString(newURL) {
@@ -304,7 +304,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Uniting inputs of streams\n")
 	r.tw.AppendHeader(table.Row{"From ID", "From name", "Input", "To ID", "To name", "Note"})
 
-	out = copier.PDeep(streams)
+	out = copier.MustDeep(streams)
 	for currIdx, currStream := range out {
 		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
@@ -329,7 +329,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Sorting inputs of streams\n")
 
-	out = copier.PDeep(streams)
+	out = copier.MustDeep(streams)
 	for _, s := range out {
 		sort.SliceStable(s.Inputs, func(i, j int) bool {
 			// Set default weight
@@ -396,7 +396,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 	pool := pond.New(r.cfg.Streams.InputMaxConns, 0, pond.MinWorkers(0))
 	var mut sync.Mutex
 
-	out = copier.PDeep(streams)
+	out = copier.MustDeep(streams)
 	for sIdx, s := range out {
 		for _, inp := range s.Inputs {
 			s, sIdx, inp := s, sIdx, inp
@@ -433,7 +433,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 	r.log.Info("Adding hashes to inputs of streams\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Hash", "Result"})
 
-	out = copier.PDeep(streams)
+	out = copier.MustDeep(streams)
 	var changed bool
 	for sIdx, s := range out {
 		for inpIdx, inp := range s.Inputs {
