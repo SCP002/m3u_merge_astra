@@ -19,7 +19,11 @@ import (
 	"github.com/utahta/go-openuri"
 )
 
-// TODO: Reduce the amount of <print> boolean arguments and passing TableWriter to minimum?
+// TODO: Get rid of "print bool" function arguments (callbacks / second return values)
+// TODO: Reduce calling tablewriter AppendRow without AppendHeader to minimum (callbacks / second return values)?
+// TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
+// TODO: Check if merge.AddNewInputs() works fine
+// TODO: Rename TDeep to TestDeep and PDeep to MustDeep
 // TODO: Move functionality of Streams.EnableOnInputUpdate out of basic functions?
 // TODO: Move HasInput functionality into AddInput?
 
