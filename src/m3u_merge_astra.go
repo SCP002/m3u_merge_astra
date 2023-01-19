@@ -28,6 +28,7 @@ import (
 
 // TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
 // TODO: Add name aliases map feature.
+// TODO: Also remove added prefixes in astra.Enable()?
 
 func main() {
 	// Init logger
