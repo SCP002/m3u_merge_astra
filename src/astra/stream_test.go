@@ -206,18 +206,20 @@ func TestKnownInputs(t *testing.T) {
 	assert.Exactly(t, expected, ki, "should have these inputs")
 }
 
-func TestRemoveInputs(t *testing.T) {
-	r := newDefRepo()
-
+func TestRemoveInputsCb(t *testing.T) {
 	s1 := Stream{Inputs: []string{"http://input/1", "http://input/2", "http://input/1"}}
 	s1Original := copier.TestDeep(t, s1)
 
-	s2 := s1.RemoveInputs(r, "http://input/1", false)
+	count := 0
+	s2 := s1.RemoveInputsCb("http://input/1", func() {
+		count++
+	})
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
 	expected := []string{"http://input/2"}
 	assert.Exactly(t, expected, s2.Inputs, "should have these inputs")
+	assert.Exactly(t, 2, count, "should remove 2 inputs")
 }
 
 func TestInputsUpdateNote(t *testing.T) {

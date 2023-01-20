@@ -146,19 +146,22 @@ func (s Stream) KnownInputs(r deps.Global) []string {
 	})
 }
 
-// RemoveInputs removes all stream inputs equal <tInp>.
-//
-// If <print> is true, print removed inputs.
-func (s Stream) RemoveInputs(r deps.Global, tInp string, print bool) Stream {
+// RemoveInputs removes all stream inputs equal <tInp>, running <callback> for every input removed
+func (s Stream) RemoveInputsCb(tInp string, callback func()) Stream {
 	rejectFn := func(cInp string, _ int) bool {
-		if print && cInp == tInp {
-			r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), tInp})
+		if cInp == tInp {
+			callback()
 		}
 		return cInp == tInp
 	}
 	s.Inputs = lo.Reject(s.Inputs, rejectFn)
 	s.DisabledInputs = lo.Reject(s.DisabledInputs, rejectFn)
 	return s
+}
+
+// removeInputs is the same as RemoveInputsCb but without callback
+func (s Stream) removeInputs(tInp string) Stream {
+	return s.RemoveInputsCb(tInp, nil)
 }
 
 // inputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
@@ -314,7 +317,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 					currStream = currStream.AddInput(r, nextInput, false)
 					out[currIdx] = currStream
 				}
-				nextStream = nextStream.RemoveInputs(r, nextInput, false)
+				nextStream = nextStream.removeInputs(nextInput)
 				out[nextIdx] = nextStream
 			}
 		})
