@@ -84,7 +84,8 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	for _, s := range streams {
 		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
 			if !s.HasInput(r, ch.URL, r.cfg.Streams.HashCheckOnAddNewInputs) {
-				s = s.AddInput(r, ch.URL, true)
+				r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), ch.URL, s.InputsUpdateNote(r)})
+				s = s.AddInput(r, ch.URL)
 			}
 		})
 		out = append(out, s)

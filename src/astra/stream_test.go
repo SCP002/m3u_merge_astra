@@ -166,7 +166,7 @@ func TestAddInput(t *testing.T) {
 	s1 := Stream{Inputs: []string{"http://input/1", "http://input/2"}}
 	s1Original := copier.TestDeep(t, s1)
 
-	s2 := s1.AddInput(r, "http://input/3", false)
+	s2 := s1.AddInput(r, "http://input/3")
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
@@ -178,13 +178,13 @@ func TestAddInput(t *testing.T) {
 	s1 = Stream{Enabled: false, Inputs: []string{}}
 	s1Original = copier.TestDeep(t, s1)
 
-	s2 = s1.AddInput(r, "http://input/1", false)
+	s2 = s1.AddInput(r, "http://input/1")
 
 	assert.False(t, s2.Enabled, "stream should stay disalbed as EnableOnInputUpdate = false")
 
 	r.cfg.Streams.EnableOnInputUpdate = true
 
-	s2 = s1.AddInput(r, "http://input/1", false)
+	s2 = s1.AddInput(r, "http://input/1")
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
@@ -227,15 +227,15 @@ func TestInputsUpdateNote(t *testing.T) {
 
 	r.cfg.Streams.EnableOnInputUpdate = false
 	s := Stream{Enabled: false}
-	assert.Exactly(t, "Stream is disabled", s.inputsUpdateNote(r), "should return this note")
+	assert.Exactly(t, "Stream is disabled", s.InputsUpdateNote(r), "should return this note")
 	s = Stream{Enabled: true}
-	assert.Exactly(t, "", s.inputsUpdateNote(r), "should not return a note if enabled")
+	assert.Exactly(t, "", s.InputsUpdateNote(r), "should not return a note if enabled")
 
 	r.cfg.Streams.EnableOnInputUpdate = true
 	s = Stream{Enabled: false}
-	assert.Exactly(t, "Enabling the stream", s.inputsUpdateNote(r), "should return this note")
+	assert.Exactly(t, "Enabling the stream", s.InputsUpdateNote(r), "should return this note")
 	s = Stream{Enabled: true}
-	assert.Exactly(t, "", s.inputsUpdateNote(r), "should not return a note if enabled")
+	assert.Exactly(t, "", s.InputsUpdateNote(r), "should not return a note if enabled")
 }
 
 func TestDisableStream(t *testing.T) {

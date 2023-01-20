@@ -96,7 +96,7 @@ func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
 					continue
 				}
 				// Update first encountered matching input.
-				r.TW().AppendRow(table.Row{s.Name, oldURL, newURL, s.inputsUpdateNote(r)})
+				r.TW().AppendRow(table.Row{s.Name, oldURL, newURL, s.InputsUpdateNote(r)})
 				s.Inputs[inpIdx] = newURL
 				if r.Cfg().Streams.EnableOnInputUpdate {
 					s = s.enable(r, false, false)
@@ -123,13 +123,8 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 
 // AddInput adds new <url> to stream inputs.
 //
-// If <print> is true, print added input.
-//
 // If EnableOnInputUpdate is enabled in config, it also enables a stream.
-func (s Stream) AddInput(r deps.Global, url string, print bool) Stream {
-	if print {
-		r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), url, s.inputsUpdateNote(r)})
-	}
+func (s Stream) AddInput(r deps.Global, url string) Stream {
 	s.Inputs = slice.Prepend(s.Inputs, url)
 	if r.Cfg().Streams.EnableOnInputUpdate {
 		s = s.enable(r, false, false)
@@ -164,8 +159,8 @@ func (s Stream) removeInputs(tInp string) Stream {
 	return s.RemoveInputsCb(tInp, nil)
 }
 
-// inputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
-func (s Stream) inputsUpdateNote(r deps.Global) string {
+// InputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
+func (s Stream) InputsUpdateNote(r deps.Global) string {
 	if !s.Enabled {
 		if r.Cfg().Streams.EnableOnInputUpdate {
 			return "Enabling the stream"
@@ -312,9 +307,9 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
-					currStream.inputsUpdateNote(r)})
+					currStream.InputsUpdateNote(r)})
 				if !currStream.HasInput(r, nextInput, true) {
-					currStream = currStream.AddInput(r, nextInput, false)
+					currStream = currStream.AddInput(r, nextInput)
 					out[currIdx] = currStream
 				}
 				nextStream = nextStream.removeInputs(nextInput)
