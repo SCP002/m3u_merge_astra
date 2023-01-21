@@ -41,7 +41,9 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	for _, s := range streams {
 		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
 			if !s.HasInput(r, ch.URL, true) {
-				s = s.UpdateInput(r, ch.URL)
+				s = s.UpdateInput(r, ch.URL, func(oldURL string) {
+					r.tw.AppendRow(table.Row{s.Name, oldURL, ch.URL, s.InputsUpdateNote(r)})
+				})
 			}
 		})
 		out = append(out, s)
