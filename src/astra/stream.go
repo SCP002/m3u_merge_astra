@@ -196,28 +196,8 @@ func (s Stream) disable(r deps.Global) Stream {
 //
 // If <onlyPrefixed> is true, enable stream only if it's name contains DisabledPrefix in config from <r>.
 //
-// Runs <callback> if stream was updated.
+// Runs <callback> with new name if stream was updated.
 func (s Stream) enableCb(r deps.Global, onlyPrefixed bool, callback func(string)) Stream {
-	// newName := s.Name
-	// updated := false
-	// disabledPrefix := r.Cfg().Streams.DisabledPrefix
-
-	// if strings.Contains(s.Name, disabledPrefix) && disabledPrefix != "" {
-	// 	newName = strings.ReplaceAll(s.Name, disabledPrefix, "")
-	// 	updated = true
-	// } else if onlyPrefixed {
-	// 	return s
-	// }
-	// if !s.Enabled {
-	// 	s.Enabled = true
-	// 	updated = true
-	// }
-	// if updated {
-	// 	callback(newName)
-	// }
-	// s.Name = newName
-	// return s
-
 	updated := false
 	disabledPrefix := r.Cfg().Streams.DisabledPrefix
 

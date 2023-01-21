@@ -22,9 +22,12 @@ func TestReplaceGroup(t *testing.T) {
 		"From Group 2": "To Group 2",
 	}
 
+	newGroups := []string{}
 	c1 := Channel{Name: "From Group 2", Group: "From Group 2", URL: "From Group 2"}
 	c1Original := copier.TestDeep(t, c1)
-	c2 := c1.replaceGroup(r)
+	c2 := c1.replaceGroupCb(r, func(newGroup string) {
+		newGroups = append(newGroups, newGroup)
+	})
 
 	assert.NotSame(t, &c1, &c2, "should return copy of channel")
 	assert.Exactly(t, c1Original, c1, "should not modify the source")
@@ -34,12 +37,16 @@ func TestReplaceGroup(t *testing.T) {
 
 	c1 = Channel{Group: "Group 1"}
 	c1Original = copier.TestDeep(t, c1)
-	c2 = c1.replaceGroup(r)
+	c2 = c1.replaceGroupCb(r, func(newGroup string) {
+		t.Fail()
+	})
 
 	assert.NotSame(t, &c1, &c2, "should return copy of channel")
 	assert.Exactly(t, c1Original, c1, "should not modify the source")
 
 	assert.Exactly(t, c1, c2, "group should stay the same")
+
+	assert.Exactly(t, []string{"To Group 2"}, newGroups, "callbacks should return these new groups")
 }
 
 func TestParse(t *testing.T) {

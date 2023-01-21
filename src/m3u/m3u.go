@@ -28,11 +28,11 @@ func (ch Channel) GetName() string {
 	return ch.Name
 }
 
-// replaceGroup returns new channel with group taken from config in <r>
-func (ch Channel) replaceGroup(r deps.Global) Channel {
+// replaceGroup returns new channel with group taken from config in <r>, running <callback> with new group on change
+func (ch Channel) replaceGroupCb(r deps.Global, callback func(string)) Channel {
 	newGroup := r.Cfg().M3U.ChannGroupMap[ch.Group]
 	if ch.Group != newGroup && newGroup != "" {
-		r.TW().AppendRow(table.Row{ch.Name, ch.Group, newGroup})
+		callback(newGroup)
 		ch.Group = newGroup
 	}
 	return ch
@@ -90,7 +90,9 @@ func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 	r.tw.AppendHeader(table.Row{"Name", "Original group", "New group"})
 
 	for _, ch := range channels {
-		out = append(out, ch.replaceGroup(r))
+		out = append(out, ch.replaceGroupCb(r, func(newGroup string) {
+			r.tw.AppendRow(table.Row{ch.Name, ch.Group, newGroup})
+		}))
 	}
 
 	r.tw.Render()
