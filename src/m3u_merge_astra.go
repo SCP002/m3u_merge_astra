@@ -19,7 +19,6 @@ import (
 	"github.com/utahta/go-openuri"
 )
 
-// TODO: Get rid of "print bool" function arguments (callbacks / second return values)
 // TODO: Reduce calling tablewriter AppendRow without AppendHeader to minimum (callbacks / second return values)?
 // TODO: Check if merge.AddNewInputs() works fine
 // TODO: Move functionality of Streams.EnableOnInputUpdate out of basic functions?

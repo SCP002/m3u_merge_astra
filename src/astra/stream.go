@@ -78,11 +78,13 @@ func (s Stream) FirstGroup() string {
 // If EnableOnInputUpdate is enabled in config, it also enables a stream on update.
 func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
 	s = copier.MustDeep(s)
+	cfg := r.Cfg().Streams
+
 	for inpIdx, oldURL := range s.Inputs {
-		for _, updRec := range r.Cfg().Streams.InputUpdateMap {
+		for _, updRec := range cfg.InputUpdateMap {
 			if updRec.From.MatchString(oldURL) && updRec.To.MatchString(newURL) {
 				// Append old hash to new URL.
-				if r.Cfg().Streams.KeepInputHash {
+				if cfg.KeepInputHash {
 					oldHash, err := conv.GetHash(oldURL)
 					if err != nil {
 						r.Log().Debug(err)
@@ -98,8 +100,8 @@ func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
 				// Update first encountered matching input.
 				r.TW().AppendRow(table.Row{s.Name, oldURL, newURL, s.InputsUpdateNote(r)})
 				s.Inputs[inpIdx] = newURL
-				if r.Cfg().Streams.EnableOnInputUpdate {
-					s = s.enable(r, false, false)
+				if cfg.EnableOnInputUpdate {
+					s = s.enable(r, false)
 				}
 				return s
 			}
@@ -127,7 +129,7 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 func (s Stream) AddInput(r deps.Global, url string) Stream {
 	s.Inputs = slice.Prepend(s.Inputs, url)
 	if r.Cfg().Streams.EnableOnInputUpdate {
-		s = s.enable(r, false, false)
+		s = s.enable(r, false)
 	}
 	return s
 }
@@ -156,7 +158,7 @@ func (s Stream) RemoveInputsCb(tInp string, callback func()) Stream {
 
 // removeInputs is the same as RemoveInputsCb but without callback
 func (s Stream) removeInputs(tInp string) Stream {
-	return s.RemoveInputsCb(tInp, nil)
+	return s.RemoveInputsCb(tInp, func() {})
 }
 
 // InputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
@@ -194,12 +196,33 @@ func (s Stream) disable(r deps.Global) Stream {
 //
 // If <onlyPrefixed> is true, enable stream only if it's name contains DisabledPrefix in config from <r>.
 //
-// If <print> is true, print old name, new name and group of the stream.
-func (s Stream) enable(r deps.Global, onlyPrefixed bool, print bool) Stream {
-	newName := s.Name
+// Runs <callback> if stream was updated.
+func (s Stream) enableCb(r deps.Global, onlyPrefixed bool, callback func(string)) Stream {
+	// newName := s.Name
+	// updated := false
+	// disabledPrefix := r.Cfg().Streams.DisabledPrefix
+
+	// if strings.Contains(s.Name, disabledPrefix) && disabledPrefix != "" {
+	// 	newName = strings.ReplaceAll(s.Name, disabledPrefix, "")
+	// 	updated = true
+	// } else if onlyPrefixed {
+	// 	return s
+	// }
+	// if !s.Enabled {
+	// 	s.Enabled = true
+	// 	updated = true
+	// }
+	// if updated {
+	// 	callback(newName)
+	// }
+	// s.Name = newName
+	// return s
+
 	updated := false
-	if strings.Contains(s.Name, r.Cfg().Streams.DisabledPrefix) && r.Cfg().Streams.DisabledPrefix != "" {
-		newName = strings.ReplaceAll(s.Name, r.Cfg().Streams.DisabledPrefix, "")
+	disabledPrefix := r.Cfg().Streams.DisabledPrefix
+
+	if strings.Contains(s.Name, disabledPrefix) && disabledPrefix != "" {
+		s.Name = strings.ReplaceAll(s.Name, disabledPrefix, "")
 		updated = true
 	} else if onlyPrefixed {
 		return s
@@ -208,11 +231,15 @@ func (s Stream) enable(r deps.Global, onlyPrefixed bool, print bool) Stream {
 		s.Enabled = true
 		updated = true
 	}
-	if updated && print {
-		r.TW().AppendRow(table.Row{s.Name, newName, s.FirstGroup()})
+	if updated {
+		callback(s.Name)
 	}
-	s.Name = newName
 	return s
+}
+
+// enable is the same as enableCb but without callback
+func (s Stream) enable(r deps.Global, onlyPrefixed bool) Stream {
+	return s.enableCb(r, onlyPrefixed, func(_ string) {})
 }
 
 // removeBlockedInputs removes blocked inputs from stream
@@ -250,7 +277,9 @@ func (r repo) Enable(streams []Stream) (out []Stream) {
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
 
 	for _, s := range streams {
-		out = append(out, s.enable(r, true, true))
+		out = append(out, s.enableCb(r, true, func(newName string) {
+			r.tw.AppendRow(table.Row{s.Name, newName, s.FirstGroup()})
+		}))
 	}
 
 	r.tw.Render()

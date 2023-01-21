@@ -4,6 +4,7 @@ import (
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/network"
+	"m3u_merge_astra/util/slice"
 	"net/http"
 	"regexp"
 	"strings"
@@ -222,6 +223,11 @@ func TestRemoveInputsCb(t *testing.T) {
 	assert.Exactly(t, 2, count, "should remove 2 inputs")
 }
 
+func TestRemoveInputs(t *testing.T) {
+	s := Stream{}
+	s.removeInputs("") // Should not panic. Tested with RemoveInputsCb.
+}
+
 func TestInputsUpdateNote(t *testing.T) {
 	r := newDefRepo()
 
@@ -276,12 +282,15 @@ func TestDisableStream(t *testing.T) {
 	assert.Exactly(t, expected, s2, "name should stay unmodified and set Enabled field to false")
 }
 
-func TestEnableStream(t *testing.T) {
+func TestEnableStreamCb(t *testing.T) {
 	r := newDefRepo()
 
+	names := []string{}
 	s1 := Stream{Name: "Name", Enabled: false}
 	s1Original := copier.TestDeep(t, s1)
-	s2 := s1.enable(r, false, false)
+	s2 := s1.enableCb(r, false, func(newName string) {
+		names = append(names, newName)
+	})
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
@@ -289,41 +298,64 @@ func TestEnableStream(t *testing.T) {
 	assert.Exactly(t, expected, s2, "should set Enabled field to true")
 
 	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	s2 = s1.enable(r, false, false)
+	s2 = s1.enableCb(r, false, func(newName string) {
+		names = append(names, newName)
+	})
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should remove disabled prefix and set Enabled field to true")
 
 	s1 = Stream{Name: "Name", Enabled: true}
-	s2 = s1.enable(r, false, false)
+	s2 = s1.enableCb(r, false, func(newName string) {
+		t.Fail()
+	})
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should stay unchanged")
 
 	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: true}
-	s2 = s1.enable(r, false, false)
+	s2 = s1.enableCb(r, false, func(newName string) {
+		names = append(names, newName)
+	})
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should remove disabled prefix")
 
 	s1 = Stream{Name: "Name", Enabled: false}
 	s1Original = copier.TestDeep(t, s1)
-	s2 = s1.enable(r, true, false)
+	s2 = s1.enableCb(r, true, func(newName string) {
+		t.Fail()
+	})
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
 	assert.Exactly(t, s1, s2, "should stay unchanged")
 
 	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	s2 = s1.enable(r, true, false)
+	s2 = s1.enableCb(r, true, func(newName string) {
+		names = append(names, newName)
+	})
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should remove disabled prefix and set Enabled field to true")
 
 	s1 = Stream{Name: "Name", Enabled: true}
-	s2 = s1.enable(r, true, false)
+	s2 = s1.enableCb(r, true, func(newName string) {
+		t.Fail()
+	})
 	assert.Exactly(t, s1, s2, "should stay unchanged")
 
 	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: true}
-	s2 = s1.enable(r, true, false)
+	s2 = s1.enableCb(r, true, func(newName string) {
+		names = append(names, newName)
+	})
 	expected = Stream{Name: "Name", Enabled: true}
 	assert.Exactly(t, expected, s2, "should remove disabled prefix")
+
+	// Check names from callbacks
+	assert.Exactly(t, slice.Filled("Name", 5), names, "callbacks should return these new names")
+}
+
+func TestEnableStream(t *testing.T) {
+	r := newDefRepo()
+	s := Stream{}
+	s.enable(r, false) // Should not panic. Tested with enableCb.
 }
 
 func TestRemoveBlockedInputs(t *testing.T) {
