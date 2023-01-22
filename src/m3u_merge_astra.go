@@ -19,9 +19,8 @@ import (
 	"github.com/utahta/go-openuri"
 )
 
+// TODO: Move functionality of Streams.EnableOnInputUpdate out of basic functions
 // TODO: Check if merge.AddNewInputs() works fine
-// TODO: Move functionality of Streams.EnableOnInputUpdate out of basic functions?
-// TODO: Move HasInput functionality into AddInput?
 // TODO: Split functions using boolean arguments like withHash or onlyPrefixed into 2 separate functions?
 
 // TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
