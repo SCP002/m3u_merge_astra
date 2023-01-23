@@ -140,6 +140,25 @@ func (s Stream) KnownInputs(r deps.Global) []string {
 	})
 }
 
+// InputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
+func (s Stream) InputsUpdateNote(r deps.Global) string {
+	if !s.Enabled {
+		if r.Cfg().Streams.EnableOnInputUpdate {
+			return "Enabling the stream"
+		} else {
+			return "Stream is disabled"
+		}
+	}
+	return ""
+}
+
+// Enable enables stream and removes name prefix.
+//
+// If <onlyPrefixed> is true, enable stream only if it's name contains DisabledPrefix in config from <r>.
+func (s Stream) Enable(r deps.Global, onlyPrefixed bool) Stream {
+	return s.enableCb(r, onlyPrefixed, func(_ string) {})
+}
+
 // RemoveInputs removes all stream inputs equal <tInp>, running <callback> for every input removed
 func (s Stream) RemoveInputsCb(tInp string, callback func()) Stream {
 	rejectFn := func(cInp string, _ int) bool {
@@ -156,18 +175,6 @@ func (s Stream) RemoveInputsCb(tInp string, callback func()) Stream {
 // removeInputs is the same as RemoveInputsCb but without callback
 func (s Stream) removeInputs(tInp string) Stream {
 	return s.RemoveInputsCb(tInp, func() {})
-}
-
-// InputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
-func (s Stream) InputsUpdateNote(r deps.Global) string {
-	if !s.Enabled {
-		if r.Cfg().Streams.EnableOnInputUpdate {
-			return "Enabling the stream"
-		} else {
-			return "Stream is disabled"
-		}
-	}
-	return ""
 }
 
 // Disable disables stream and adds name prefix if not already contain any, running <callback> if stream was updated
@@ -190,11 +197,7 @@ func (s Stream) disableCb(r deps.Global, callback func()) Stream {
 	return s
 }
 
-// enableCb enables stream and removes name prefix.
-//
-// If <onlyPrefixed> is true, enable stream only if it's name contains DisabledPrefix in config from <r>.
-//
-// Runs <callback> with new name if stream was updated.
+// enableCb is the same as Enable() but runs <callback> with new name if stream was updated
 func (s Stream) enableCb(r deps.Global, onlyPrefixed bool, callback func(string)) Stream {
 	updated := false
 	disabledPrefix := r.Cfg().Streams.DisabledPrefix
@@ -213,11 +216,6 @@ func (s Stream) enableCb(r deps.Global, onlyPrefixed bool, callback func(string)
 		callback(s.Name)
 	}
 	return s
-}
-
-// Enable is the same as enableCb but without callback
-func (s Stream) Enable(r deps.Global, onlyPrefixed bool) Stream {
-	return s.enableCb(r, onlyPrefixed, func(_ string) {})
 }
 
 // removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input

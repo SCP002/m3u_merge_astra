@@ -203,6 +203,28 @@ func TestKnownInputs(t *testing.T) {
 	assert.Exactly(t, expected, ki, "should have these inputs")
 }
 
+func TestInputsUpdateNote(t *testing.T) {
+	r := newDefRepo()
+
+	r.cfg.Streams.EnableOnInputUpdate = false
+	s := Stream{Enabled: false}
+	assert.Exactly(t, "Stream is disabled", s.InputsUpdateNote(r), "should return this note")
+	s = Stream{Enabled: true}
+	assert.Exactly(t, "", s.InputsUpdateNote(r), "should not return a note if enabled")
+
+	r.cfg.Streams.EnableOnInputUpdate = true
+	s = Stream{Enabled: false}
+	assert.Exactly(t, "Enabling the stream", s.InputsUpdateNote(r), "should return this note")
+	s = Stream{Enabled: true}
+	assert.Exactly(t, "", s.InputsUpdateNote(r), "should not return a note if enabled")
+}
+
+func TestEnableStream(t *testing.T) {
+	r := newDefRepo()
+	s := Stream{}
+	s.Enable(r, false) // Should not panic. Tested with enableCb.
+}
+
 func TestRemoveInputsCb(t *testing.T) {
 	s1 := Stream{Inputs: []string{"http://input/1", "http://input/2", "http://input/1"}}
 	s1Original := copier.TestDeep(t, s1)
@@ -222,22 +244,6 @@ func TestRemoveInputsCb(t *testing.T) {
 func TestRemoveInputs(t *testing.T) {
 	s := Stream{}
 	s.removeInputs("") // Should not panic. Tested with RemoveInputsCb.
-}
-
-func TestInputsUpdateNote(t *testing.T) {
-	r := newDefRepo()
-
-	r.cfg.Streams.EnableOnInputUpdate = false
-	s := Stream{Enabled: false}
-	assert.Exactly(t, "Stream is disabled", s.InputsUpdateNote(r), "should return this note")
-	s = Stream{Enabled: true}
-	assert.Exactly(t, "", s.InputsUpdateNote(r), "should not return a note if enabled")
-
-	r.cfg.Streams.EnableOnInputUpdate = true
-	s = Stream{Enabled: false}
-	assert.Exactly(t, "Enabling the stream", s.InputsUpdateNote(r), "should return this note")
-	s = Stream{Enabled: true}
-	assert.Exactly(t, "", s.InputsUpdateNote(r), "should not return a note if enabled")
 }
 
 func TestDisableStreamCb(t *testing.T) {
@@ -361,12 +367,6 @@ func TestEnableStreamCb(t *testing.T) {
 
 	// Check names from callbacks
 	assert.Exactly(t, slice.Filled("Name", 5), names, "callbacks should return these new names")
-}
-
-func TestEnableStream(t *testing.T) {
-	r := newDefRepo()
-	s := Stream{}
-	s.Enable(r, false) // Should not panic. Tested with enableCb.
 }
 
 func TestRemoveBlockedInputs(t *testing.T) {
