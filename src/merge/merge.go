@@ -35,7 +35,7 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 // UpdateInputs returns copy of <streams> with every first matching input of every stream replaced with matching URL's
 // of m3u channels according to cfg.Streams.InputUpdateMap.
 //
-// If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables a stream on update.
+// If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream on update.
 func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Updating inputs\n")
 	r.tw.AppendHeader(table.Row{"Name", "Old URL", "New URL", "Note"})
@@ -83,7 +83,9 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 	return
 }
 
-// AddNewInputs returns copy of <streams> with new inputs if such found in <channels>
+// AddNewInputs returns copy of <streams> with new inputs if such found in <channels>.
+//
+// If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Adding new inputs\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "URL", "Note"})
@@ -92,7 +94,10 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
 			if !s.HasInput(r, ch.URL, r.cfg.Streams.HashCheckOnAddNewInputs) {
 				r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), ch.URL, s.InputsUpdateNote(r)})
-				s = s.AddInput(r, ch.URL)
+				s = s.AddInput(ch.URL)
+				if r.cfg.Streams.EnableOnInputUpdate {
+					s = s.Enable(r, false)
+				}
 			}
 		})
 		out = append(out, s)

@@ -120,14 +120,9 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	})
 }
 
-// AddInput adds new <url> to stream inputs.
-//
-// If EnableOnInputUpdate is enabled in config, it also enables a stream.
-func (s Stream) AddInput(r deps.Global, url string) Stream {
+// AddInput adds new <url> to stream inputs
+func (s Stream) AddInput(url string) Stream {
 	s.Inputs = slice.Prepend(s.Inputs, url)
-	if r.Cfg().Streams.EnableOnInputUpdate {
-		s = s.Enable(r, false)
-	}
 	return s
 }
 
@@ -304,7 +299,9 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// UniteInputs returns copy of <streams> with inputs of every equally named stream moved to the first stream found
+// UniteInputs returns copy of <streams> with inputs of every equally named stream moved to the first stream found.
+//
+// If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Uniting inputs of streams\n")
 	r.tw.AppendHeader(table.Row{"From ID", "From name", "Input", "To ID", "To name", "Note"})
@@ -316,7 +313,10 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
 					currStream.InputsUpdateNote(r)})
 				if !currStream.HasInput(r, nextInput, true) {
-					currStream = currStream.AddInput(r, nextInput)
+					currStream = currStream.AddInput(nextInput)
+					if r.cfg.Streams.EnableOnInputUpdate {
+						currStream = currStream.Enable(r, false)
+					}
 					out[currIdx] = currStream
 				}
 				nextStream = nextStream.removeInputs(nextInput)

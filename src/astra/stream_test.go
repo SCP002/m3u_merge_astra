@@ -158,34 +158,15 @@ func TestHasInput(t *testing.T) {
 }
 
 func TestAddInput(t *testing.T) {
-	r := newDefRepo()
-
 	s1 := Stream{Inputs: []string{"http://input/1", "http://input/2"}}
 	s1Original := copier.TestDeep(t, s1)
 
-	s2 := s1.AddInput(r, "http://input/3")
+	s2 := s1.AddInput("http://input/3")
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
 	expected := []string{"http://input/3", "http://input/1", "http://input/2"}
 	assert.Exactly(t, expected, s2.Inputs, "should have these inputs")
-
-	// Test Streams.EnableOnInputUpdate
-	r.cfg.Streams.EnableOnInputUpdate = false
-	s1 = Stream{Enabled: false, Inputs: []string{}}
-	s1Original = copier.TestDeep(t, s1)
-
-	s2 = s1.AddInput(r, "http://input/1")
-
-	assert.False(t, s2.Enabled, "stream should stay disalbed as EnableOnInputUpdate = false")
-
-	r.cfg.Streams.EnableOnInputUpdate = true
-
-	s2 = s1.AddInput(r, "http://input/1")
-	assert.NotSame(t, &s1, &s2, "should return copy of stream")
-	assert.Exactly(t, s1Original, s1, "should not modify the source")
-
-	assert.True(t, s2.Enabled, "stream become enabled as EnableOnInputUpdate = true")
 }
 
 func TestKnownInputs(t *testing.T) {
