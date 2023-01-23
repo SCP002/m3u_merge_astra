@@ -34,6 +34,8 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 
 // UpdateInputs returns copy of <streams> with every first matching input of every stream replaced with matching URL's
 // of m3u channels according to cfg.Streams.InputUpdateMap.
+//
+// If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables a stream on update.
 func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Updating inputs\n")
 	r.tw.AppendHeader(table.Row{"Name", "Old URL", "New URL", "Note"})
@@ -44,6 +46,9 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 				s = s.UpdateInput(r, ch.URL, func(oldURL string) {
 					r.tw.AppendRow(table.Row{s.Name, oldURL, ch.URL, s.InputsUpdateNote(r)})
 				})
+				if r.cfg.Streams.EnableOnInputUpdate {
+					s = s.Enable(r, false)
+				}
 			}
 		})
 		out = append(out, s)

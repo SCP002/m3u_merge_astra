@@ -76,8 +76,6 @@ func (s Stream) FirstGroup() string {
 // Runs <callback> with old URL for every updated input.
 //
 // If KeepInputHash is enabled in config, it also adds old input URL hash to <newURL>.
-//
-// If EnableOnInputUpdate is enabled in config, it also enables a stream on update.
 func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string)) Stream {
 	s = copier.MustDeep(s)
 	cfg := r.Cfg().Streams
@@ -102,9 +100,6 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 				// Update first encountered matching input.
 				callback(oldURL)
 				s.Inputs[inpIdx] = newURL
-				if cfg.EnableOnInputUpdate {
-					s = s.enable(r, false)
-				}
 				return s
 			}
 		}
@@ -131,7 +126,7 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 func (s Stream) AddInput(r deps.Global, url string) Stream {
 	s.Inputs = slice.Prepend(s.Inputs, url)
 	if r.Cfg().Streams.EnableOnInputUpdate {
-		s = s.enable(r, false)
+		s = s.Enable(r, false)
 	}
 	return s
 }
@@ -195,7 +190,7 @@ func (s Stream) disableCb(r deps.Global, callback func()) Stream {
 	return s
 }
 
-// enable enables stream and removes name prefix.
+// enableCb enables stream and removes name prefix.
 //
 // If <onlyPrefixed> is true, enable stream only if it's name contains DisabledPrefix in config from <r>.
 //
@@ -220,8 +215,8 @@ func (s Stream) enableCb(r deps.Global, onlyPrefixed bool, callback func(string)
 	return s
 }
 
-// enable is the same as enableCb but without callback
-func (s Stream) enable(r deps.Global, onlyPrefixed bool) Stream {
+// Enable is the same as enableCb but without callback
+func (s Stream) Enable(r deps.Global, onlyPrefixed bool) Stream {
 	return s.enableCb(r, onlyPrefixed, func(_ string) {})
 }
 

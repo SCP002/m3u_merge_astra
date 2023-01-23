@@ -123,43 +123,11 @@ func TestUpdateStreamInput(t *testing.T) {
 	})
 	assert.Exactly(t, s1, s2, "inputs should not be updated with irrelevant URL")
 
-	// Test Streams.EnableOnInputUpdate
-	r.cfg.Streams.EnableOnInputUpdate = false
-	s1 = Stream{Enabled: false, Inputs: []string{"http://update/from/1#c"}}
-	s1Original = copier.TestDeep(t, s1)
-
-	s2 = s1.UpdateInput(r, "http://update/to/1", func(oldInput string) {
-		oldInputs = append(oldInputs, oldInput)
-	})
-
-	assert.False(t, s2.Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
-
-	r.cfg.Streams.EnableOnInputUpdate = true
-
-	s2 = s1.UpdateInput(r, "http://update/to/1", func(oldInput string) {
-		oldInputs = append(oldInputs, oldInput)
-	})
-	assert.NotSame(t, &s1, &s2, "should return copy of stream")
-	assert.Exactly(t, s1Original, s1, "should not modify the source")
-
-	assert.True(t, s2.Enabled, "stream should become enabled as EnableOnInputUpdate = true")
-
-	r.cfg.Streams.EnableOnInputUpdate = true
-	s1 = Stream{Enabled: false, Inputs: []string{"http://irrelevant/from#a"}}
-
-	s2 = s1.UpdateInput(r, "http://update/to/1", func(oldInput string) {
-		t.Fail()
-	})
-
-	assert.Exactly(t, s1, s2, "stream should stay disabled because it was not updated")
-
 	assert.Exactly(t, []string{
 		"http://update/from/1#c",
 		"http://update/url/1#c",
 		"http://update/url/1#b",
 		"http://update/url/1#b",
-		"http://update/from/1#c",
-		"http://update/from/1#c",
 	}, oldInputs, "callbacks should return these old iputs")
 }
 
@@ -398,7 +366,7 @@ func TestEnableStreamCb(t *testing.T) {
 func TestEnableStream(t *testing.T) {
 	r := newDefRepo()
 	s := Stream{}
-	s.enable(r, false) // Should not panic. Tested with enableCb.
+	s.Enable(r, false) // Should not panic. Tested with enableCb.
 }
 
 func TestRemoveBlockedInputs(t *testing.T) {
