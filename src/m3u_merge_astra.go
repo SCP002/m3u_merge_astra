@@ -24,8 +24,9 @@ import (
 // TODO: Split functions using boolean arguments like withHash or onlyPrefixed into 2 separate functions?
 
 // TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
+// TODO: Remove added and disabled prefixes and use it instead of astra.Enable(), or remove this step entirely?
 // TODO: Add name aliases map feature.
-// TODO: Remove added and disabled prefixes and use it instead of astra.Enable()?
+// TODO: Add warning and exit on incomplete config.
 
 func main() {
 	// Init logger
