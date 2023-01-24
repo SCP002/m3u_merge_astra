@@ -47,7 +47,7 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 					r.tw.AppendRow(table.Row{s.Name, oldURL, ch.URL, s.InputsUpdateNote(r)})
 				})
 				if r.cfg.Streams.EnableOnInputUpdate {
-					s = s.Enable(r, false)
+					s = s.Enable()
 				}
 			}
 		})
@@ -96,7 +96,7 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 				r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), ch.URL, s.InputsUpdateNote(r)})
 				s = s.AddInput(ch.URL)
 				if r.cfg.Streams.EnableOnInputUpdate {
-					s = s.Enable(r, false)
+					s = s.Enable()
 				}
 			}
 		})

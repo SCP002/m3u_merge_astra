@@ -147,11 +147,10 @@ func (s Stream) InputsUpdateNote(r deps.Global) string {
 	return ""
 }
 
-// Enable enables stream and removes name prefix.
-//
-// If <onlyPrefixed> is true, enable stream only if it's name contains DisabledPrefix in config from <r>.
-func (s Stream) Enable(r deps.Global, onlyPrefixed bool) Stream {
-	return s.enableCb(r, onlyPrefixed, func(_ string) {})
+// Enable enables the stream
+func (s Stream) Enable() Stream {
+	s.Enabled = true
+	return s
 }
 
 // RemoveInputs removes all stream inputs equal <tInp>, running <callback> for every input removed
@@ -192,27 +191,6 @@ func (s Stream) disableCb(r deps.Global, callback func()) Stream {
 	return s
 }
 
-// enableCb is the same as Enable() but runs <callback> with new name if stream was updated
-func (s Stream) enableCb(r deps.Global, onlyPrefixed bool, callback func(string)) Stream {
-	updated := false
-	disabledPrefix := r.Cfg().Streams.DisabledPrefix
-
-	if strings.Contains(s.Name, disabledPrefix) && disabledPrefix != "" {
-		s.Name = strings.ReplaceAll(s.Name, disabledPrefix, "")
-		updated = true
-	} else if onlyPrefixed {
-		return s
-	}
-	if !s.Enabled {
-		s.Enabled = true
-		updated = true
-	}
-	if updated {
-		callback(s.Name)
-	}
-	return s
-}
-
 // removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input
 func (s Stream) removeBlockedInputs(r deps.Global, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
@@ -246,11 +224,16 @@ func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 func (r repo) Enable(streams []Stream) (out []Stream) {
 	r.log.Info("Enabling and renaming prefixed streams\n")
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
+	disabledPrefix := r.cfg.Streams.DisabledPrefix
 
 	for _, s := range streams {
-		out = append(out, s.enableCb(r, true, func(newName string) {
-			r.tw.AppendRow(table.Row{s.Name, newName, s.FirstGroup()})
-		}))
+		if strings.Contains(s.Name, disabledPrefix) && disabledPrefix != "" {
+			oldName := s.Name
+			s.Name = strings.ReplaceAll(s.Name, disabledPrefix, "")
+			s = s.Enable()
+			r.tw.AppendRow(table.Row{oldName, s.Name, s.FirstGroup()})
+		}
+		out = append(out, s)
 	}
 
 	r.tw.Render()
@@ -315,7 +298,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 				if !currStream.HasInput(r, nextInput, true) {
 					currStream = currStream.AddInput(nextInput)
 					if r.cfg.Streams.EnableOnInputUpdate {
-						currStream = currStream.Enable(r, false)
+						currStream = currStream.Enable()
 					}
 					out[currIdx] = currStream
 				}

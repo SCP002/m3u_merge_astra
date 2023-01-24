@@ -19,11 +19,11 @@ import (
 	"github.com/utahta/go-openuri"
 )
 
-// TODO: Check if merge.AddNewInputs() works fine
-// TODO: Split functions using boolean arguments like withHash or onlyPrefixed into 2 separate functions?
+// TODO: Split functions using boolean arguments like withHash into 2 separate functions?
 
-// TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
+// TODO: Check if merge.AddNewInputs() works fine
 // TODO: Remove added and disabled prefixes and use it instead of astra.Enable(), or remove this step entirely?
+// TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
 // TODO: Add name aliases map feature.
 // TODO: Add warning and exit on incomplete config.
 
