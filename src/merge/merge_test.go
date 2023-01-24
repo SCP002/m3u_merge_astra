@@ -19,11 +19,11 @@ func TestRenameStreams(t *testing.T) {
 	sl1 := []astra.Stream{
 		{Name: "Known name 2"}, {Name: "Known name"}, {Name: "Other name A"},
 	}
-	sl1Original := copier.TDeep(t, sl1)
+	sl1Original := copier.TestDeep(t, sl1)
 	cl1 := []m3u.Channel{
 		{Name: "Other_Name_B"}, {Name: "Known_Name_2"}, {Name: "Known_Name"},
 	}
-	cl1Original := copier.TDeep(t, cl1)
+	cl1Original := copier.TestDeep(t, cl1)
 
 	sl2 := r.RenameStreams(sl1, cl1)
 
@@ -57,7 +57,7 @@ func TestUpdateInputs(t *testing.T) {
 		{Name: "Known name 2", Inputs: []string{"http://known/input/2#b"}},
 		{Name: "Other name A", Inputs: []string{"http://known/input/1#a"}},
 	}
-	sl1Original := copier.TDeep(t, sl1)
+	sl1Original := copier.TestDeep(t, sl1)
 	cl1 := []m3u.Channel{
 		{Name: "Other_Name_B", URL: "http://new/known/input/1#a"},
 		{Name: "Known_Name", URL: "http://new/known/input/2#b"},
@@ -65,7 +65,7 @@ func TestUpdateInputs(t *testing.T) {
 		{Name: "Known-Name", URL: "http://new/known/input/1"},
 		{Name: "KnownName", URL: "http://_other_/input"},
 	}
-	cl1Original := copier.TDeep(t, cl1)
+	cl1Original := copier.TestDeep(t, cl1)
 
 	r.cfg.Streams.KeepInputHash = false
 	sl2 := r.UpdateInputs(sl1, cl1)
@@ -108,7 +108,7 @@ func TestUpdateInputs(t *testing.T) {
 	sl1 = []astra.Stream{
 		{Enabled: false, Name: "Known name", Inputs: []string{"http://known/input/1"}},
 	}
-	sl1Original = copier.TDeep(t, sl1)
+	sl1Original = copier.TestDeep(t, sl1)
 	cl1 = []m3u.Channel{
 		{Name: "Known name", URL: "http://new/known/input/1"},
 	}
@@ -146,14 +146,14 @@ func TestRemoveInputsByUpdateMap(t *testing.T) {
 		{Name: "Known name 2", Inputs: []string{"http://known/input/2#a"}},
 		{Name: "Other name A", Inputs: []string{"http://known/input/1#a", "http://known/input/2", "http://other/input"}},
 	}
-	sl1Original := copier.TDeep(t, sl1)
+	sl1Original := copier.TestDeep(t, sl1)
 	cl1 := []m3u.Channel{
 		{Name: "Other_Name_B", URL: "http://other/url"},
 		{Name: "Known_Name", URL: "http://known/input/1#b"},
 		{Name: "Known_Name_2", URL: "http://other/url"},
 		{Name: "Known_Name_2", URL: "http://known/input/2"},
 	}
-	cl1Original := copier.TDeep(t, cl1)
+	cl1Original := copier.TestDeep(t, cl1)
 	sl2 := r.RemoveInputsByUpdateMap(sl1, cl1)
 
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
@@ -189,7 +189,7 @@ func TestAddNewInputs(t *testing.T) {
 		{Name: "Known name 3", Inputs: []string{"http://input/1"}},
 		{Name: "Other name A", Inputs: []string{"http://input/1#b"}},
 	}
-	sl1Original := copier.TDeep(t, sl1)
+	sl1Original := copier.TestDeep(t, sl1)
 	cl1 := []m3u.Channel{
 		{Name: "Known_Name_2", URL: "http://input/1"},
 		{Name: "Known_Name", URL: "http://input/2#a"},
@@ -197,7 +197,7 @@ func TestAddNewInputs(t *testing.T) {
 		{Name: "Other_Name_B", URL: "http://input/1#c"},
 		{Name: "Known-Name-3", URL: "http://input/3"},
 	}
-	cl1Original := copier.TDeep(t, cl1)
+	cl1Original := copier.TestDeep(t, cl1)
 
 	r.cfg.Streams.HashCheckOnAddNewInputs = true
 	sl2 := r.AddNewInputs(sl1, cl1)
@@ -247,21 +247,21 @@ func TestAddNewInputs(t *testing.T) {
 	assert.Exactly(t, expected, sl2[2], "should add unknown inputs")
 
 	assert.Exactly(t, sl1[3], sl2[3], "should not change streams with unknown names")
-	
+
 	// Test Streams.EnableOnInputUpdate
 	r.cfg.Streams.EnableOnInputUpdate = false
 	sl1 = []astra.Stream{
 		{Enabled: false, Name: "Known name", Inputs: []string{"http://input/1"}},
 	}
-	sl1Original = copier.TDeep(t, sl1)
+	sl1Original = copier.TestDeep(t, sl1)
 	cl1 = []m3u.Channel{
 		{Name: "Known name", URL: "http://input/2"},
 	}
-	
+
 	sl2 = r.AddNewInputs(sl1, cl1)
 
 	assert.False(t, sl2[0].Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
-	
+
 	r.cfg.Streams.EnableOnInputUpdate = true
 
 	sl2 = r.AddNewInputs(sl1, cl1)
@@ -286,13 +286,13 @@ func TestAddNewStreams(t *testing.T) {
 		{Name: "Known name", Inputs: []string{"http://some/url"}},
 		{Name: "Other name A", Inputs: []string{"http://some/url/2"}},
 	}
-	sl1Original := copier.TDeep(t, sl1)
+	sl1Original := copier.TestDeep(t, sl1)
 	cl1 := []m3u.Channel{
 		{Name: "Other name B", Group: "Group", URL: "http://some/url/2"},
 		{Name: "Known name", URL: "http://some/url"},
 		{Name: "Other name B", Group: "Group", URL: "http://some/url/3"},
 	}
-	cl1Original := copier.TDeep(t, cl1)
+	cl1Original := copier.TestDeep(t, cl1)
 
 	r.cfg.Streams.AddNewWithKnownInputs = true
 	r.cfg.Streams.AddGroupsToNew = false
@@ -349,12 +349,12 @@ func TestAddNewStreams(t *testing.T) {
 		{Name: "Known name", Inputs: []string{"http://some/url#a"}},
 		{Name: "Other name A", Inputs: []string{"http://known/url#b"}},
 	}
-	sl1Original = copier.TDeep(t, sl1)
+	sl1Original = copier.TestDeep(t, sl1)
 	cl1 = []m3u.Channel{
 		{Name: "Other name B", URL: "http://known/url#c"},
 		{Name: "Known name", URL: "http://some/url/2#a"},
 	}
-	cl1Original = copier.TDeep(t, cl1)
+	cl1Original = copier.TestDeep(t, cl1)
 
 	r.cfg.Streams.AddNewWithKnownInputs = false
 	sl2 = r.AddNewStreams(sl1, cl1)

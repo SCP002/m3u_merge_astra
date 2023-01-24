@@ -73,16 +73,18 @@ func (s Stream) FirstGroup() string {
 
 // UpdateInput updates first encountered input if both it and <newURL> match the InputUpdateMap from config in <r>.
 //
-// If KeepInputHash is enabled in config, it also adds old input URL hash to <newURL>.
+// Runs <callback> with old URL for every updated input.
 //
-// If EnableOnInputUpdate is enabled in config, it also enables a stream on update.
-func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
-	s = copier.PDeep(s)
+// If KeepInputHash is enabled in config, it also adds old input URL hash to <newURL>.
+func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string)) Stream {
+	s = copier.MustDeep(s)
+	cfg := r.Cfg().Streams
+
 	for inpIdx, oldURL := range s.Inputs {
-		for _, updRec := range r.Cfg().Streams.InputUpdateMap {
+		for _, updRec := range cfg.InputUpdateMap {
 			if updRec.From.MatchString(oldURL) && updRec.To.MatchString(newURL) {
 				// Append old hash to new URL.
-				if r.Cfg().Streams.KeepInputHash {
+				if cfg.KeepInputHash {
 					oldHash, err := conv.GetHash(oldURL)
 					if err != nil {
 						r.Log().Debug(err)
@@ -96,11 +98,8 @@ func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
 					continue
 				}
 				// Update first encountered matching input.
-				r.TW().AppendRow(table.Row{s.Name, oldURL, newURL, s.inputsUpdateNote(r)})
+				callback(oldURL)
 				s.Inputs[inpIdx] = newURL
-				if r.Cfg().Streams.EnableOnInputUpdate {
-					s = s.enable(r, false, false)
-				}
 				return s
 			}
 		}
@@ -110,7 +109,7 @@ func (s Stream) UpdateInput(r deps.Global, newURL string) Stream {
 
 // HasInput returns true if stream inputs contain <tURLStr> parameter.
 //
-// If <withHash> is false, return true even if stream input and <tURLStr> are the same but have different hashes.
+// If <withHash> is false, ignore hashes (everything after #) during the search.
 func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
 		equal, err := conv.LinksEqual(tURLStr, cURLStr, withHash)
@@ -121,19 +120,9 @@ func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	})
 }
 
-// AddInput adds new <url> to stream inputs.
-//
-// If <print> is true, print added input.
-//
-// If EnableOnInputUpdate is enabled in config, it also enables a stream.
-func (s Stream) AddInput(r deps.Global, url string, print bool) Stream {
-	if print {
-		r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), url, s.inputsUpdateNote(r)})
-	}
+// AddInput adds new <url> to stream inputs
+func (s Stream) AddInput(url string) Stream {
 	s.Inputs = slice.Prepend(s.Inputs, url)
-	if r.Cfg().Streams.EnableOnInputUpdate {
-		s = s.enable(r, false, false)
-	}
 	return s
 }
 
@@ -146,23 +135,8 @@ func (s Stream) KnownInputs(r deps.Global) []string {
 	})
 }
 
-// RemoveInputs removes all stream inputs equal <tInp>.
-//
-// If <print> is true, print removed inputs.
-func (s Stream) RemoveInputs(r deps.Global, tInp string, print bool) Stream {
-	rejectFn := func(cInp string, _ int) bool {
-		if print && cInp == tInp {
-			r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), tInp})
-		}
-		return cInp == tInp
-	}
-	s.Inputs = lo.Reject(s.Inputs, rejectFn)
-	s.DisabledInputs = lo.Reject(s.DisabledInputs, rejectFn)
-	return s
-}
-
-// inputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
-func (s Stream) inputsUpdateNote(r deps.Global) string {
+// InputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
+func (s Stream) InputsUpdateNote(r deps.Global) string {
 	if !s.Enabled {
 		if r.Cfg().Streams.EnableOnInputUpdate {
 			return "Enabling the stream"
@@ -173,12 +147,38 @@ func (s Stream) inputsUpdateNote(r deps.Global) string {
 	return ""
 }
 
-// Disable disables stream and adds name prefix if not already contain any
-func (s Stream) disable(r deps.Global) Stream {
-	newName := s.Name
+// Enable enables the stream
+func (s Stream) Enable() Stream {
+	s.Enabled = true
+	return s
+}
+
+// RemoveInputs removes all stream inputs equal <tInp>, running <callback> for every input removed
+func (s Stream) RemoveInputsCb(tInp string, callback func()) Stream {
+	rejectFn := func(cInp string, _ int) bool {
+		if cInp == tInp {
+			callback()
+		}
+		return cInp == tInp
+	}
+	s.Inputs = lo.Reject(s.Inputs, rejectFn)
+	s.DisabledInputs = lo.Reject(s.DisabledInputs, rejectFn)
+	return s
+}
+
+// removeInputs is the same as RemoveInputsCb but without callback
+func (s Stream) removeInputs(tInp string) Stream {
+	return s.RemoveInputsCb(tInp, func() {})
+}
+
+// Disable disables stream and adds name prefix if not already contain any, running <callback> if stream was updated
+func (s Stream) disableCb(r deps.Global, callback func()) Stream {
 	updated := false
-	if !conv.ContainsAny(s.Name, r.Cfg().Streams.AddedPrefix, r.Cfg().Streams.DisabledPrefix) {
-		newName = r.Cfg().Streams.DisabledPrefix + s.Name
+	addedPrefix := r.Cfg().Streams.AddedPrefix
+	disabledPrefix := r.Cfg().Streams.DisabledPrefix
+
+	if !conv.ContainsAny(s.Name, addedPrefix, disabledPrefix) {
+		s.Name = disabledPrefix + s.Name
 		updated = true
 	}
 	if s.Enabled {
@@ -186,43 +186,17 @@ func (s Stream) disable(r deps.Global) Stream {
 		updated = true
 	}
 	if updated {
-		r.TW().AppendRow(table.Row{s.Name, s.FirstGroup()})
+		callback()
 	}
-	s.Name = newName
 	return s
 }
 
-// enable enables stream and removes name prefix.
-//
-// If <onlyPrefixed> is true, enable stream only if it's name contains DisabledPrefix in config from <r>.
-//
-// If <print> is true, print old name, new name and group of the stream.
-func (s Stream) enable(r deps.Global, onlyPrefixed bool, print bool) Stream {
-	newName := s.Name
-	updated := false
-	if strings.Contains(s.Name, r.Cfg().Streams.DisabledPrefix) && r.Cfg().Streams.DisabledPrefix != "" {
-		newName = strings.ReplaceAll(s.Name, r.Cfg().Streams.DisabledPrefix, "")
-		updated = true
-	} else if onlyPrefixed {
-		return s
-	}
-	if !s.Enabled {
-		s.Enabled = true
-		updated = true
-	}
-	if updated && print {
-		r.TW().AppendRow(table.Row{s.Name, newName, s.FirstGroup()})
-	}
-	s.Name = newName
-	return s
-}
-
-// removeBlockedInputs removes blocked inputs from stream
-func (s Stream) removeBlockedInputs(r deps.Global) Stream {
+// removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input
+func (s Stream) removeBlockedInputs(r deps.Global, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
 		reject := slice.RxAnyMatch(r.Cfg().Streams.InputBlacklist, input)
 		if reject {
-			r.TW().AppendRow(table.Row{s.Name, s.FirstGroup(), input})
+			callback(input)
 		}
 		return reject
 	}
@@ -239,7 +213,7 @@ func (s Stream) hasNoInputs() bool {
 
 // HasInput returns true if any input of <streams> contains <inp>.
 //
-// If <withHash> is false, return true even if stream input and <inp> are the same but have different hashes.
+// If <withHash> is false, ignore hashes (everything after #) during the search.
 func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 	return lo.ContainsBy(streams, func(s Stream) bool {
 		return s.HasInput(r, inp, withHash)
@@ -250,9 +224,16 @@ func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 func (r repo) Enable(streams []Stream) (out []Stream) {
 	r.log.Info("Enabling and renaming prefixed streams\n")
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
+	disabledPrefix := r.cfg.Streams.DisabledPrefix
 
 	for _, s := range streams {
-		out = append(out, s.enable(r, true, true))
+		if strings.Contains(s.Name, disabledPrefix) && disabledPrefix != "" {
+			oldName := s.Name
+			s.Name = strings.ReplaceAll(s.Name, disabledPrefix, "")
+			s = s.Enable()
+			r.tw.AppendRow(table.Row{oldName, s.Name, s.FirstGroup()})
+		}
+		out = append(out, s)
 	}
 
 	r.tw.Render()
@@ -266,7 +247,9 @@ func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
 
 	for _, s := range streams {
-		out = append(out, s.removeBlockedInputs(r))
+		out = append(out, s.removeBlockedInputs(r, func(input string) {
+			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), input})
+		}))
 	}
 
 	r.tw.Render()
@@ -299,22 +282,27 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// UniteInputs returns copy of <streams> with inputs of every equally named stream moved to the first stream found
+// UniteInputs returns copy of <streams> with inputs of every equally named stream moved to the first stream found.
+//
+// If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Uniting inputs of streams\n")
 	r.tw.AppendHeader(table.Row{"From ID", "From name", "Input", "To ID", "To name", "Note"})
 
-	out = copier.PDeep(streams)
+	out = copier.MustDeep(streams)
 	for currIdx, currStream := range out {
 		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
-					currStream.inputsUpdateNote(r)})
+					currStream.InputsUpdateNote(r)})
 				if !currStream.HasInput(r, nextInput, true) {
-					currStream = currStream.AddInput(r, nextInput, false)
+					currStream = currStream.AddInput(nextInput)
+					if r.cfg.Streams.EnableOnInputUpdate {
+						currStream = currStream.Enable()
+					}
 					out[currIdx] = currStream
 				}
-				nextStream = nextStream.RemoveInputs(r, nextInput, false)
+				nextStream = nextStream.removeInputs(nextInput)
 				out[nextIdx] = nextStream
 			}
 		})
@@ -329,7 +317,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Sorting inputs of streams\n")
 
-	out = copier.PDeep(streams)
+	out = copier.MustDeep(streams)
 	for _, s := range out {
 		sort.SliceStable(s.Inputs, func(i, j int) bool {
 			// Set default weight
@@ -396,7 +384,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 	pool := pond.New(r.cfg.Streams.InputMaxConns, 0, pond.MinWorkers(0))
 	var mut sync.Mutex
 
-	out = copier.PDeep(streams)
+	out = copier.MustDeep(streams)
 	for sIdx, s := range out {
 		for _, inp := range s.Inputs {
 			s, sIdx, inp := s, sIdx, inp
@@ -433,7 +421,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 	r.log.Info("Adding hashes to inputs of streams\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Hash", "Result"})
 
-	out = copier.PDeep(streams)
+	out = copier.MustDeep(streams)
 	var changed bool
 	for sIdx, s := range out {
 		for inpIdx, inp := range s.Inputs {
@@ -509,7 +497,9 @@ func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
 
 	for _, s := range streams {
 		if s.hasNoInputs() {
-			s = s.disable(r)
+			s = s.disableCb(r, func() {
+				r.tw.AppendRow(table.Row{s.Name, s.FirstGroup()})
+			})
 		}
 		out = append(out, s)
 	}

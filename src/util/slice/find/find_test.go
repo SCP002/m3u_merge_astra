@@ -11,7 +11,7 @@ import (
 
 func TestIndexOrElse(t *testing.T) {
 	ol1 := []string{"A", "B"}
-	ol1Original := copier.TDeep(t, ol1)
+	ol1Original := copier.TestDeep(t, ol1)
 
 	search := "B"
 	ol2, o, idx := IndexOrElse(ol1, search, func(o string) bool {
@@ -101,7 +101,7 @@ func TestGetSimilar(t *testing.T) {
 		/* 4 */ {Name: "Name_3"},
 		/* 5 */ {Name: "Name-2"},
 	}
-	ol1Original := copier.TDeep(t, ol1)
+	ol1Original := copier.TestDeep(t, ol1)
 	ol2 := GetSimilar(cfg, ol1, "name2!")
 
 	assert.NotSame(t, &ol1, &ol2, "should return copy of objects")

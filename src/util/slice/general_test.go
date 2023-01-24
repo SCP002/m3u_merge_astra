@@ -14,7 +14,7 @@ func TestPrepend(t *testing.T) {
 
 func TestAppendNew(t *testing.T) {
 	ol1 := []int{0, 1}
-	ol1Original := copier.TDeep(t, ol1)
+	ol1Original := copier.TestDeep(t, ol1)
 
 	cbCounter := 0
 	ol2 := AppendNew(ol1, func(_ int) {
@@ -30,7 +30,7 @@ func TestAppendNew(t *testing.T) {
 
 func TestRemoveLast(t *testing.T) {
 	ol1 := []string{"C", "A", "", "A", "B"}
-	ol1Original := copier.TDeep(t, ol1)
+	ol1Original := copier.TestDeep(t, ol1)
 
 	ol2 := RemoveLast(ol1, "A")
 	assert.NotSame(t, &ol1, &ol2, "should return copy of objects")

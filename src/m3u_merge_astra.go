@@ -19,15 +19,11 @@ import (
 	"github.com/utahta/go-openuri"
 )
 
-// TODO: Get rid of "print bool" function arguments (callbacks / second return values)
-// TODO: Reduce calling tablewriter AppendRow without AppendHeader to minimum (callbacks / second return values)?
 // TODO: Check if merge.AddNewInputs() works fine
-// TODO: Rename TDeep to TestDeep and PDeep to MustDeep
-// TODO: Move functionality of Streams.EnableOnInputUpdate out of basic functions?
-// TODO: Move HasInput functionality into AddInput?
-
+// TODO: Remove added and disabled prefixes and mark streams with bool fields instead of astra.Enable(), then re-enable
 // TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
 // TODO: Add name aliases map feature.
+// TODO: Add warning and exit on incomplete config.
 
 func main() {
 	// Init logger
@@ -76,7 +72,8 @@ func main() {
 	m3uRepo := m3u.NewRepo(log, tw, cfg)
 
 	m3uChannels := m3uRepo.Parse(m3uResp)
-	m3uChannels = slice.Sort(log, m3uChannels, "M3U channels")
+	log.Info("Sorting M3U channels")
+	m3uChannels = slice.Sort(m3uChannels)
 	m3uChannels = m3uRepo.ReplaceGroups(m3uChannels)
 	m3uChannels = m3uRepo.RemoveBlocked(m3uChannels)
 
@@ -85,7 +82,8 @@ func main() {
 	astraRepo := astra.NewRepo(log, tw, cfg)
 	mergeRepo := merge.NewRepo(log, tw, cfg)
 
-	astraCfg.Streams = slice.Sort(log, astraCfg.Streams, "astra streams")
+	log.Info("Sorting astra streams")
+	astraCfg.Streams = slice.Sort(astraCfg.Streams)
 	astraCfg.Streams = astraRepo.Enable(astraCfg.Streams)
 	if cfg.Streams.Rename {
 		astraCfg.Streams = mergeRepo.RenameStreams(astraCfg.Streams, m3uChannels)

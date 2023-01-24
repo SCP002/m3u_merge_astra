@@ -28,11 +28,11 @@ func (ch Channel) GetName() string {
 	return ch.Name
 }
 
-// replaceGroup returns new channel with group taken from config in <r>
-func (ch Channel) replaceGroup(r deps.Global) Channel {
+// replaceGroup returns new channel with group taken from config in <r>, running <callback> with new group on change
+func (ch Channel) replaceGroupCb(r deps.Global, callback func(string)) Channel {
 	newGroup := r.Cfg().M3U.ChannGroupMap[ch.Group]
 	if ch.Group != newGroup && newGroup != "" {
-		r.TW().AppendRow(table.Row{ch.Name, ch.Group, newGroup})
+		callback(newGroup)
 		ch.Group = newGroup
 	}
 	return ch
@@ -90,7 +90,9 @@ func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 	r.tw.AppendHeader(table.Row{"Name", "Original group", "New group"})
 
 	for _, ch := range channels {
-		out = append(out, ch.replaceGroup(r))
+		out = append(out, ch.replaceGroupCb(r, func(newGroup string) {
+			r.tw.AppendRow(table.Row{ch.Name, ch.Group, newGroup})
+		}))
 	}
 
 	r.tw.Render()
@@ -120,7 +122,7 @@ func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
 
 // HasURL returns true if <channels> contain <url>.
 //
-// If <withHash> is false, return true even if channel url and <url> are the same but have different hashes.
+// If <withHash> is false, ignore hashes (everything after #) during the search.
 func (r repo) HasURL(channels []Channel, url string, withHash bool) bool {
 	return lo.ContainsBy(channels, func(ch Channel) bool {
 		equal, err := conv.LinksEqual(ch.URL, url, withHash)

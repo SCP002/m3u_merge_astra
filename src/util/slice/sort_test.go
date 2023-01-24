@@ -2,22 +2,19 @@ package slice
 
 import (
 	"m3u_merge_astra/util/copier"
-	"m3u_merge_astra/util/logger"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSort(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
 
 	ol1 := []TestNamedStruct{
 		{Name: "C"}, {Name: "A"}, {}, {Name: "B"},
 	}
-	ol1Original := copier.TDeep(t, ol1)
+	ol1Original := copier.TestDeep(t, ol1)
 
-	ol2 := Sort(log, ol1, "test objects")
+	ol2 := Sort(ol1)
 	assert.NotSame(t, &ol1, &ol2, "should return copy of objects")
 	assert.Exactly(t, ol1Original, ol1, "should not modify the source")
 
