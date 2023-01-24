@@ -109,7 +109,7 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 
 // HasInput returns true if stream inputs contain <tURLStr> parameter.
 //
-// If <withHash> is false, return true even if stream input and <tURLStr> are the same but have different hashes.
+// If <withHash> is false, ignore hashes (everything after #) during the search.
 func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
 		equal, err := conv.LinksEqual(tURLStr, cURLStr, withHash)
@@ -213,7 +213,7 @@ func (s Stream) hasNoInputs() bool {
 
 // HasInput returns true if any input of <streams> contains <inp>.
 //
-// If <withHash> is false, return true even if stream input and <inp> are the same but have different hashes.
+// If <withHash> is false, ignore hashes (everything after #) during the search.
 func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 	return lo.ContainsBy(streams, func(s Stream) bool {
 		return s.HasInput(r, inp, withHash)

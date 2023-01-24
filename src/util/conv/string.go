@@ -39,7 +39,7 @@ func IsNameSame(cfg cfg.General, lName, rName string) bool {
 
 // LinksEqual returns true if <lURLStr> equal <rURLStr> and error is parsing failed.
 //
-// If <withHash> is false, return true even if links are the same but have different hashes.
+// If <withHash> is false, compare ignoring hashes (everything after #).
 func LinksEqual(lURLStr string, rURLStr string, withHash bool) (bool, error) {
 	if withHash {
 		return lURLStr == rURLStr, nil
