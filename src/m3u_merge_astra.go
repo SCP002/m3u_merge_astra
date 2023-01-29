@@ -19,12 +19,6 @@ import (
 	"github.com/utahta/go-openuri"
 )
 
-// TODO: Check if merge.AddNewInputs() works fine
-// TODO: Remove added and disabled prefixes and mark streams with bool fields instead of astra.Enable(), then re-enable
-// TODO: Do not print stream on DisableWithoutInputs if it's already disabled.
-// TODO: Add name aliases map feature.
-// TODO: Add warning and exit on incomplete config.
-
 func main() {
 	// Init logger
 	log := logger.New(logrus.InfoLevel)
@@ -82,9 +76,9 @@ func main() {
 	astraRepo := astra.NewRepo(log, tw, cfg)
 	mergeRepo := merge.NewRepo(log, tw, cfg)
 
+	astraCfg.Streams = astraRepo.RemoveNamePrefixes(astraCfg.Streams)
 	log.Info("Sorting astra streams")
 	astraCfg.Streams = slice.Sort(astraCfg.Streams)
-	astraCfg.Streams = astraRepo.Enable(astraCfg.Streams)
 	if cfg.Streams.Rename {
 		astraCfg.Streams = mergeRepo.RenameStreams(astraCfg.Streams, m3uChannels)
 	}
@@ -121,6 +115,7 @@ func main() {
 	} else if cfg.Streams.DisableWithoutInputs {
 		astraCfg.Streams = astraRepo.DisableWithoutInputs(astraCfg.Streams)
 	}
+	astraCfg.Streams = astraRepo.AddNamePrefixes(astraCfg.Streams)
 
 	// Write astra config
 	log.Info("Writing astra config\n")

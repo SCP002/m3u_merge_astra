@@ -18,6 +18,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/utahta/go-openuri v0.1.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
+	github.com/zenizh/go-capturer v0.0.0-20211219060012-52ea6c8fed04
 	golang.org/x/exp v0.0.0-20230116083435-1de6713980de
 )
 

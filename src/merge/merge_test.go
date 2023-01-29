@@ -312,9 +312,10 @@ func TestAddNewStreams(t *testing.T) {
 		Enabled:        r.cfg.Streams.MakeNewEnabled,
 		Type:           string(r.cfg.Streams.NewType),
 		ID:             sl2[2].ID,
-		Name:           r.cfg.Streams.AddedPrefix + "Other name B",
+		Name:           "Other name B",
 		Inputs:         []string{"http://some/url/2"},
 		DisabledInputs: make([]string, 0),
+		MarkAdded:      true,
 	}
 	assert.Exactly(t, expected, sl2[2], "should add new stream")
 

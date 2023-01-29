@@ -118,9 +118,7 @@ func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []as
 		if !r.cfg.Streams.AddNewWithKnownInputs && astraRepo.HasInput(streams, ch.URL, false) {
 			continue
 		}
-		nameWithAddedPrefix := r.cfg.Streams.AddedPrefix + ch.Name
-		nameWithDisabledPrefix := r.cfg.Streams.DisabledPrefix + ch.Name
-		if !find.HasAnySimilar(r.cfg.General, streams, ch.Name, nameWithAddedPrefix, nameWithDisabledPrefix) {
+		if !find.HasAnySimilar(r.cfg.General, streams, ch.Name) {
 			id := generateUID(streams)
 			stream := astra.NewStream(r.cfg.Streams, id, ch.Name, ch.Group, []string{ch.URL})
 			r.tw.AppendRow(table.Row{ch.Name, stream.FirstGroup(), ch.URL})

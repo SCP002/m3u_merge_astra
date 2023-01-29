@@ -12,6 +12,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/zenizh/go-capturer"
 )
 
 func TestNewStream(t *testing.T) {
@@ -22,9 +23,10 @@ func TestNewStream(t *testing.T) {
 		Enabled:        cfg.MakeNewEnabled,
 		Type:           string(cfg.NewType),
 		ID:             "0000",
-		Name:           cfg.AddedPrefix + "Name",
+		Name:           "Name",
 		Inputs:         []string{"http://url"},
 		DisabledInputs: make([]string, 0),
+		MarkAdded:      true,
 	}
 	assert.Exactly(t, expected, s, "should create this stream")
 
@@ -241,57 +243,39 @@ func TestRemoveInputs(t *testing.T) {
 	s.removeInputs("") // Should not panic. Tested with RemoveInputsCb.
 }
 
-func TestDisableStreamCb(t *testing.T) {
-	r := newDefRepo()
-
-	s1 := Stream{Name: "Name", Enabled: false}
+func TestDisableStream(t *testing.T) {
+	s1 := Stream{Enabled: false, MarkDisabled: false}
 	s1Original := copier.TestDeep(t, s1)
-	count := 0
-	s2 := s1.disableCb(r, func() {
-		count++
-	})
+
+	s2 := s1.disable()
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
-	expected := Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, s2, "should have disabled prefix")
+	expected := Stream{Enabled: false, MarkDisabled: true}
+	assert.Exactly(t, expected, s2, "should set disabled prefix flag")
 
-	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	s2 = s1.disableCb(r, func() {
-		count++
-	})
-	expected = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, s2, "should stay disabled")
+	s1 = Stream{Enabled: true, MarkDisabled: false}
+	s1Original = copier.TestDeep(t, s1)
 
-	s1 = Stream{Name: r.cfg.Streams.AddedPrefix + "Name", Enabled: false}
-	s2 = s1.disableCb(r, func() {
-		count++
-	})
-	expected = Stream{Name: r.cfg.Streams.AddedPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, s2, "should stay unchanged")
+	s2 = s1.disable()
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
-	s1 = Stream{Name: "Name", Enabled: true}
-	s2 = s1.disableCb(r, func() {
-		count++
-	})
-	expected = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, s2, "should have disabled prefix and set Enabled field to false")
+	expected = Stream{Enabled: false, MarkDisabled: true}
+	assert.Exactly(t, expected, s2, "should set disabled prefix flag")
 
-	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: true}
-	s2 = s1.disableCb(r, func() {
-		count++
-	})
-	expected = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, s2, "disabled prefix should stay and set Enabled field to false")
+	s1 = Stream{Enabled: false, MarkDisabled: true}
 
-	s1 = Stream{Name: r.cfg.Streams.AddedPrefix + "Name", Enabled: true}
-	s2 = s1.disableCb(r, func() {
-		count++
-	})
-	expected = Stream{Name: r.cfg.Streams.AddedPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, s2, "name should stay unmodified and set Enabled field to false")
+	s2 = s1.disable()
 
-	assert.Exactly(t, 4, count, "should disable that amount of streams")
+	assert.Exactly(t, s1, s2, "should not change the stream")
+
+	s1 = Stream{Enabled: true, MarkDisabled: true}
+
+	s2 = s1.disable()
+
+	expected = Stream{Enabled: false, MarkDisabled: true}
+	assert.Exactly(t, expected, s2, "should disable the stream")
 }
 
 func TestRemoveBlockedInputs(t *testing.T) {
@@ -486,10 +470,152 @@ func TestSortInputs(t *testing.T) {
 func TestHasNoInputs(t *testing.T) {
 	s := Stream{}
 	assert.True(t, s.hasNoInputs())
+
 	s = Stream{Inputs: []string{}}
 	assert.True(t, s.hasNoInputs())
+
 	s = Stream{Inputs: []string{"http://input"}}
 	assert.False(t, s.hasNoInputs())
+}
+
+func TestHasDisabledPrefix(t *testing.T) {
+	r := newDefRepo()
+
+	s := Stream{Name: "Name"}
+	assert.False(t, s.hasDisabledPrefix(r))
+
+	s = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name"}
+	assert.True(t, s.hasDisabledPrefix(r))
+
+	s = Stream{Name: "Na" + r.cfg.Streams.DisabledPrefix + "me"}
+	assert.False(t, s.hasDisabledPrefix(r))
+
+	s = Stream{}
+	assert.False(t, s.hasDisabledPrefix(r))
+
+	r.cfg.Streams.DisabledPrefix = ""
+	s = Stream{Name: "Name"}
+	assert.False(t, s.hasDisabledPrefix(r))
+}
+
+func TestSetDisabledPrefix(t *testing.T) {
+	r := newDefRepo()
+
+	s1 := Stream{Name: "Name"}
+	s1Original := copier.TestDeep(t, s1)
+
+	s2 := s1.setDisabledPrefix(r)
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected := Stream{Name: r.cfg.Streams.DisabledPrefix + "Name"}
+	assert.Exactly(t, expected, s2, "stream name should start with added prefix")
+}
+
+func TestRemoveDisabledPrefix(t *testing.T) {
+	r := newDefRepo()
+
+	s1 := Stream{Name: "Name"}
+	s1Original := copier.TestDeep(t, s1)
+
+	s2 := s1.removeDisabledPrefix(r)
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	assert.Exactly(t, s1, s2, "should not modify the stream without prefix")
+
+	s1 = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name"}
+	s1Original = copier.TestDeep(t, s1)
+
+	s2 = s1.removeDisabledPrefix(r)
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected := Stream{Name: "Name"}
+	assert.Exactly(t, expected, s2, "should remove prefix")
+
+	s1 = Stream{Name: "Na" + r.cfg.Streams.DisabledPrefix + "me"}
+
+	s2 = s1.removeDisabledPrefix(r)
+
+	assert.Exactly(t, s1, s2, "should not modify the stream with prefix string in the middle of the name")
+
+	r.cfg.Streams.DisabledPrefix = ""
+	s1 = Stream{Name: "Name"}
+
+	s2 = s1.removeDisabledPrefix(r)
+
+	assert.Exactly(t, s1, s2, "should not modify the stream with empty prefix set in config")
+}
+
+func TestHasAddedPrefix(t *testing.T) {
+	r := newDefRepo()
+
+	s := Stream{Name: "Name"}
+	assert.False(t, s.hasAddedPrefix(r))
+
+	s = Stream{Name: r.cfg.Streams.AddedPrefix + "Name"}
+	assert.True(t, s.hasAddedPrefix(r))
+
+	s = Stream{Name: "Na" + r.cfg.Streams.AddedPrefix + "me"}
+	assert.False(t, s.hasAddedPrefix(r))
+
+	s = Stream{}
+	assert.False(t, s.hasAddedPrefix(r))
+
+	r.cfg.Streams.AddedPrefix = ""
+	s = Stream{Name: "Name"}
+	assert.False(t, s.hasAddedPrefix(r))
+}
+
+func TestSetAddedPrefix(t *testing.T) {
+	r := newDefRepo()
+
+	s1 := Stream{Name: "Name"}
+	s1Original := copier.TestDeep(t, s1)
+
+	s2 := s1.setAddedPrefix(r)
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected := Stream{Name: r.cfg.Streams.AddedPrefix + "Name"}
+	assert.Exactly(t, expected, s2, "stream name should start with added prefix")
+}
+
+func TestRemoveAddedPrefix(t *testing.T) {
+	r := newDefRepo()
+
+	s1 := Stream{Name: "Name"}
+	s1Original := copier.TestDeep(t, s1)
+
+	s2 := s1.removeAddedPrefix(r)
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	assert.Exactly(t, s1, s2, "should not modify the stream without prefix")
+
+	s1 = Stream{Name: r.cfg.Streams.AddedPrefix + "Name"}
+	s1Original = copier.TestDeep(t, s1)
+
+	s2 = s1.removeAddedPrefix(r)
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected := Stream{Name: "Name"}
+	assert.Exactly(t, expected, s2, "should remove prefix")
+
+	s1 = Stream{Name: "Na" + r.cfg.Streams.AddedPrefix + "me"}
+
+	s2 = s1.removeAddedPrefix(r)
+
+	assert.Exactly(t, s1, s2, "should not modify the stream with prefix string in the middle of the name")
+
+	r.cfg.Streams.AddedPrefix = ""
+	s1 = Stream{Name: "Name"}
+
+	s2 = s1.removeAddedPrefix(r)
+
+	assert.Exactly(t, s1, s2, "should not modify the stream with empty prefix set in config")
 }
 
 func TestAnyHasInput(t *testing.T) {
@@ -521,32 +647,46 @@ func TestAnyHasInput(t *testing.T) {
 	assert.False(t, r.HasInput(sl, "http://foreign/input#b", false), "should not contain URL")
 }
 
-func TestEnableAllStreams(t *testing.T) {
+func TestRemoveNamePrefixes(t *testing.T) {
 	r := newDefRepo()
+	addedPrefix := r.cfg.Streams.AddedPrefix
+	disabledPrefix := r.cfg.Streams.DisabledPrefix
 
 	sl1 := []Stream{
-		{Name: "Name", Enabled: false},
-		{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false},
-		{Name: r.cfg.Streams.DisabledPrefix + "Name 2", Enabled: true},
-		{Name: r.cfg.Streams.AddedPrefix + "Name", Enabled: false},
+		/* 0 */ {Name: "Name 1", MarkAdded: false, MarkDisabled: false},
+		/* 1 */ {Name: disabledPrefix + "Name 2", MarkAdded: false, MarkDisabled: true},
+		/* 2 */ {Name: disabledPrefix + "Name 3", MarkAdded: false, MarkDisabled: false},
+		/* 3 */ {Name: addedPrefix + "Name 4", MarkAdded: false, MarkDisabled: true},
+		/* 4 */ {Name: disabledPrefix + addedPrefix + "Name 5", MarkAdded: true, MarkDisabled: true},
+		/* 5 */ {Name: addedPrefix + disabledPrefix + "Name 6", MarkAdded: false, MarkDisabled: false},
+		/* 6 */ {Name: "Na" + addedPrefix + disabledPrefix + "me 7", MarkAdded: false, MarkDisabled: false},
 	}
 	sl1Original := copier.TestDeep(t, sl1)
 
-	sl2 := r.Enable(sl1)
+	sl2 := r.RemoveNamePrefixes(sl1)
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
 
 	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
 
-	assert.Exactly(t, sl1[0], sl2[0], "should not enable stream without disabled prefix")
+	assert.Exactly(t, sl1[0], sl2[0], "should not change the stream without prefixes")
 
-	expected := Stream{Name: "Name", Enabled: true}
-	assert.Exactly(t, expected, sl2[1], "should remove disabled prefix and set Enabled field to true")
+	expected := Stream{Name: "Name 2", MarkAdded: false, MarkDisabled: true}
+	assert.Exactly(t, expected, sl2[1], "should remove disabled prefix")
 
-	expected = Stream{Name: "Name 2", Enabled: true}
-	assert.Exactly(t, expected, sl2[2], "should remove disabled prefix and set Enabled field to true")
+	expected = Stream{Name: "Name 3", MarkAdded: false, MarkDisabled: true}
+	assert.Exactly(t, expected, sl2[2], "should remove disabled prefix and set MarkDisabled to true")
 
-	assert.Exactly(t, sl1[3], sl2[3], "should not enable stream with added prefix")
+	expected = Stream{Name: "Name 4", MarkAdded: true, MarkDisabled: true}
+	assert.Exactly(t, expected, sl2[3], "should remove added prefix, set MarkAdded to true and ignore MarkDisabled")
+
+	expected = Stream{Name: "Name 5", MarkAdded: true, MarkDisabled: true}
+	assert.Exactly(t, expected, sl2[4], "should remove prefixes")
+
+	expected = Stream{Name: "Name 6", MarkAdded: true, MarkDisabled: true}
+	assert.Exactly(t, expected, sl2[5], "should remove prefixes and set both MarkAdded and MarkDisabled to true")
+
+	assert.Exactly(t, sl1[6], sl2[6], "should not change the stream with prefix strings in the middle of the name")
 }
 
 func TestAllRemoveBlockedInputs(t *testing.T) {
@@ -840,25 +980,15 @@ func TestDisableWithoutInputs(t *testing.T) {
 	r := newDefRepo()
 
 	sl1 := []Stream{
-		/*  0 */ {Enabled: true, Name: "Name", Inputs: []string{"http://input"}},
-		/*  1 */ {Enabled: true, Inputs: []string{"http://input"}},
-		/*  2 */ {Enabled: true, Name: r.cfg.Streams.DisabledPrefix + "Name", Inputs: []string{"http://input"}},
-		/*  3 */ {Enabled: true, Name: r.cfg.Streams.AddedPrefix + "Name", Inputs: []string{"http://input"}},
+		/* 0 */ {MarkDisabled: false, Enabled: true, Name: "Name", Inputs: []string{"http://input"}},
+		/* 1 */ {MarkDisabled: false, Enabled: true, Name: "Name", Inputs: []string{}},
+		/* 2 */ {MarkDisabled: false, Enabled: false, Name: "Name", Inputs: []string{"http://input"}},
+		/* 3 */ {MarkDisabled: false, Enabled: false, Name: "Name"},
 
-		/*  4 */ {Enabled: true, Name: "Name"},
-		/*  5 */ {Enabled: true},
-		/*  6 */ {Enabled: true, Name: r.cfg.Streams.DisabledPrefix + "Name"},
-		/*  7 */ {Enabled: true, Name: r.cfg.Streams.AddedPrefix + "Name"},
-
-		/*  8 */ {Enabled: false, Name: "Name", Inputs: []string{"http://input"}},
-		/*  9 */ {Enabled: false, Inputs: []string{"http://input"}},
-		/* 10 */ {Enabled: false, Name: r.cfg.Streams.DisabledPrefix + "Name", Inputs: []string{"http://input"}},
-		/* 11 */ {Enabled: false, Name: r.cfg.Streams.AddedPrefix + "Name", Inputs: []string{"http://input"}},
-
-		/* 12 */ {Enabled: false, Name: "Name"},
-		/* 13 */ {Enabled: false},
-		/* 14 */ {Enabled: false, Name: r.cfg.Streams.DisabledPrefix + "Name"},
-		/* 15 */ {Enabled: false, Name: r.cfg.Streams.AddedPrefix + "Name"},
+		/* 4 */ {MarkDisabled: true, Enabled: true, Name: "Name", Inputs: []string{"http://input"}},
+		/* 5 */ {MarkDisabled: true, Enabled: true, Name: "Name", Inputs: []string{}},
+		/* 6 */ {MarkDisabled: true, Enabled: false, Name: "Name", Inputs: []string{"http://input"}},
+		/* 7 */ {MarkDisabled: true, Enabled: false, Name: "Name"},
 	}
 	sl1Original := copier.TestDeep(t, sl1)
 
@@ -868,39 +998,62 @@ func TestDisableWithoutInputs(t *testing.T) {
 
 	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
 
-	assert.Exactly(t, sl1[0], sl2[0], "should not change the stream with inputs")
-	assert.Exactly(t, sl1[1], sl2[1], "should not change the stream with inputs")
-	assert.Exactly(t, sl1[2], sl2[2], "should not change the stream with inputs")
-	assert.Exactly(t, sl1[3], sl2[3], "should not change the stream with inputs")
+	assert.Exactly(t, sl1[0], sl2[0], "should not modify the stream with inputs")
 
-	expected := Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, sl2[4], "should add disabled prefix and set Enabled field to false")
+	expected := Stream{MarkDisabled: true, Enabled: false, Name: "Name", Inputs: []string{}}
+	assert.Exactly(t, expected, sl2[1], "should disable stream without inputs and set MarkDisabled to true")
 
-	expected = Stream{Name: r.cfg.Streams.DisabledPrefix, Enabled: false}
-	assert.Exactly(t, expected, sl2[5], "should add disabled prefix and set Enabled field to false")
+	assert.Exactly(t, sl1[2], sl2[2], "should not modify disabled stream or stream with inputs")
 
-	expected = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, sl2[6], "should not rename prefixed streams and set Enabled field to false")
+	assert.Exactly(t, sl1[3], sl2[3], "should not modify disabled streams")
 
-	expected = Stream{Name: r.cfg.Streams.AddedPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, sl2[7], "should not rename prefixed streams and set Enabled field to false")
+	assert.Exactly(t, sl1[4], sl2[4], "should not modify the stream with inputs")
 
-	assert.Exactly(t, sl1[8], sl2[8], "should not change the stream with inputs")
-	assert.Exactly(t, sl1[9], sl2[9], "should not change the stream with inputs")
-	assert.Exactly(t, sl1[10], sl2[10], "should not change the stream with inputs")
-	assert.Exactly(t, sl1[11], sl2[11], "should not change the stream with inputs")
+	expected = Stream{MarkDisabled: true, Enabled: false, Name: "Name", Inputs: []string{}}
+	assert.Exactly(t, expected, sl2[5], "should disable stream without inputs")
 
-	expected = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, sl2[12], "should add disabled prefix")
+	assert.Exactly(t, sl1[6], sl2[6], "should not modify disabled stream or stream with inputs")
 
-	expected = Stream{Name: r.cfg.Streams.DisabledPrefix, Enabled: false}
-	assert.Exactly(t, expected, sl2[13], "should add disabled prefix")
+	assert.Exactly(t, sl1[7], sl2[7], "should not modify disabled streams")
+}
 
-	expected = Stream{Name: r.cfg.Streams.DisabledPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, sl2[14], "should not rename prefixed streams")
+func TestAddNamePrefixes(t *testing.T) {
+	r := newDefRepo()
 
-	expected = Stream{Name: r.cfg.Streams.AddedPrefix + "Name", Enabled: false}
-	assert.Exactly(t, expected, sl2[15], "should not rename prefixed streams")
+	sl1 := []Stream{
+		/* 0 */ {MarkAdded: false, MarkDisabled: false, Name: "Name_1"},
+		/* 1 */ {MarkAdded: true, MarkDisabled: false, Name: "Name_2"},
+		/* 2 */ {MarkAdded: false, MarkDisabled: true, Name: "Name_3"},
+		/* 3 */ {MarkAdded: true, MarkDisabled: true, Name: "Name_4"},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := r.AddNamePrefixes(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	assert.Exactly(t, sl1[0], sl2[0], "should not modify the stream with MarkAdded and MarkDisabled set to false")
+
+	expected := Stream{MarkAdded: true, MarkDisabled: false, Name: r.cfg.Streams.AddedPrefix + "Name_2"}
+	assert.Exactly(t, expected, sl2[1], "should add added prefix to the name")
+
+	expected = Stream{MarkAdded: false, MarkDisabled: true, Name: r.cfg.Streams.DisabledPrefix + "Name_3"}
+	assert.Exactly(t, expected, sl2[2], "should add disabled prefix to the name")
+
+	expected = Stream{MarkAdded: true, MarkDisabled: true,
+		Name: r.cfg.Streams.DisabledPrefix + r.cfg.Streams.AddedPrefix + "Name_4"}
+	assert.Exactly(t, expected, sl2[3], "should add both disabled and added prefixes to the name")
+
+	// Check if table rows are not printed if prefixes are empty
+	out := capturer.CaptureOutput(func() {
+		r = newDefRepo()
+		r.cfg.Streams.AddedPrefix = ""
+		r.cfg.Streams.DisabledPrefix = ""
+		_ = r.AddNamePrefixes(sl1)
+	})
+	assert.False(t, strings.Contains(out, "Name_"))
 }
 
 func TestGetInputsAmount(t *testing.T) {

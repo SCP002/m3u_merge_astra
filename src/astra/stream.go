@@ -34,6 +34,8 @@ type Stream struct {
 	Name           string            `json:"name,omitempty"`
 	Type           string            `json:"type,omitempty"`
 	Unknown        map[string]any    `json:"-" jsonex:"true"` // All unknown fields go here.
+	MarkAdded      bool              `json:"-"`               // Set added name prefix after processing?
+	MarkDisabled   bool              `json:"-"`               // Set disabled name prefix after processing?
 }
 
 // NewStream returns new stream with default config
@@ -49,8 +51,9 @@ func NewStream(cfg cfg.Streams, id, name, group string, inputs []string) Stream 
 		Groups:         groups,
 		ID:             id,
 		Inputs:         inputs,
-		Name:           cfg.AddedPrefix + name,
+		Name:           name,
 		Type:           string(cfg.NewType),
+		MarkAdded:      true,
 	}
 }
 
@@ -171,23 +174,10 @@ func (s Stream) removeInputs(tInp string) Stream {
 	return s.RemoveInputsCb(tInp, func() {})
 }
 
-// Disable disables stream and adds name prefix if not already contain any, running <callback> if stream was updated
-func (s Stream) disableCb(r deps.Global, callback func()) Stream {
-	updated := false
-	addedPrefix := r.Cfg().Streams.AddedPrefix
-	disabledPrefix := r.Cfg().Streams.DisabledPrefix
-
-	if !conv.ContainsAny(s.Name, addedPrefix, disabledPrefix) {
-		s.Name = disabledPrefix + s.Name
-		updated = true
-	}
-	if s.Enabled {
-		s.Enabled = false
-		updated = true
-	}
-	if updated {
-		callback()
-	}
+// Disable disables stream and sets MarkDisabled field
+func (s Stream) disable() Stream {
+	s.Enabled = false
+	s.MarkDisabled = true
 	return s
 }
 
@@ -211,6 +201,46 @@ func (s Stream) hasNoInputs() bool {
 	return len(s.Inputs) == 0
 }
 
+// hasDisabledPrefix returns true if name of the stream has DisabledPrefix
+func (s Stream) hasDisabledPrefix(r deps.Global) bool {
+	disabledPrefix := r.Cfg().Streams.DisabledPrefix
+	return disabledPrefix != "" && strings.HasPrefix(s.Name, disabledPrefix)
+}
+
+// setAddedPrefix returns stream named with DisabledPrefix
+func (s Stream) setDisabledPrefix(r deps.Global) Stream {
+	disabledPrefix := r.Cfg().Streams.DisabledPrefix
+	s.Name = disabledPrefix + s.Name
+	return s
+}
+
+// removeAddedPrefix returns stream without DisabledPrefix
+func (s Stream) removeDisabledPrefix(r deps.Global) Stream {
+	disabledPrefix := r.Cfg().Streams.DisabledPrefix
+	s.Name = strings.TrimPrefix(s.Name, disabledPrefix)
+	return s
+}
+
+// hasAddedPrefix returns true if name of the stream has AddedPrefix
+func (s Stream) hasAddedPrefix(r deps.Global) bool {
+	addedPrefix := r.Cfg().Streams.AddedPrefix
+	return addedPrefix != "" && strings.HasPrefix(s.Name, addedPrefix)
+}
+
+// setAddedPrefix returns stream named with AddedPrefix
+func (s Stream) setAddedPrefix(r deps.Global) Stream {
+	addedPrefix := r.Cfg().Streams.AddedPrefix
+	s.Name = addedPrefix + s.Name
+	return s
+}
+
+// removeAddedPrefix returns stream without AddedPrefix
+func (s Stream) removeAddedPrefix(r deps.Global) Stream {
+	addedPrefix := r.Cfg().Streams.AddedPrefix
+	s.Name = strings.TrimPrefix(s.Name, addedPrefix)
+	return s
+}
+
 // HasInput returns true if any input of <streams> contains <inp>.
 //
 // If <withHash> is false, ignore hashes (everything after #) during the search.
@@ -220,17 +250,25 @@ func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 	})
 }
 
-// Enable returns copy of <streams> with all prefixed streams enabled and renamed
-func (r repo) Enable(streams []Stream) (out []Stream) {
-	r.log.Info("Enabling and renaming prefixed streams\n")
+// RemoveNamePrefixes returns copy of <streams> without name prefixes on every stream and MarkAdded or MarkDisabled
+// fields set instead
+func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
+	r.log.Info("Temporarily removing name prefixes from streams\n")
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
-	disabledPrefix := r.cfg.Streams.DisabledPrefix
 
 	for _, s := range streams {
-		if strings.Contains(s.Name, disabledPrefix) && disabledPrefix != "" {
-			oldName := s.Name
-			s.Name = strings.ReplaceAll(s.Name, disabledPrefix, "")
-			s = s.Enable()
+		oldName := s.Name
+		for i := 0; i < 2; i++ { // Run twice to remove in any order
+			if s.hasAddedPrefix(r) {
+				s = s.removeAddedPrefix(r)
+				s.MarkAdded = true
+			}
+			if s.hasDisabledPrefix(r) {
+				s = s.removeDisabledPrefix(r)
+				s.MarkDisabled = true
+			}
+		}
+		if oldName != s.Name {
 			r.tw.AppendRow(table.Row{oldName, s.Name, s.FirstGroup()})
 		}
 		out = append(out, s)
@@ -496,10 +534,33 @@ func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
 	r.tw.AppendHeader(table.Row{"Name", "Group"})
 
 	for _, s := range streams {
-		if s.hasNoInputs() {
-			s = s.disableCb(r, func() {
-				r.tw.AppendRow(table.Row{s.Name, s.FirstGroup()})
-			})
+		if s.Enabled && s.hasNoInputs() {
+			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup()})
+			s = s.disable()
+		}
+		out = append(out, s)
+	}
+
+	r.tw.Render()
+	fmt.Fprint(os.Stderr, "\n")
+	return
+}
+
+// RemoveNamePrefixes returns copy of <streams> with name prefixes on every stream if MarkAdded or MarkDisabled is true
+func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
+	r.log.Info("Adding name prefixes to streams\n")
+	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
+
+	for _, s := range streams {
+		oldName := s.Name
+		if s.MarkAdded {
+			s = s.setAddedPrefix(r)
+		}
+		if s.MarkDisabled {
+			s = s.setDisabledPrefix(r)
+		}
+		if oldName != s.Name {
+			r.tw.AppendRow(table.Row{oldName, s.Name, s.FirstGroup()})
 		}
 		out = append(out, s)
 	}
