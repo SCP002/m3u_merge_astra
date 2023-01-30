@@ -20,24 +20,28 @@ func TestIsNameSame(t *testing.T) {
 	assert.False(t, IsNameSame(cfg, "НТВ HD", "htb hd"), "names should not be equvalent")
 	assert.False(t, IsNameSame(cfg, "монитор", "Monitor!"), "names should not be equvalent")
 	assert.True(t, IsNameSame(cfg, "Some Thing", "@Something"), "names should be equvalent")
+	assert.False(t, IsNameSame(cfg, "TV1000 Русское кино", "ТВ 1000 Русское кино"), "names should not be equvalent")
 
 	cfg.SimilarTranslit = true
 	cfg.FullTranslit = false
 	assert.True(t, IsNameSame(cfg, "НТВ HD", "htb hd"), "names should be equvalent")
 	assert.False(t, IsNameSame(cfg, "монитор", "Monitor!"), "names should not be equvalent")
 	assert.True(t, IsNameSame(cfg, "Some Thing", "@Something"), "names should be equvalent")
+	assert.False(t, IsNameSame(cfg, "TV1000 Русское кино", "ТВ 1000 Русское кино"), "names should not be equvalent")
 
 	cfg.SimilarTranslit = false
 	cfg.FullTranslit = true
 	assert.False(t, IsNameSame(cfg, "НТВ HD", "htb hd"), "names should not be equvalent")
 	assert.True(t, IsNameSame(cfg, "монитор", "Monitor!"), "names should be equvalent")
 	assert.True(t, IsNameSame(cfg, "Some Thing", "@Something"), "names should be equvalent")
+	assert.True(t, IsNameSame(cfg, "TV1000 Русское кино", "ТВ 1000 Русское кино"), "names should be equvalent")
 
 	cfg.SimilarTranslit = true
 	cfg.FullTranslit = true
 	assert.True(t, IsNameSame(cfg, "НТВ HD", "htb hd"), "names should be equvalent")
 	assert.True(t, IsNameSame(cfg, "монитор", "Monitor!"), "names should be equvalent")
 	assert.True(t, IsNameSame(cfg, "Some Thing", "@Something"), "names should be equvalent")
+	assert.True(t, IsNameSame(cfg, "TV1000 Русское кино", "ТВ 1000 Русское кино"), "names should be equvalent")
 
 	assert.False(t, IsNameSame(cfg, "Some Thing (+2)", "@Something2"), "should not discard the + symbol")
 }
