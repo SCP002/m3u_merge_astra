@@ -109,7 +109,7 @@ func TestRemoveBlocked(t *testing.T) {
 
 	r.cfg.M3U.ChannNameBlacklist = []regexp.Regexp{
 		*regexp.MustCompile("Name 1"),
-		*regexp.MustCompile("Name 2"),
+		*regexp.MustCompile("(?i)^NAME 2$"),
 	}
 	r.cfg.M3U.ChannGroupBlacklist = []regexp.Regexp{
 		*regexp.MustCompile("Group 1"),
@@ -121,7 +121,7 @@ func TestRemoveBlocked(t *testing.T) {
 	}
 
 	cl1 := []Channel{
-		/* 0 */ {Name: "The Name 2 Something", Group: "Other", URL: "http://other/url"},
+		/* 0 */ {Name: "Name 2", Group: "Other", URL: "http://other/url"},
 		/* 1 */ {Name: "Other", Group: "The Group 2 Something", URL: "http://other/url"},
 		/* 2 */ {Name: "Other", Group: "Other", URL: "http://url/2/something"},
 		/* 3 */ {Name: "The Name 1 Something", Group: "The Group 1 Something", URL: "http://url/1/something"},
