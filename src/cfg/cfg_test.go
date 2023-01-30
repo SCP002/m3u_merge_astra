@@ -48,7 +48,7 @@ func TestInit(t *testing.T) {
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,
-			ChannNameBlacklist:  []regexp.Regexp{*regexp.MustCompile(`Nonsense TV`), *regexp.MustCompile(`^Test.*`)},
+			ChannNameBlacklist:  []regexp.Regexp{*regexp.MustCompile(`Nonsense TV`), *regexp.MustCompile(`(?i)^Test$`)},
 			ChannGroupBlacklist: nil,
 			ChannURLBlacklist: []regexp.Regexp{
 				*regexp.MustCompile(`https?://filter_me\.com`),
@@ -102,8 +102,8 @@ func TestInit(t *testing.T) {
 				{By: *regexp.MustCompile(`[- _]FM$`), Hash: "no_sync"},
 			},
 			GroupToInputHashMap: []HashAddRule{
-				{By: *regexp.MustCompile(`HD Channels`), Hash: "buffer_time=10"},
-				{By: *regexp.MustCompile(`Radio`), Hash: "no_sync"},
+				{By: *regexp.MustCompile(`(?i)^HD Channels$`), Hash: "buffer_time=10"},
+				{By: *regexp.MustCompile(`(?i)RADIO`), Hash: "no_sync"},
 			},
 			InputToInputHashMap: []HashAddRule{
 				{By: *regexp.MustCompile(`:8080`), Hash: "ua=VLC/3.0.9 LibVLC/3.0.9"},

@@ -79,14 +79,14 @@ m3u:
   # If any expression match name of a channel, this channel will be removed from M3U input before merging.
   chann_name_blacklist:
     # - 'Nonsense TV'
-    # - '^Test.*'
+    # - '(?i)^Test$'
 
   # List of regular expressions.
   # If any expression match group of a channel, this channel will be removed from M3U input before merging.
   # It runs after replacing groups by 'chann_group_map' so enter the appropriate values.
   chann_group_blacklist:
     # - '18\+'
-    # - 'Cooking'
+    # - '(?i)^cooking$'
 
   # List of regular expressions.
   # If any expression match URL of a channel, this channel will be removed from M3U input before merging.
@@ -224,9 +224,9 @@ streams:
 
   # Mapping of stream group regular expression to stream input hash which should be added.
   group_to_input_hash_map:
-    # - by: 'HD Channels'
+    # - by: '(?i)^HD Channels$'
     #   hash: 'buffer_time=10'
-    # - by: 'Radio'
+    # - by: '(?i)RADIO'
     #   hash: 'no_sync'
 
   # Mapping of stream input regular expression to stream input hash which should be added.
