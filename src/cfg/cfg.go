@@ -2,10 +2,12 @@ package cfg
 
 import (
 	_ "embed"
+	"fmt"
 	"io/fs"
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -231,22 +233,33 @@ const (
 	MPTS StreamType = "mpts"
 )
 
+// DamagedConfigError represents error thrown if program config is missing unexpected fields
+type DamagedConfigError struct {
+	MissingFields []string
+}
+
+// Error is used to satisfy golang error interface
+func (e DamagedConfigError) Error() string {
+	msg := "Existing program config is missing unexpected fields. Create new config or add missing fields manually"
+	return fmt.Sprintf("%v: %v", msg, strings.Join(e.MissingFields, ", "))
+}
+
 // Init returns config instance and false if config at <cfgFilePath> already exist.
 //
 // If config does not exist, creates a default, returns empty instance and true.
-func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
+//
+// Can return errors defined in this package: DamagedConfigError.
+func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 	log.Info("Reading program config\n")
 
 	ko := koanf.New(".")
 
 	loadConfig := func() error {
-		err := ko.Load(file.Provider(cfgFilePath), yaml.Parser())
-		return errors.Wrap(err, "Load config")
+		return ko.Load(file.Provider(cfgFilePath), yaml.Parser())
 	}
 
 	writeDefConfig := func() error {
-		err := os.WriteFile(cfgFilePath, defCfgBytes, 0644)
-		return errors.Wrap(err, "Write default config")
+		return os.WriteFile(cfgFilePath, defCfgBytes, 0644)
 	}
 
 	// Load config file into koanf or create a new if not exist
@@ -255,11 +268,11 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 		if errors.Is(err, fs.ErrNotExist) {
 			log.Info("Config file not found, creating a default\n")
 			if err := writeDefConfig(); err != nil {
-				log.Fatal(err)
+				return root, false, errors.Wrap(err, "Write default config")
 			}
-			return root, true
+			return root, true, nil
 		} else {
-			log.Fatal(err)
+			return root, false, errors.Wrap(err, "Load config")
 		}
 	}
 
@@ -288,18 +301,31 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 			ZeroFields:       true,
 		},
 	})
-	if err := errors.Wrap(err, "Decode config"); err != nil {
-		log.Fatal(err)
+	if err != nil {
+		return root, false, errors.Wrap(err, "Decode config")
 	}
 
-	// Add known missing fields
+	// Check if config is damaged (there are more missing fields than was added since v1.0.0)
+	knownFields := []string{
+		"streams.add_groups_to_new",
+		"streams.groups_category_for_new",
+		"streams.enable_on_input_update",
+	}
+	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
+	if len(missingFields) > 0 {
+		err := DamagedConfigError{MissingFields: missingFields}
+ 		return root, false, errors.Wrap(err, "Check config")
+	}
+
+	// Add missing known fields
 	cfgBytes, err := os.ReadFile(cfgFilePath) // Broken if read with ko.Bytes("")
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "Read config"))
+		return root, false, errors.Wrap(err, "Read config")
 	}
 	defCfg := NewDefCfg()
+
 	// v1.0.0 to v1.1.0
-	knownField := "streams.add_groups_to_new"
+	knownField := knownFields[0]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AddGroupsToNew
 		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
@@ -311,12 +337,12 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 			Values:       []string{"false"},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", false, node); err != nil {
-			log.Fatal(errors.Wrap(err, "Add missing field to config"))
+			return root, false, errors.Wrap(err, "Add missing field to config")
 		}
 		root.Streams.AddGroupsToNew = defVal
 	}
 	// v1.0.0 to v1.1.0
-	knownField = "streams.groups_category_for_new"
+	knownField = knownFields[1]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.GroupsCategoryForNew
 		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
@@ -328,12 +354,12 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 			Values:       []string{"'All'"},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", false, node); err != nil {
-			log.Fatal(errors.Wrap(err, "Add missing field to config"))
+			return root, false, errors.Wrap(err, "Add missing field to config")
 		}
 		root.Streams.GroupsCategoryForNew = defVal
 	}
 	// v1.1.0 to v1.2.0
-	knownField = "streams.enable_on_input_update"
+	knownField = knownFields[2]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.EnableOnInputUpdate
 		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
@@ -345,15 +371,16 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool) {
 			Values:       []string{"false"},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.disable_without_inputs", false, node); err != nil {
-			log.Fatal(errors.Wrap(err, "Add missing field to config"))
+			return root, false, errors.Wrap(err, "Add missing field to config")
 		}
 		root.Streams.EnableOnInputUpdate = defVal
 	}
+
 	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
-		log.Fatal(errors.Wrap(err, "Write modified config"))
+		return root, false, errors.Wrap(err, "Write modified config")
 	}
 
-	return root, false
+	return root, false, nil
 }
 
 // DefFullTranslitMap returns default full transliteration map.

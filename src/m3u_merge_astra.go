@@ -38,9 +38,11 @@ func main() {
 		log.Panic(err)
 	}
 
-	// Init table writer and read program config
-	tw := tw.New()
-	cfg, isNewCfg := cfg.Init(log, flags.ProgramCfgPath)
+	// Read program config
+	cfg, isNewCfg, err := cfg.Init(log, flags.ProgramCfgPath)
+	if err != nil {
+		log.Panic(err)
+	}
 	if isNewCfg {
 		log.Infof("New config is written to %v, please verify it and start this program again", flags.ProgramCfgPath)
 		os.Exit(0)
@@ -61,6 +63,9 @@ func main() {
 		log.Panic(err)
 	}
 	defer m3uResp.Close()
+
+	// Init table writer
+	tw := tw.New()
 
 	// Parse and preprocess M3U channels
 	m3uRepo := m3u.NewRepo(log, tw, cfg)

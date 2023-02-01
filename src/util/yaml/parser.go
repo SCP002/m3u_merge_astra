@@ -60,6 +60,8 @@ type Node struct {
 // <afterPath> is formatted as "key.subkey".
 //
 // If <sectionEnd> is true, insert after the indented section end, not first line.
+//
+// Can return errors defined in this package: BadValueError, PathNotFoundError.
 func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) {
 	if node.ValType == None && len(node.Values) > 0 {
 		msg := "None value type can't have values"
