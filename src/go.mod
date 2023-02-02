@@ -1,16 +1,16 @@
 module m3u_merge_astra
 
-go 1.19
+go 1.20
 
 require (
 	github.com/SCP002/clipboard v0.1.5
 	github.com/SCP002/jsonexraw v0.1.0
-	github.com/alitto/pond v1.8.2
-	github.com/cockroachdb/errors v1.9.0
+	github.com/alitto/pond v1.8.3
+	github.com/cockroachdb/errors v1.9.1
 	github.com/jedib0t/go-pretty/v6 v6.4.4
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jinzhu/copier v0.3.5
-	github.com/knadh/koanf v1.4.5
+	github.com/knadh/koanf v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/samber/lo v1.37.0
 	github.com/schollz/progressbar/v3 v3.13.0
@@ -19,11 +19,11 @@ require (
 	github.com/utahta/go-openuri v0.1.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/zenizh/go-capturer v0.0.0-20211219060012-52ea6c8fed04
-	golang.org/x/exp v0.0.0-20230116083435-1de6713980de
+	golang.org/x/exp v0.0.0-20230131160201-f062dba9d201
 )
 
 require (
-	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
+	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
