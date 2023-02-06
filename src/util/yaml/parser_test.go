@@ -163,6 +163,9 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "lists_section.empty_list_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
 
+	// TODO: Nested lists
+	// ...
+
 	// Futurer changes scalars
 	node = Node{
 		HeadComment: []string{"Comment"},
@@ -225,12 +228,17 @@ func TestSetIndent(t *testing.T) {
 	assert.NotSame(t, &input, &output, "should return copy of input")
 	assert.Exactly(t, inputOriginal, input, "should not modify the source")
 
-	expected, err := os.ReadFile("set_indent_expected_test.yaml")
+	expected, err := os.ReadFile("set_indent_2_expected_test.yaml")
+	assert.NoError(t, err, "should read expected file")
+	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
+
+	output = setIndent(input, 4)
+	expected, err = os.ReadFile("set_indent_4_expected_test.yaml")
 	assert.NoError(t, err, "should read expected file")
 	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
 }
 
-func TestInsertIndex(t *testing.T) {
+func TestInsertIndex(t *testing.T) { // TODO: Update insert_input_test.yaml with nested lists
 	inputBytes, err := os.ReadFile("insert_input_test.yaml")
 	assert.NoError(t, err, "should read input file")
 	input := []rune(string(inputBytes))

@@ -5,6 +5,7 @@ import (
 	"m3u_merge_astra/util/parse"
 	"m3u_merge_astra/util/scan"
 	"m3u_merge_astra/util/slice"
+	"regexp"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -147,45 +148,60 @@ func setIndent(input []rune, tIndent int) []rune {
 		new int
 	}
 
-	var foldersIndents []indentPair
+	var parentsIndents []indentPair
 
-	// getParentIndent returns new indent of the parent of the <line>
+	// getParentIndent returns new indent of the parent of the <line> or 0 if not found (indentPair.new default value)
 	getParentIndent := func(line string) int {
-		// Find closest folder (section header) which old indent is lower than <line> has
-		indent, _ := lo.Find(foldersIndents, func(folderIndent indentPair) bool {
-			return folderIndent.old < parse.GetIndent(line)
+		// Find closest section header which old indent is lower than <line> has
+		indent, _ := lo.Find(parentsIndents, func(parentIndent indentPair) bool {
+			return parentIndent.old < parse.GetIndent(line)
 		})
 		return indent.new
 	}
 
+	listRx := regexp.MustCompile(`^ *(- )+`)
+
+	// getHyphensAmount returns amount of starting "- " in the <line>
+	getHyphensAmount := func(line string) int {
+		hyphens := 0
+		if matchList := listRx.FindStringSubmatch(line); len(matchList) > 0 {
+			hyphens = strings.Count(matchList[0], "- ")
+		}
+		return hyphens
+	}
+
 	var output []rune
-	prevLineHyphenPrefix := false
+	prevLineHyphensAmount := 0
 
 	sc := scan.New(input, 0)
 	for sc.Lines(false) {
 		trimLine := strings.TrimSpace(sc.Line)
 		isFolder := strings.HasSuffix(trimLine, ":")
-		hasHyphenPrefix := strings.HasPrefix(trimLine, "- ")
 		isComment := strings.HasPrefix(trimLine, "#")
-		isSeqValue := !isFolder && !isComment && !hasHyphenPrefix && prevLineHyphenPrefix
+		hypensAmount := getHyphensAmount(trimLine)
+		isSeqValue := !isFolder && !isComment && hypensAmount == 0 && prevLineHyphensAmount == 1
 
 		cIndent := parse.GetIndent(sc.Line)
-		newIndent := 0
+		parentIndent := getParentIndent(sc.Line)
+		newIndent := parentIndent
 
+		// TODO: Try to optimize
 		if cIndent > 0 {
-			newIndent = getParentIndent(sc.Line) + tIndent
+			newIndent += tIndent
 			if isSeqValue {
 				newIndent += 2 // Add 2 to align sequence keys and values
 			}
 		}
 		if isFolder {
-			foldersIndents = slice.Prepend(foldersIndents, indentPair{old: cIndent, new: newIndent})
+			parentsIndents = slice.Prepend(parentsIndents, indentPair{old: cIndent, new: newIndent})
+		} else if hypensAmount > 1 {
+			parentsIndents = slice.Prepend(parentsIndents, indentPair{old: cIndent, new: parentIndent + 2})
 		}
 
 		sc.Line = strings.Repeat(" ", newIndent) + strings.TrimLeft(sc.Line, " ")
 		output = append(output, []rune(sc.Line)...)
 
-		prevLineHyphenPrefix = hasHyphenPrefix
+		prevLineHyphensAmount = hypensAmount
 	}
 
 	return output
