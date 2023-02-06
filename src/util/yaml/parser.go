@@ -185,7 +185,6 @@ func setIndent(input []rune, tIndent int) []rune {
 		parentIndent := getParentIndent(sc.Line)
 		newIndent := parentIndent
 
-		// TODO: Try to optimize
 		if cIndent > 0 {
 			newIndent += tIndent
 			if isSeqValue {
@@ -195,6 +194,7 @@ func setIndent(input []rune, tIndent int) []rune {
 		if isFolder {
 			parentsIndents = slice.Prepend(parentsIndents, indentPair{old: cIndent, new: newIndent})
 		} else if hypensAmount > 1 {
+			// Indent nested lists with two spaces regardless of <tIndent>
 			parentsIndents = slice.Prepend(parentsIndents, indentPair{old: cIndent, new: parentIndent + 2})
 		}
 
