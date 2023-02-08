@@ -8,7 +8,6 @@ import (
 )
 
 func TestSort(t *testing.T) {
-
 	ol1 := []TestNamedStruct{
 		{Name: "C"}, {Name: "A"}, {}, {Name: "B"},
 	}

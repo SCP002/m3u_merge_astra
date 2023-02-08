@@ -238,7 +238,7 @@ func TestSetIndent(t *testing.T) {
 	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
 }
 
-func TestInsertIndex(t *testing.T) { // TODO: Update insert_input_test.yaml with nested lists
+func TestInsertIndex(t *testing.T) { // TODO: Make this pass; add check for lists_section.nested_list
 	inputBytes, err := os.ReadFile("insert_input_test.yaml")
 	assert.NoError(t, err, "should read input file")
 	input := []rune(string(inputBytes))
