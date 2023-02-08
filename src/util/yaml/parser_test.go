@@ -238,7 +238,7 @@ func TestSetIndent(t *testing.T) {
 	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
 }
 
-func TestInsertIndex(t *testing.T) { // TODO: Add check for lists_section.nested_list
+func TestInsertIndex(t *testing.T) {
 	inputBytes, err := os.ReadFile("insert_input_test.yaml")
 	assert.NoError(t, err, "should read input file")
 	input := []rune(string(inputBytes))
@@ -369,6 +369,19 @@ func TestInsertIndex(t *testing.T) { // TODO: Add check for lists_section.nested
 	assert.Exactly(t, 945, index, "should return that index")
 	assert.Exactly(t, 2, depth, "should return that depth")
 	assert.Exactly(t, "s:\r\n    ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
+
+	path = "lists_section.nested_list"
+	index, depth, err = insertIndex(input, path, true, 2)
+	assert.NoError(t, err, "should not return error")
+	assert.Exactly(t, 1069, index, "should return that index")
+	assert.Exactly(t, 1, depth, "should return that depth")
+	assert.Exactly(t, "5'\r\nscal", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
+
+	index, depth, err = insertIndex(input, path, false, 2)
+	assert.NoError(t, err, "should not return error")
+	assert.Exactly(t, 979, index, "should return that index")
+	assert.Exactly(t, 2, depth, "should return that depth")
+	assert.Exactly(t, "t:\r\n    ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	path = "scalar_section"
 	index, depth, err = insertIndex(input, path, true, 2)
