@@ -56,11 +56,14 @@ lists_section:
   empty_list_with_comments:
     # - 'item_1'
   nested_list:
-    - - 'item_1'
-      - 'item_2'
-      - 'item_3'
-    - - 'item_4'
-      - 'item_5'
+    - - - 'item_1'
+      - - 'item_2'
+        - 'item_3'
+        - 'item_4'
+    - - - 'item_5'
+      - - 'item_6'
+        - 'item_7'
+        - 'item_8'
 scalar_section:
   bool_item: true
   str_item: "# value"
