@@ -1,28 +1,21 @@
 package rnd
 
 import (
-	"math/rand"
-	"time"
+	"github.com/samber/lo"
 )
 
 // String returns random string
 func String(length uint, uppercase bool, numbers bool) string {
-	rand.Seed(time.Now().UnixNano())
+	if length == 0 {
+		return ""
+	}
 
-	charset := "abcdefghijklmnopqrstuvwxyz"
+	charset := lo.LowerCaseLettersCharset
 	if uppercase {
-		charset += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		charset = append(charset, lo.UpperCaseLettersCharset...)
 	}
 	if numbers {
-		charset += "0123456789"
+		charset = append(charset, lo.NumbersCharset...)
 	}
-	charsetRunes := []rune(charset)
-
-	outRunes := make([]rune, length)
-
-	for i := range outRunes {
-		outRunes[i] = charsetRunes[rand.Intn(len(charsetRunes))]
-	}
-
-	return string(outRunes)
+	return lo.RandomString(int(length), charset)
 }
