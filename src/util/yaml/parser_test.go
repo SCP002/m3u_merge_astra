@@ -15,58 +15,72 @@ func TestPathNotFoundError(t *testing.T) {
 	assert.Exactly(t, "Can not find the specified path: a.b.c", err.Error())
 }
 
-func TestBadValueError(t *testing.T) {
-	err := error(BadValueError{Reason: "unknown"})
+func TestBadDataError(t *testing.T) {
+	err := error(BadDataError{Reason: "unknown"})
 	assert.Exactly(t, "unknown", err.Error())
 }
 
-// TODO: Unknown data type error check
-// TODO: Insert int 0 error check
 func TestInsert(t *testing.T) {
 	input, err := os.ReadFile("insert_input_test.yaml")
 	assert.NoError(t, err, "should read input file")
 	inputOriginal := copier.TestDeep(t, input)
 
-	// Error cases (bad value or path can not be found)
+	// Error cases (bad data or path can not be found)
 	afterPath := ""
-	node := Node{Key: "new_key", ValType: None, Values: []string{"a"}}
+	node := Node{Data: Scalar{Value: "a"}}
 	output, err := Insert(input, afterPath, false, node)
-	assert.ErrorAs(t, err, &BadValueError{}, "should return bad value error if None type has value")
+	assert.ErrorAs(t, err, &BadDataError{}, "should return bad data error if key is not specified")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "key"
-	node = Node{Key: "new_key", ValType: Scalar, Values: []string{"a", "b"}}
+	node = Node{Data: Sequence{
+		Key: "new_key",
+		Sets: [][]Pair{
+			{
+				{Key: "key_1", Value: "'val_1'"},
+				{Key: "key_2", Commented: true}, // <- Missing value here
+			},
+		},
+	}}
 	output, err = Insert(input, afterPath, false, node)
-	assert.ErrorAs(t, err, &BadValueError{}, "should return bad value error if Scalar has more than 1 value")
+	assert.ErrorAs(t, err, &BadDataError{}, "should return bad data error if value is not specified")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "nested_section"
-	node = Node{Key: "new_key", ValType: Map}
+	node = Node{Data: errors.EncodedError{}} // Random invalid struct
 	output, err = Insert(input, afterPath, false, node)
-	assert.ErrorAs(t, err, &BadValueError{}, "should return bad value error if not None type has no values")
+	assert.ErrorAs(t, err, &BadDataError{}, "should return bad data error if data type is invalid")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "unknown_root_path"
-	node = Node{Key: "new_key", ValType: Scalar, Values: []string{"true"}}
+	node = Node{Data: Scalar{Key: "new_key", Value: "true"}}
 	output, err = Insert(input, afterPath, false, node)
 	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err), "should return unknown path error")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "sequences_section.unknown_subkey"
-	node = Node{Key: "new_key", ValType: Sequence, Values: []string{"- a: 'b'", "c: 'd'"}}
+	node = Node{Data: Sequence{
+		Key: "new_key",
+		Sets: [][]Pair{
+			{
+				{Key: "a", Value: "'b'"},
+				{Key: "c", Value: "'d'"},
+			},
+		},
+	}}
 	output, err = Insert(input, afterPath, false, node)
 	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err), "should return unknown path error")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "lists_section.list.item_2"
-	node = Node{Key: "new_key", ValType: Scalar, Values: []string{"true"}}
+	node = Node{Data: Scalar{Key: "new_key", Value: "true"}}
 	output, err = Insert(input, afterPath, false, node)
 	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err),
 		"should not resolve node value as proper path")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	// Overflow check, should not panic
-	node = Node{Key: "new_key", ValType: List, Values: slice.Filled("- a", 10000)}
+	node = Node{Data: List{Key: "new_key", Values: slice.Filled(Value{Value: "a"}, 10000)}}
 	_, err = Insert(input, "", false, node)
 	assert.NoError(t, err, "should not return error")
 
@@ -75,9 +89,7 @@ func TestInsert(t *testing.T) {
 	node = Node{
 		StartNewline: true,
 		HeadComment:  []string{"New comment"},
-		Key:          "new_key",
-		ValType:      Scalar,
-		Values:       []string{"'value_1'"},
+		Data:         Scalar{Key: "new_key", Value: "'value_1'"},
 	}
 	output, err = Insert(input, "key", false, node)
 	assert.NoError(t, err, "should not return error")
@@ -88,9 +100,19 @@ func TestInsert(t *testing.T) {
 	// Futurer changes to sequences
 	node = Node{
 		HeadComment: []string{"New comment line 1", "New comment line 2"},
-		Key:         "new_seqence",
-		ValType:     Sequence,
-		Values:      []string{"- key_1: 'value_1'", "val_1: 'value_2'", "- key_2: 'value_1'", "val_2: 'value_2'"},
+		Data: Sequence{
+			Key: "new_sequence",
+			Sets: [][]Pair{
+				{
+					{Key: "key_1", Value: "'value_1'"},
+					{Key: "val_1", Value: "'value_2'"},
+				},
+				{
+					{Key: "key_2", Value: "'value_1'"},
+					{Key: "val_2", Value: "'value_2'"},
+				},
+			},
+		},
 		EndNewline:  true,
 	}
 	output, err = Insert(output, "sequences_section", false, node)
@@ -99,18 +121,34 @@ func TestInsert(t *testing.T) {
 	node = Node{
 		StartNewline: true,
 		HeadComment:  []string{"New comment"},
-		Key:          "new_empty_sequence_with_comments",
-		ValType:      Sequence,
-		Values:       []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'"},
+		Data: Sequence{
+			Key: "new_empty_sequence_with_comments",
+			Sets: [][]Pair{
+				{
+					{Key: "key_1", Value: "'value_1'", Commented: true},
+					{Key: "val_1", Value: "'value_2'", Commented: true},
+				},
+			},
+		},
 		EndNewline:   true,
 	}
 	output, err = Insert(output, "sequences_section.sequence", true, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		Key:        "new_sequence_with_comments",
-		ValType:    Sequence,
-		Values:     []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'", "- key_1: 'value_3'", "val_1: 'value_4'"},
+		Data: Sequence{
+			Key: "new_sequence_with_comments",
+			Sets: [][]Pair{
+				{
+					{Key: "key_1", Value: "'value_1'", Commented: true},
+					{Key: "val_1", Value: "'value_2'", Commented: true},
+				},
+				{
+					{Key: "key_1", Value: "'value_3'"},
+					{Key: "val_1", Value: "'value_4'"},
+				},
+			},
+		},
 		EndNewline: true,
 	}
 	output, err = Insert(output, "sequences_section.sequence_with_comments", true, node)
@@ -118,9 +156,15 @@ func TestInsert(t *testing.T) {
 
 	node = Node{
 		HeadComment: []string{"New comment line 1", "New comment line 2"},
-		Key:         "new_empty_sequence_with_comments_2",
-		ValType:     Sequence,
-		Values:      []string{"# - key_1: 'value_1'", "#   val_1: 'value_2'"},
+		Data: Sequence{
+			Key: "new_empty_sequence_with_comments_2",
+			Sets: [][]Pair{
+				{
+					{Key: "key_1", Value: "'value_1'", Commented: true},
+					{Key: "val_1", Value: "'value_2'", Commented: true},
+				},
+			},
+		},
 		EndNewline:  true,
 	}
 	output, err = Insert(output, "sequences_section.empty_sequence_with_comments", true, node)
@@ -129,27 +173,36 @@ func TestInsert(t *testing.T) {
 	// Futurer changes to lists
 	node = Node{
 		HeadComment: []string{"New comment"},
-		Key:         "new_list",
-		ValType:     List,
-		Values:      []string{"- 0"},
+		Data: List{
+			Key: "new_list",
+			Values: []Value{
+				{Value: "0"},
+			},
+		},
 	}
 	output, err = Insert(output, "lists_section", false, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
 		StartNewline: true,
-		Key:          "new_list_with_comments",
-		ValType:      List,
-		Values:       []string{"- 'item_1'", "- 'item_2'", "# - 'item_3'"},
+		Data: List{
+			Key: "new_list_with_comments",
+			Values: []Value{
+				{Value: "'item_1'"}, {Value: "'item_2'"}, {Value: "'item_3'", Commented: true},
+			},
+		},
 	}
 	output, err = Insert(output, "lists_section.list_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
 		StartNewline: true,
-		Key:          "new_empty_list_with_comments",
-		ValType:      List,
-		Values:       []string{"# - 'item_1'"},
+		Data: List{
+			Key: "new_empty_list_with_comments",
+			Values: []Value{
+				{Value: "'item_1'", Commented: true},
+			},
+		},
 		EndNewline:   true,
 	}
 	output, err = Insert(output, "lists_section.new_list_with_comments", true, node)
@@ -157,31 +210,29 @@ func TestInsert(t *testing.T) {
 
 	node = Node{
 		StartNewline: true,
-		Key:          "new_empty_list_with_comments_2",
-		ValType:      List,
-		Values:       []string{"# - 'item_1'"},
+		Data: List{
+			Key: "new_empty_list_with_comments_2",
+			Values: []Value{
+				{Value: "'item_1'", Commented: true},
+			},
+		},
 		EndNewline:   true,
 	}
 	output, err = Insert(output, "lists_section.empty_list_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
 
-	// TODO: Nested lists
-	// ...
+	// TODO: Tests for nested lists
 
 	// Futurer changes scalars
 	node = Node{
 		HeadComment: []string{"Comment"},
-		Key:         "new_int_item",
-		ValType:     Scalar,
-		Values:      []string{"1"},
+		Data: Scalar{Key: "new_int_item", Value: "1"},
 	}
 	output, err = Insert(output, "scalar_section.bool_item", false, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		Key:        "new_bool_item",
-		ValType:    Scalar,
-		Values:     []string{"false"},
+		Data: Scalar{Key: "new_bool_item", Value: "false"},
 		EndNewline: true,
 	}
 	output, err = Insert(output, "scalar_section.str_item", false, node)
@@ -190,16 +241,20 @@ func TestInsert(t *testing.T) {
 	// Add new map section to the end
 	node = Node{
 		HeadComment: []string{"New comment"},
-		Key:         "new_map_section",
-		ValType:     None,
+		Data: Key{Key: "new_map_section"},
 	}
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		Key:        "new_map",
-		ValType:    Map,
-		Values:     []string{"# key_1: 'value_1'", "key_2: 'value_2'", "key_3: 'value_3'"},
+		Data: Map{
+			Key: "new_map",
+			Map: map[Key]string{
+				{Key: "key_1", Commented: true}: "'value_1'",
+				{Key: "key_2"}: "'value_2'",
+				{Key: "key_3"}: "'value_3'",
+			},
+		},
 		EndNewline: true,
 	}
 	output, err = Insert(output, "new_map_section", false, node)
@@ -207,11 +262,12 @@ func TestInsert(t *testing.T) {
 
 	// Add new empty section to the end
 	node = Node{
-		Key:     "new_empty_section",
-		ValType: None,
+		Data: Key{Key: "new_empty_section"},
 	}
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
+
+	// TODO: Test if passing nil
 
 	// Compare result with the expected one
 	expected, err := os.ReadFile("insert_expected_test.yaml")

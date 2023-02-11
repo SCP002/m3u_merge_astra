@@ -5,23 +5,13 @@ import (
 	"m3u_merge_astra/util/parse"
 	"m3u_merge_astra/util/scan"
 	"m3u_merge_astra/util/slice"
+	"reflect"
 	"regexp"
 	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slices"
-)
-
-// ValType represents YAML value type
-type ValType uint8
-
-const (
-	None ValType = iota // Should be used to declare empty sections
-	Scalar
-	Sequence
-	List
-	Map
 )
 
 // PathNotFoundError represents error thrown if specified path not found in given YAML
@@ -34,15 +24,14 @@ func (e PathNotFoundError) Error() string {
 	return fmt.Sprintf("Can not find the specified path: %v", e.Path)
 }
 
-// BadValueError represents error thrown if specified Node.ValType is incompatible with Node.Values
-type BadValueError struct {
-	ValType ValType
-	Values  []string
-	Reason  string
+// BadDataError represents error thrown if specified node data is incorrect
+type BadDataError struct {
+	Data   any
+	Reason string
 }
 
 // Error is used to satisfy golang error interface
-func (e BadValueError) Error() string {
+func (e BadDataError) Error() string {
 	return e.Reason
 }
 
@@ -50,9 +39,7 @@ func (e BadValueError) Error() string {
 type Node struct {
 	StartNewline bool // Add blank line before content?
 	HeadComment  []string
-	Key          string
-	ValType      ValType // Determines if value will be inserted at the new line after the key and it's indentations
-	Values       []string
+	Data         any  // Keys and values. Can be types from values.go
 	EndNewline   bool // Add blank line after content?
 }
 
@@ -62,21 +49,76 @@ type Node struct {
 //
 // If <sectionEnd> is true, insert after the indented section end, not first line.
 //
-// Can return errors defined in this package: BadValueError, PathNotFoundError.
+// Can return errors defined in this package: BadDataError, PathNotFoundError.
 func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) {
-	if node.ValType == None && len(node.Values) > 0 {
-		msg := "None value type can't have values"
-		return input, errors.Wrap(BadValueError{ValType: node.ValType, Values: node.Values, Reason: msg}, "Bad value")
-	}
-	if node.ValType == Scalar && len(node.Values) > 1 {
-		msg := "Scalar value type can't have more than 1 value"
-		return input, errors.Wrap(BadValueError{ValType: node.ValType, Values: node.Values, Reason: msg}, "Bad value")
-	}
-	if node.ValType != None && len(node.Values) == 0 {
-		msg := "Only None value type can be used without values"
-		return input, errors.Wrap(BadValueError{ValType: node.ValType, Values: node.Values, Reason: msg}, "Bad value")
+	// Return error if node data is not nil and keys or values are empty
+	{
+		errMsg := "Can not set empty key or value, use nil instead"
+		err := errors.Wrap(BadDataError{Data: node.Data, Reason: errMsg}, "Validate node data")
+
+		switch data := node.Data.(type) {
+		case nil:
+			//
+		case Key:
+			if data.Key == "" {
+				return input, err
+			}
+		case Scalar:
+			if data.Key == "" || data.Value == "" {
+				return input, err
+			}
+		case Sequence:
+			if data.Key == "" || len(data.Sets) == 0 {
+				return input, err
+			}
+			for _, set := range data.Sets {
+				if len(set) == 0 {
+					return input, err
+				}
+				for _, pair := range set {
+					if pair.Key == "" || pair.Value == "" {
+						return input, err
+					}
+				}
+			}
+		case List:
+			if data.Key == "" || len(data.Values) == 0 {
+				return input, err
+			}
+			for _, value := range data.Values {
+				if value.Value == "" {
+					return input, err
+				}
+			}
+		case NestedList:
+			// TODO: Nested list empty value check
+		case Map:
+			if data.Key == "" || len(data.Map) == 0 {
+				return input, err
+			}
+			for key, value := range data.Map {
+				if key.Key == "" || value == "" {
+					return input, err
+				}
+			}
+		default:
+			current := reflect.TypeOf(data).Name()
+			allowed := []string{ // TODO: Check types in debugger
+				"nil",
+				reflect.TypeOf(Key{}).Name(),
+				reflect.TypeOf(Scalar{}).Name(),
+				reflect.TypeOf(Sequence{}).Name(),
+				reflect.TypeOf(List{}).Name(),
+				reflect.TypeOf(NestedList{}).Name(),
+				reflect.TypeOf(Map{}).Name(),
+			}
+			errMsg := fmt.Sprintf("Invalid data type: %v, allowed types are: %v", current, allowed)
+			err := errors.Wrap(BadDataError{Data: node.Data, Reason: errMsg}, "Validate node data")
+			return input, err
+		}
 	}
 
+	// Prepare and get insert location
 	output := []rune(string(input))
 
 	step := 2
@@ -88,6 +130,9 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 
 	indent := strings.Repeat(" ", step * depth)
 	newlineSeq := "\r\n"
+	commentSeq := "# "
+	keyStartSeq := "- "
+	keyValDelimSeq := ": "
 	chunk := ""
 
 	// Add top newline
@@ -97,36 +142,61 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 
 	// Add comment
 	for _, line := range node.HeadComment {
-		chunk += indent + "# " + line + newlineSeq
+		chunk += indent + commentSeq + line + newlineSeq
 	}
 
-	// Add key
-	chunk += indent + node.Key + ":"
-
-	// Add values
-	switch node.ValType {
-	case None:
+	// Add keys and values
+	switch data := node.Data.(type) {
+	case nil:
 		chunk += newlineSeq
+	case Key:
+		chunk += indent
+		if data.Commented {
+			chunk += commentSeq
+		}
+		chunk += data.Key + ":" + newlineSeq
 	case Scalar:
-		chunk += " "
+		chunk += indent
+		if data.Commented {
+			chunk += commentSeq
+		}
+		chunk += data.Key + keyValDelimSeq + data.Value + newlineSeq
 	case Sequence:
-		chunk += newlineSeq
-		node.Values = lo.Map(node.Values, func(line string, _ int) string {
-			if strings.HasPrefix(line, "- ") {
-				return indent + strings.Repeat(" ", step) + line
+		chunk += indent + data.Key + ":" + newlineSeq
+		for _, set := range data.Sets {
+			for i, pair := range set {
+				chunk += indent + strings.Repeat(" ", step)
+				if pair.Commented {
+					chunk += commentSeq
+				}
+				if i == 0 {
+					chunk += keyStartSeq
+				} else {
+					chunk += "  "
+				}
+				chunk += pair.Key + keyValDelimSeq + pair.Value + newlineSeq
 			}
-			// If sequence value, add 2 spaces to align keys and values
-			return "  " + indent + strings.Repeat(" ", step) + line
-		})
-	case List, Map:
-		chunk += newlineSeq
-		node.Values = lo.Map(node.Values, func(line string, _ int) string {
-			return indent + strings.Repeat(" ", step) + line
-		})
-	}
-
-	for _, line := range node.Values {
-		chunk += line + newlineSeq
+		}
+	case List:
+		chunk += indent + data.Key + ":" + newlineSeq
+		for _, value := range data.Values {
+			chunk += indent + strings.Repeat(" ", step)
+			if value.Commented {
+				chunk += commentSeq
+			}
+			chunk += keyStartSeq + value.Value + newlineSeq
+		}
+	case NestedList:
+		// TODO: Nested list write implementation
+	case Map:
+		chunk += indent + data.Key + ":" + newlineSeq
+		for key, value := range data.Map {
+			chunk += indent + strings.Repeat(" ", step)
+			if key.Commented {
+				chunk += commentSeq
+			}
+			chunk += key.Key + keyValDelimSeq + value + newlineSeq
+		}
 	}
 
 	// Add bottom newline

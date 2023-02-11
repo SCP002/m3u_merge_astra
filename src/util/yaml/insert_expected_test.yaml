@@ -25,7 +25,7 @@ nested_section:
 sequences_section:
   # New comment line 1
   # New comment line 2
-  new_seqence:
+  new_sequence:
     - key_1: 'value_1'
       val_1: 'value_2'
     - key_2: 'value_1'
@@ -109,17 +109,6 @@ lists_section:
       - - 'item_6'
         - 'item_7'
         - 'item_8'
-
-  new_nested_list:
-    - - - 'item_1'
-      - - 'item_2'
-        - 'item_3'
-        - 'item_4'
-    - - - 'item_5'
-      - - 'item_6'
-        - 'item_7'
-        - 'item_8'
-
 scalar_section:
   bool_item: true
   # Comment
