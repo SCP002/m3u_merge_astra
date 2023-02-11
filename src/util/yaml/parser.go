@@ -7,6 +7,7 @@ import (
 	"m3u_merge_astra/util/slice"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -97,7 +98,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 				return input, err
 			}
 			for key, value := range data.Map {
-				if key.Key == "" || value == "" {
+				if key == "" || value.Value == "" {
 					return input, err
 				}
 			}
@@ -190,12 +191,19 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 		// TODO: Nested list write implementation
 	case Map:
 		chunk += indent + data.Key + ":" + newlineSeq
-		for key, value := range data.Map {
+		// Transform map to slice and sort it to ensure key order
+		pairs := lo.MapToSlice(data.Map, func(key string, value Value) Pair {
+			return Pair{Key: key, Value: value.Value, Commented: value.Commented}
+		})
+		sort.SliceStable(pairs, func(i, j int) bool {
+			return pairs[i].Key < pairs[j].Key
+		})
+		for _, pair := range pairs {
 			chunk += indent + strings.Repeat(" ", step)
-			if key.Commented {
+			if pair.Commented {
 				chunk += commentSeq
 			}
-			chunk += key.Key + keyValDelimSeq + value + newlineSeq
+			chunk += pair.Key + keyValDelimSeq + pair.Value + newlineSeq
 		}
 	}
 

@@ -19,7 +19,7 @@ type ValueTree struct {
 	Children *ValueTree
 }
 
-// Key represents YAML node value type. Key with comment boolean flag. Use to create keys without values.
+// Key represents YAML node value type. Use to create keys without values.
 type Key struct {
 	Key       string
 	Commented bool
@@ -53,5 +53,5 @@ type NestedList struct {
 // Map represents YAML node value type
 type Map struct {
 	Key string
-	Map map[Key]string
+	Map map[string]Value // Keep it as map type to prevent key duplication
 }

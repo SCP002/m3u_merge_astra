@@ -232,16 +232,16 @@ func TestInsert(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		Data:       Scalar{Key: "new_bool_item", Value: "false"},
-		EndNewline: true,
+		Data: Scalar{Key: "new_bool_item", Value: "false"},
 	}
 	output, err = Insert(output, "scalar_section.str_item", false, node)
 	assert.NoError(t, err, "should not return error")
 
 	// Add new map section to the end
 	node = Node{
-		HeadComment: []string{"New comment"},
-		Data:        Key{Key: "new_map_section"},
+		StartNewline: true,
+		HeadComment:  []string{"New comment"},
+		Data:         Key{Key: "new_map_section"},
 	}
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
@@ -249,10 +249,10 @@ func TestInsert(t *testing.T) {
 	node = Node{
 		Data: Map{
 			Key: "new_map",
-			Map: map[Key]string{
-				{Key: "key_1", Commented: true}: "'value_1'",
-				{Key: "key_2"}:                  "'value_2'",
-				{Key: "key_3"}:                  "'value_3'",
+			Map: map[string]Value{
+				"key_1": {Value: "'value_1'", Commented: true},
+				"key_2": {Value: "'value_2'"},
+				"key_3": {Value: "'value_3'"},
 			},
 		},
 		EndNewline: true,
@@ -453,7 +453,7 @@ func TestInsertIndex(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 	assert.Exactly(t, 1200, index, "should return that index")
 	assert.Exactly(t, 0, depth, "should return that depth")
-	assert.Exactly(t, "\r\n\r\n# Co", string(input[index-4:index+4]), "should be last 4 characters")
+	assert.Exactly(t, "\r\n\r\n# Co", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	index, depth, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
@@ -479,11 +479,11 @@ func TestInsertIndex(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 	assert.Exactly(t, 1200, index, "should return that index")
 	assert.Exactly(t, 0, depth, "should return that depth")
-	assert.Exactly(t, "\r\n\r\n# Co", string(input[index-4:index+4]), "should be last 4 characters")
+	assert.Exactly(t, "\r\n\r\n# Co", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 
 	index, depth, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
 	assert.Exactly(t, 1198, index, "should return that index")
 	assert.Exactly(t, 1, depth, "should return that depth")
-	assert.Exactly(t, "e\"\r\n\r\n# ", string(input[index-4:index+4]), "should be last 4 characters")
+	assert.Exactly(t, "e\"\r\n\r\n# ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 }
