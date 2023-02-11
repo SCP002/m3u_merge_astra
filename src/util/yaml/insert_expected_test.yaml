@@ -116,6 +116,9 @@ scalar_section:
   str_item: "# value"
   new_bool_item: false
 
+# Comment without data, line 1
+# Comment without data, line 2
+
 # New comment
 new_map_section:
   new_map:
@@ -124,3 +127,6 @@ new_map_section:
     key_3: 'value_3'
 
 new_empty_section:
+
+# New comment without data, line 1
+# New comment without data, line 2

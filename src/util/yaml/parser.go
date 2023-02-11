@@ -37,10 +37,10 @@ func (e BadDataError) Error() string {
 
 // Node represents YAML comment, key and value
 type Node struct {
-	StartNewline bool // Add blank line before content?
+	StartNewline bool // Add new line character(s) before content?
 	HeadComment  []string
 	Data         any  // Keys and values. Can be types from values.go
-	EndNewline   bool // Add blank line after content?
+	EndNewline   bool // Add new line character(s) after content?
 }
 
 // Insert returns copy of the YAML bytes <input> with <node> inserted <afterPath>.
@@ -103,7 +103,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 			}
 		default:
 			current := reflect.TypeOf(data).Name()
-			allowed := []string{ // TODO: Check types in debugger
+			allowed := []string{
 				"nil",
 				reflect.TypeOf(Key{}).Name(),
 				reflect.TypeOf(Scalar{}).Name(),
@@ -148,7 +148,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	// Add keys and values
 	switch data := node.Data.(type) {
 	case nil:
-		chunk += newlineSeq
+		//
 	case Key:
 		chunk += indent
 		if data.Commented {

@@ -67,3 +67,6 @@ lists_section:
 scalar_section:
   bool_item: true
   str_item: "# value"
+
+# Comment without data, line 1
+# Comment without data, line 2

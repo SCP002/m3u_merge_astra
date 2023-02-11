@@ -113,7 +113,7 @@ func TestInsert(t *testing.T) {
 				},
 			},
 		},
-		EndNewline:  true,
+		EndNewline: true,
 	}
 	output, err = Insert(output, "sequences_section", false, node)
 	assert.NoError(t, err, "should not return error")
@@ -130,7 +130,7 @@ func TestInsert(t *testing.T) {
 				},
 			},
 		},
-		EndNewline:   true,
+		EndNewline: true,
 	}
 	output, err = Insert(output, "sequences_section.sequence", true, node)
 	assert.NoError(t, err, "should not return error")
@@ -165,7 +165,7 @@ func TestInsert(t *testing.T) {
 				},
 			},
 		},
-		EndNewline:  true,
+		EndNewline: true,
 	}
 	output, err = Insert(output, "sequences_section.empty_sequence_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
@@ -203,7 +203,7 @@ func TestInsert(t *testing.T) {
 				{Value: "'item_1'", Commented: true},
 			},
 		},
-		EndNewline:   true,
+		EndNewline: true,
 	}
 	output, err = Insert(output, "lists_section.new_list_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
@@ -216,7 +216,7 @@ func TestInsert(t *testing.T) {
 				{Value: "'item_1'", Commented: true},
 			},
 		},
-		EndNewline:   true,
+		EndNewline: true,
 	}
 	output, err = Insert(output, "lists_section.empty_list_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
@@ -226,13 +226,13 @@ func TestInsert(t *testing.T) {
 	// Futurer changes scalars
 	node = Node{
 		HeadComment: []string{"Comment"},
-		Data: Scalar{Key: "new_int_item", Value: "1"},
+		Data:        Scalar{Key: "new_int_item", Value: "1"},
 	}
 	output, err = Insert(output, "scalar_section.bool_item", false, node)
 	assert.NoError(t, err, "should not return error")
 
 	node = Node{
-		Data: Scalar{Key: "new_bool_item", Value: "false"},
+		Data:       Scalar{Key: "new_bool_item", Value: "false"},
 		EndNewline: true,
 	}
 	output, err = Insert(output, "scalar_section.str_item", false, node)
@@ -241,7 +241,7 @@ func TestInsert(t *testing.T) {
 	// Add new map section to the end
 	node = Node{
 		HeadComment: []string{"New comment"},
-		Data: Key{Key: "new_map_section"},
+		Data:        Key{Key: "new_map_section"},
 	}
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
@@ -251,8 +251,8 @@ func TestInsert(t *testing.T) {
 			Key: "new_map",
 			Map: map[Key]string{
 				{Key: "key_1", Commented: true}: "'value_1'",
-				{Key: "key_2"}: "'value_2'",
-				{Key: "key_3"}: "'value_3'",
+				{Key: "key_2"}:                  "'value_2'",
+				{Key: "key_3"}:                  "'value_3'",
 			},
 		},
 		EndNewline: true,
@@ -267,7 +267,14 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
 
-	// TODO: Test if passing nil
+	// Add comment with no data
+	node = Node{
+		StartNewline: true,
+		HeadComment:  []string{"New comment without data, line 1", "New comment without data, line 2"},
+		Data:         nil,
+	}
+	output, err = Insert(output, "", false, node)
+	assert.NoError(t, err, "should not return error")
 
 	// Compare result with the expected one
 	expected, err := os.ReadFile("insert_expected_test.yaml")
@@ -353,15 +360,15 @@ func TestInsertIndex(t *testing.T) {
 	path = ""
 	index, depth, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1198, index, "should return last index")
+	assert.Exactly(t, 1264, index, "should return last index")
 	assert.Exactly(t, 0, depth, "should return 0 depth")
-	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
+	assert.Exactly(t, " 2\r\n", string(input[index-4:]), "should be last 4 characters")
 
 	index, depth, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1198, index, "should return last index")
+	assert.Exactly(t, 1264, index, "should return last index")
 	assert.Exactly(t, 0, depth, "should return 0 depth")
-	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
+	assert.Exactly(t, " 2\r\n", string(input[index-4:]), "should be last 4 characters")
 
 	path = "key"
 	index, depth, err = insertIndex(input, path, true, 2)
@@ -444,9 +451,9 @@ func TestInsertIndex(t *testing.T) {
 	path = "scalar_section"
 	index, depth, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1198, index, "should return that index")
+	assert.Exactly(t, 1200, index, "should return that index")
 	assert.Exactly(t, 0, depth, "should return that depth")
-	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
+	assert.Exactly(t, "\r\n\r\n# Co", string(input[index-4:index+4]), "should be last 4 characters")
 
 	index, depth, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
@@ -470,13 +477,13 @@ func TestInsertIndex(t *testing.T) {
 	path = "scalar_section.str_item"
 	index, depth, err = insertIndex(input, path, true, 2)
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, 1198, index, "should return that index")
+	assert.Exactly(t, 1200, index, "should return that index")
 	assert.Exactly(t, 0, depth, "should return that depth")
-	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
+	assert.Exactly(t, "\r\n\r\n# Co", string(input[index-4:index+4]), "should be last 4 characters")
 
 	index, depth, err = insertIndex(input, path, false, 2)
 	assert.NoError(t, err, "should not return error")
 	assert.Exactly(t, 1198, index, "should return that index")
 	assert.Exactly(t, 1, depth, "should return that depth")
-	assert.Exactly(t, "e\"\r\n", string(input[index-4:]), "should be last 4 characters")
+	assert.Exactly(t, "e\"\r\n\r\n# ", string(input[index-4:index+4]), "should be last 4 characters")
 }
