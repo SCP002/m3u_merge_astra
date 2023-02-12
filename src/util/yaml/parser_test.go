@@ -555,45 +555,6 @@ func TestFlatten(t *testing.T) { // TODO: Make it pass
 	assert.Exactly(t, treeOriginal, tree, "should not modify the source tree")
 
 	expected := []ValueTree{
-		{ // Root
-			Depth: 0,
-			Children: []ValueTree{
-				{
-					Value: Value{Value: "'item_1'"},
-					Depth: 0,
-					Children: []ValueTree{
-						{
-							Value: Value{Value: "'item_2'"},
-							Depth: 0,
-						},
-						{
-							Value: Value{Value: "'item_3'"},
-							Depth: 0,
-							Children: []ValueTree{
-								{
-									Value: Value{Value: "'item_4'"},
-									Depth: 0,
-								},
-								{
-									Value: Value{Value: "'item_5'"},
-									Depth: 0,
-								},
-							},
-						},
-					},
-				},
-				{
-					Value: Value{Value: "'item_6'"},
-					Depth: 0,
-					Children: []ValueTree{
-						{
-							Value: Value{Value: "'item_7'"},
-							Depth: 0,
-						},
-					},
-				},
-			},
-		},
 		{ // 1
 			Value: Value{Value: "'item_1'"},
 			Depth: 1,
