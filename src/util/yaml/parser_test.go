@@ -221,7 +221,44 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "lists_section.empty_list_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
 
-	// TODO: Tests for nested lists
+	// Futurer changes to nested lists
+	node = Node{
+		StartNewline: true,
+		Data: NestedList{
+			Key: "new_nested_list",
+			Tree: ValueTree{
+				Children: []ValueTree{
+					{
+						Value: Value{Value: "'item_1'"},
+						Children: []ValueTree{
+							{
+								Value: Value{Value: "'item_2'"},
+								Children: []ValueTree{
+									{Value: Value{Value: "'item_3'"}},
+									{Value: Value{Value: "'item_4'"}},
+								},
+							},
+						},
+					},
+					{
+						Value: Value{Value: "'item_5'"},
+						Children: []ValueTree{
+							{
+								Value: Value{Value: "'item_6'"},
+								Children: []ValueTree{
+									{Value: Value{Value: "'item_7'"}},
+									{Value: Value{Value: "'item_8'", Commented: true}},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		EndNewline: true,
+	}
+	output, err = Insert(output, "lists_section.nested_list", true, node)
+	assert.NoError(t, err, "should not return error")
 
 	// Futurer changes scalars
 	node = Node{
@@ -486,4 +523,142 @@ func TestInsertIndex(t *testing.T) {
 	assert.Exactly(t, 1198, index, "should return that index")
 	assert.Exactly(t, 1, depth, "should return that depth")
 	assert.Exactly(t, "e\"\r\n\r\n# ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
+}
+
+func TestFlatten(t *testing.T) { // TODO: Make it pass
+	tree := ValueTree{
+		Children: []ValueTree{
+			{
+				Value: Value{Value: "'item_1'"},
+				Children: []ValueTree{
+					{Value: Value{Value: "'item_2'"}},
+					{Value: Value{Value: "'item_3'"},
+						Children: []ValueTree{
+							{Value: Value{Value: "'item_4'"}},
+							{Value: Value{Value: "'item_5'"}},
+						},
+					},
+				},
+			},
+			{
+				Value: Value{Value: "'item_6'"},
+				Children: []ValueTree{
+					{Value: Value{Value: "'item_7'"}},
+				},
+			},
+		},
+	}
+	treeOriginal := copier.TestDeep(t, tree)
+
+	actual, maxDepth := flatten(tree)
+
+	assert.Exactly(t, treeOriginal, tree, "should not modify the source tree")
+
+	expected := []ValueTree{
+		{ // Root
+			Depth: 0,
+			Children: []ValueTree{
+				{
+					Value: Value{Value: "'item_1'"},
+					Depth: 0,
+					Children: []ValueTree{
+						{
+							Value: Value{Value: "'item_2'"},
+							Depth: 0,
+						},
+						{
+							Value: Value{Value: "'item_3'"},
+							Depth: 0,
+							Children: []ValueTree{
+								{
+									Value: Value{Value: "'item_4'"},
+									Depth: 0,
+								},
+								{
+									Value: Value{Value: "'item_5'"},
+									Depth: 0,
+								},
+							},
+						},
+					},
+				},
+				{
+					Value: Value{Value: "'item_6'"},
+					Depth: 0,
+					Children: []ValueTree{
+						{
+							Value: Value{Value: "'item_7'"},
+							Depth: 0,
+						},
+					},
+				},
+			},
+		},
+		{ // 1
+			Value: Value{Value: "'item_1'"},
+			Depth: 1,
+			Children: []ValueTree{
+				{
+					Value: Value{Value: "'item_2'"},
+					Depth: 2,
+				},
+				{
+					Value: Value{Value: "'item_3'"},
+					Depth: 2,
+					Children: []ValueTree{
+						{
+							Value: Value{Value: "'item_4'"},
+							Depth: 3,
+						},
+						{
+							Value: Value{Value: "'item_5'"},
+							Depth: 3,
+						},
+					},
+				},
+			},
+		},
+		{ // 2
+			Value: Value{Value: "'item_2'"},
+			Depth: 2,
+		},
+		{ // 3
+			Value: Value{Value: "'item_3'"},
+			Depth: 2,
+			Children: []ValueTree{
+				{
+					Value: Value{Value: "'item_4'"},
+					Depth: 3,
+				},
+				{
+					Value: Value{Value: "'item_5'"},
+					Depth: 3,
+				},
+			},
+		},
+		{ // 4
+			Value: Value{Value: "'item_4'"},
+			Depth: 0,
+		},
+		{ // 5
+			Value: Value{Value: "'item_5'"},
+			Depth: 0,
+		},
+		{ // 6
+			Value: Value{Value: "'item_6'"},
+			Depth: 1,
+			Children: []ValueTree{
+				{
+					Value: Value{Value: "'item_7'"},
+					Depth: 2,
+				},
+			},
+		},
+		{ // 7
+			Value: Value{Value: "'item_7'"},
+			Depth: 2,
+		},
+	}
+	assert.Exactly(t, expected, actual, "should return that flat tree")
+	assert.Exactly(t, 3, maxDepth, "should return that maximum depth")
 }

@@ -109,6 +109,17 @@ lists_section:
       - - 'item_6'
         - 'item_7'
         - 'item_8'
+
+  new_nested_list:
+    - - - 'item_1'
+      - - 'item_2'
+        - 'item_3'
+        - 'item_4'
+    - - - 'item_5'
+      - - 'item_6'
+        - 'item_7'
+        # - 'item_8'
+
 scalar_section:
   bool_item: true
   # Comment

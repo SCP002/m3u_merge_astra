@@ -15,8 +15,9 @@ type Value struct {
 
 // ValueTree represents tree of values with children
 type ValueTree struct {
-	Values   []Value
-	Children *ValueTree
+	Value    Value
+	Children []ValueTree
+	Depth    int // Field for internal use. Specifies how deep is current element in the tree.
 }
 
 // Key represents YAML node value type. Use to create keys without values.

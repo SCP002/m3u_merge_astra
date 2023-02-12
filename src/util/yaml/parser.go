@@ -92,7 +92,16 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 				}
 			}
 		case NestedList:
-			// TODO: Nested list empty value check
+			if data.Key == "" {
+				return input, err
+			}
+			flatTree, _ := flatten(data.Tree)
+			for i, branch := range flatTree {
+				// Only root (first element) is allowed without values
+				if i > 0 && branch.Value.Value == "" {
+					return input, err
+				}
+			}
 		case Map:
 			if data.Key == "" || len(data.Map) == 0 {
 				return input, err
@@ -132,7 +141,8 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	indent := strings.Repeat(" ", step * depth)
 	newlineSeq := "\r\n"
 	commentSeq := "# "
-	keyStartSeq := "- "
+	listValSeq := "- "
+	listAlignSeq := "  "
 	keyValDelimSeq := ": "
 	chunk := ""
 
@@ -171,9 +181,9 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 					chunk += commentSeq
 				}
 				if i == 0 {
-					chunk += keyStartSeq
+					chunk += listValSeq
 				} else {
-					chunk += "  "
+					chunk += listAlignSeq
 				}
 				chunk += pair.Key + keyValDelimSeq + pair.Value + newlineSeq
 			}
@@ -185,10 +195,26 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 			if value.Commented {
 				chunk += commentSeq
 			}
-			chunk += keyStartSeq + value.Value + newlineSeq
+			chunk += listValSeq + value.Value + newlineSeq
 		}
 	case NestedList:
-		// TODO: Nested list write implementation
+		// TODO: Try to optimize (look at flatten()?)
+		// TODO: Merge NestedList with List?
+		chunk += indent + data.Key + ":" + newlineSeq
+		flatTree, maxDepth := flatten(data.Tree)
+		for i, branch := range flatTree {
+			// Root (first element) should not contain values, skip it
+			if i == 0 { // TODO: Remove if changed in flatten
+				continue
+			}
+			// Add extra spaces on top of regular indent to align deep values
+			chunk += indent + strings.Repeat(" ", step) + strings.Repeat(listAlignSeq, branch.Depth - 1)
+			if branch.Value.Commented {
+				chunk += commentSeq
+			}
+			// Add hyphens based on how deep value is
+			chunk += strings.Repeat(listValSeq, maxDepth-branch.Depth + 1) + branch.Value.Value + newlineSeq
+		}
 	case Map:
 		chunk += indent + data.Key + ":" + newlineSeq
 		// Transform map to slice and sort it to ensure key order
@@ -362,4 +388,20 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 	}
 
 	return 0, 0, err
+}
+
+// flatten returns <tree> as a single level deep slice and maximum depth of the <tree> as the second value
+func flatten(tree ValueTree) (out []ValueTree, maxDepth int) {
+	if tree.Value.Value != "" {
+		tree.Depth++
+	}
+	maxDepth = tree.Depth
+	out = append(out, tree)
+	for _, child := range tree.Children {
+		child.Depth = tree.Depth
+		var flatTree []ValueTree
+		flatTree, maxDepth = flatten(child)
+		out = append(out, flatTree...)
+	}
+	return out, maxDepth
 }
