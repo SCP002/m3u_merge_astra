@@ -548,7 +548,8 @@ func TestFlatten(t *testing.T) {
 	}
 	treeOriginal := copier.TestDeep(t, tree)
 
-	actual, maxDepth := flatten(tree)
+	maxDepth := 0
+	actual := flatten(tree, &maxDepth)
 
 	assert.Exactly(t, treeOriginal, tree, "should not modify the source tree")
 
@@ -598,4 +599,96 @@ func TestFlatten(t *testing.T) {
 	}
 	assert.Exactly(t, expected, actual, "should return that flat tree")
 	assert.Exactly(t, 2, maxDepth, "should return that maximum depth")
+
+	tree = ValueTree{
+		Children: []ValueTree{
+			{
+				Value: Value{Value: "'item_1'"},
+				Children: []ValueTree{
+					{
+						Value: Value{Value: "'item_2'"},
+						Children: []ValueTree{
+							{
+								Value: Value{Value: "'item_3'"},
+								Children: []ValueTree{
+									{
+										Value: Value{Value: "'item_4'"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Value: Value{Value: "'item_5'"},
+			},
+		},
+	}
+	treeOriginal = copier.TestDeep(t, tree)
+
+	actual = flatten(tree, &maxDepth)
+
+	assert.Exactly(t, treeOriginal, tree, "should not modify the source tree")
+
+	expected = []ValueTree{
+		{
+			Value: Value{Value: "'item_1'"},
+			depth: 1,
+			Children: []ValueTree{
+				{
+					Value: Value{Value: "'item_2'"},
+					depth: 0,
+					Children: []ValueTree{
+						{
+							Value: Value{Value: "'item_3'"},
+							depth: 0,
+							Children: []ValueTree{
+								{
+									Value: Value{Value: "'item_4'"},
+									depth: 0,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Value: Value{Value: "'item_2'"},
+			depth: 2,
+			Children: []ValueTree{
+				{
+					Value: Value{Value: "'item_3'"},
+					depth: 0,
+					Children: []ValueTree{
+						{
+							Value: Value{Value: "'item_4'"},
+							depth: 0,
+						},
+					},
+				},
+			},
+		},
+		{
+			Value: Value{Value: "'item_3'"},
+			depth: 3,
+			Children: []ValueTree{
+				{
+					Value: Value{Value: "'item_4'"},
+					depth: 0,
+				},
+			},
+		},
+		{
+			Value: Value{Value: "'item_4'"},
+			depth: 4,
+		},
+		{
+			Value: Value{Value: "'item_5'"},
+			depth: 1,
+		},
+	}
+	assert.Exactly(t, expected, actual, "should return that flat tree")
+	assert.Exactly(t, 4, maxDepth, "should return that maximum depth")
 }

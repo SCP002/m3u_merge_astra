@@ -95,8 +95,8 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 			if data.Key == "" {
 				return input, err
 			}
-			flatTree, _ := flatten(data.Tree)
-			for _, branch := range flatTree {
+			var maxDepth int
+			for _, branch := range flatten(data.Tree, &maxDepth) {
 				if branch.Value.Value == "" {
 					return input, err
 				}
@@ -200,8 +200,8 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 		// TODO: Try to optimize (look at flatten()?)
 		// TODO: Merge NestedList with List?
 		chunk += indent + data.Key + ":" + newlineSeq
-		flatTree, maxDepth := flatten(data.Tree)
-		for _, branch := range flatTree {
+		var maxDepth int
+		for _, branch := range flatten(data.Tree, &maxDepth) {
 			chunk += indent + strings.Repeat(" ", step)
 			if branch.Value.Commented {
 				chunk += commentSeq
@@ -388,18 +388,18 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 }
 
 // flatten returns <tree> as a single level deep slice and maximum depth of the <tree> as the second value
-func flatten(tree ValueTree) (out []ValueTree, maxDepth int) {
+func flatten(tree ValueTree, maxDepth *int) (out []ValueTree) {
 	// If value is empty (root), do not append it to output and do not increase depth
 	if tree.Value.Value != "" {
 		tree.depth++
 		out = append(out, tree)
-		maxDepth = tree.depth
+		if tree.depth > *maxDepth {
+			*maxDepth = tree.depth
+		}
 	}
 	for _, child := range tree.Children {
 		child.depth = tree.depth
-		var flatTree []ValueTree
-		flatTree, maxDepth = flatten(child)
-		out = append(out, flatTree...)
+		out = append(out, flatten(child, maxDepth)...)
 	}
-	return out, maxDepth
+	return
 }
