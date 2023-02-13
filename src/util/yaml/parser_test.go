@@ -258,6 +258,40 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "lists_section.nested_list", true, node)
 	assert.NoError(t, err, "should not return error")
 
+	node = Node{
+		Data: NestedList{
+			Key: "new_nested_list_2",
+			Tree: ValueTree{
+				Children: []ValueTree{
+					{
+						Value: Value{Value: "'item_1'"},
+						Children: []ValueTree{
+							{
+								Value: Value{Value: "'item_2'"},
+								Children: []ValueTree{
+									{
+										Value: Value{Value: "'item_3'"},
+										Children: []ValueTree{
+											{
+												Value: Value{Value: "'item_4'"},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					{
+						Value: Value{Value: "'item_5'"},
+					},
+				},
+			},
+		},
+		EndNewline: true,
+	}
+	output, err = Insert(output, "lists_section.new_nested_list", true, node)
+	assert.NoError(t, err, "should not return error")
+
 	// Futurer changes scalars
 	node = Node{
 		HeadComment: []string{"Comment"},

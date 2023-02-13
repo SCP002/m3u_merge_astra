@@ -387,7 +387,7 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 	return 0, 0, err
 }
 
-// flatten returns <tree> as a single level deep slice and maximum depth of the <tree> as the second value
+// flatten returns <tree> as a single level deep slice and sets maximum depth of the <tree> in <maxDepth>
 func flatten(tree ValueTree, maxDepth *int) (out []ValueTree) {
 	// If value is empty (root), do not append it to output and do not increase depth
 	if tree.Value.Value != "" {
