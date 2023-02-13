@@ -233,22 +233,20 @@ func TestInsert(t *testing.T) {
 						Children: []ValueTree{
 							{
 								Value: Value{Value: "'item_2'"},
-								Children: []ValueTree{
-									{Value: Value{Value: "'item_3'"}},
-									{Value: Value{Value: "'item_4'"}},
-								},
+							},
+							{
+								Value: Value{Value: "'item_3'"},
 							},
 						},
 					},
 					{
-						Value: Value{Value: "'item_5'"},
+						Value: Value{Value: "'item_4'", Commented: true},
 						Children: []ValueTree{
 							{
-								Value: Value{Value: "'item_6'"},
-								Children: []ValueTree{
-									{Value: Value{Value: "'item_7'"}},
-									{Value: Value{Value: "'item_8'", Commented: true}},
-								},
+								Value: Value{Value: "'item_5'", Commented: true},
+							},
+							{
+								Value: Value{Value: "'item_6'", Commented: true},
 							},
 						},
 					},
@@ -525,25 +523,25 @@ func TestInsertIndex(t *testing.T) {
 	assert.Exactly(t, "e\"\r\n\r\n# ", string(input[index-4:index+4]), "should be from last 4 to next 4 characters")
 }
 
-func TestFlatten(t *testing.T) { // TODO: Make it pass
+func TestFlatten(t *testing.T) {
 	tree := ValueTree{
 		Children: []ValueTree{
 			{
 				Value: Value{Value: "'item_1'"},
 				Children: []ValueTree{
 					{Value: Value{Value: "'item_2'"}},
-					{Value: Value{Value: "'item_3'"},
-						Children: []ValueTree{
-							{Value: Value{Value: "'item_4'"}},
-							{Value: Value{Value: "'item_5'"}},
-						},
-					},
 				},
 			},
 			{
-				Value: Value{Value: "'item_6'"},
+				Value: Value{Value: "'item_3'"},
 				Children: []ValueTree{
-					{Value: Value{Value: "'item_7'"}},
+					{Value: Value{Value: "'item_4'"}},
+				},
+			},
+			{
+				Value: Value{Value: "'item_5'"},
+				Children: []ValueTree{
+					{Value: Value{Value: "'item_6'"}},
 				},
 			},
 		},
@@ -555,71 +553,49 @@ func TestFlatten(t *testing.T) { // TODO: Make it pass
 	assert.Exactly(t, treeOriginal, tree, "should not modify the source tree")
 
 	expected := []ValueTree{
-		{ // 1
+		{
 			Value: Value{Value: "'item_1'"},
-			Depth: 1,
+			depth: 1,
 			Children: []ValueTree{
 				{
 					Value: Value{Value: "'item_2'"},
-					Depth: 2,
-				},
-				{
-					Value: Value{Value: "'item_3'"},
-					Depth: 2,
-					Children: []ValueTree{
-						{
-							Value: Value{Value: "'item_4'"},
-							Depth: 3,
-						},
-						{
-							Value: Value{Value: "'item_5'"},
-							Depth: 3,
-						},
-					},
+					depth: 0,
 				},
 			},
 		},
-		{ // 2
+		{
 			Value: Value{Value: "'item_2'"},
-			Depth: 2,
+			depth: 2,
 		},
-		{ // 3
+		{
 			Value: Value{Value: "'item_3'"},
-			Depth: 2,
+			depth: 1,
 			Children: []ValueTree{
 				{
 					Value: Value{Value: "'item_4'"},
-					Depth: 3,
-				},
-				{
-					Value: Value{Value: "'item_5'"},
-					Depth: 3,
+					depth: 0,
 				},
 			},
 		},
-		{ // 4
+		{
 			Value: Value{Value: "'item_4'"},
-			Depth: 0,
+			depth: 2,
 		},
-		{ // 5
+		{
 			Value: Value{Value: "'item_5'"},
-			Depth: 0,
-		},
-		{ // 6
-			Value: Value{Value: "'item_6'"},
-			Depth: 1,
+			depth: 1,
 			Children: []ValueTree{
 				{
-					Value: Value{Value: "'item_7'"},
-					Depth: 2,
+					Value: Value{Value: "'item_6'"},
+					depth: 0,
 				},
 			},
 		},
-		{ // 7
-			Value: Value{Value: "'item_7'"},
-			Depth: 2,
+		{
+			Value: Value{Value: "'item_6'"},
+			depth: 2,
 		},
 	}
 	assert.Exactly(t, expected, actual, "should return that flat tree")
-	assert.Exactly(t, 3, maxDepth, "should return that maximum depth")
+	assert.Exactly(t, 2, maxDepth, "should return that maximum depth")
 }

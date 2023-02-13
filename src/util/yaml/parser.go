@@ -202,13 +202,15 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 		chunk += indent + data.Key + ":" + newlineSeq
 		flatTree, maxDepth := flatten(data.Tree)
 		for _, branch := range flatTree {
-			// Add extra spaces on top of regular indent to align deep values
-			chunk += indent + strings.Repeat(" ", step) + strings.Repeat(listAlignSeq, branch.Depth - 1)
+			chunk += indent + strings.Repeat(" ", step)
 			if branch.Value.Commented {
 				chunk += commentSeq
 			}
+			// Add extra spaces on top of regular indent to align deep values
+			chunk += strings.Repeat(listAlignSeq, branch.depth - 1)
 			// Add hyphens based on how deep value is
-			chunk += strings.Repeat(listValSeq, maxDepth-branch.Depth + 1) + branch.Value.Value + newlineSeq
+			chunk += strings.Repeat(listValSeq, maxDepth - branch.depth + 1)
+			chunk += branch.Value.Value + newlineSeq
 		}
 	case Map:
 		chunk += indent + data.Key + ":" + newlineSeq
@@ -389,12 +391,12 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 func flatten(tree ValueTree) (out []ValueTree, maxDepth int) {
 	// If value is empty (root), do not append it to output and do not increase depth
 	if tree.Value.Value != "" {
-		tree.Depth++
+		tree.depth++
 		out = append(out, tree)
-		maxDepth = tree.Depth
+		maxDepth = tree.depth
 	}
 	for _, child := range tree.Children {
-		child.Depth = tree.Depth
+		child.depth = tree.depth
 		var flatTree []ValueTree
 		flatTree, maxDepth = flatten(child)
 		out = append(out, flatTree...)
