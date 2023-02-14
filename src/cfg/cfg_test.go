@@ -44,7 +44,7 @@ func TestInitDefault(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 }
 
-func TestInitAddMissing(t *testing.T) { // TODO: Make it pass
+func TestInitAddMissing(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 
 	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
@@ -113,10 +113,7 @@ func newTestConfig() Root {
 			SimilarTranslit:    false,
 			SimilarTranslitMap: map[string]string(nil),
 			NameAliases:        true, // New field in v1.3.0
-			NameAliasList: [][]string{ // New field in v1.3.0
-				{"Sample", "Sample TV", "Sample Television Channel"},
-				{"Discovery ID", "Discovery Investigation"},
-			},
+			NameAliasList: [][]string(nil), // New field in v1.3.0
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,

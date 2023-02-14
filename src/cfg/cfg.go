@@ -389,7 +389,6 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		defVal := defCfg.General.NameAliases
 		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
 		node := yamlUtil.Node{
-			StartNewline: true,
 			HeadComment:  []string{"Use name aliases list to detect which M3U channel corresponds a stream?"},
 			Data:         yamlUtil.Scalar{Key: "name_aliases", Value: strconv.FormatBool(defVal)},
 		}
@@ -431,6 +430,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 					},
 				},
 			},
+			EndNewline: true,
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "general.name_aliases", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")

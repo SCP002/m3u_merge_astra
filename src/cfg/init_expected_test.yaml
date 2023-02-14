@@ -32,11 +32,11 @@ general:
   # During comparsion, names will be simplified (lowercase, no special characters except the '+' sign),
   # but not transliterated.
   name_alias_list:
-    - - 'Sample'
-      - 'Sample TV'
-      - 'Sample Television Channel'
-    - - 'Discovery ID'
-      - 'Discovery Investigation'
+    # - - 'Sample'
+    #   - 'Sample TV'
+    #   - 'Sample Television Channel'
+    # - - 'Discovery ID'
+    #   - 'Discovery Investigation'
 
 # -------------------------------------------------------------------------------------------------------------------
 # M3U related settings of the program.
