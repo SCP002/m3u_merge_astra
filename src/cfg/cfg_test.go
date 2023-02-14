@@ -21,7 +21,7 @@ func TestDamagedConfigError(t *testing.T) {
 	assert.Exactly(t, expected, err.Error())
 }
 
-func TestInit(t *testing.T) {
+func TestInitDefault(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 
 	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
@@ -42,19 +42,81 @@ func TestInit(t *testing.T) {
 	assert.Exactly(t, expected, actual, "should return default config")
 	assert.False(t, isNewCfg, "should return false")
 	assert.NoError(t, err, "should not return error")
+}
+
+func TestInitAddMissing(t *testing.T) { // TODO: Make it pass
+	log := logger.New(logrus.DebugLevel)
+
+	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
+	defer os.Remove(path)
 
 	// Test reading exising non-default config and adding missing fields
-	err = file.Copy("init_input_test.yaml", path)
+	err := file.Copy("init_input_test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
-	actual, isNewCfg, err = Init(log, path)
+	actual, isNewCfg, err := Init(log, path)
 
-	expected = Root{
+	expected := newTestConfig()
+
+	assert.Exactly(t, expected, actual, "should return this config instance")
+	assert.False(t, isNewCfg, "should return false")
+	assert.NoError(t, err, "should not return error")
+
+	// Check if missing fields were added to config file
+	actualBytes, err := os.ReadFile(path)
+	assert.NoError(t, err, "should read actual config bytes")
+
+	expectedBytes, err := os.ReadFile("init_expected_test.yaml")
+	assert.NoError(t, err, "should read expected config bytes")
+
+	assert.Exactly(t, string(expectedBytes), string(actualBytes), "should add missing fields to config file")
+}
+
+func TestInitDamaged(t *testing.T) {
+	log := logger.New(logrus.DebugLevel)
+
+	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
+	defer os.Remove(path)
+
+	// Test reading damaged config
+	err := file.Copy("init_damaged_test.yaml", path)
+	assert.NoError(t, err, "should copy and overwrite previous test file")
+
+	actual, isNewCfg, err := Init(log, path)
+
+	expected := newTestConfig()
+	expected.General.NameAliases = false
+	expected.General.NameAliasList = nil
+	expected.M3U.ChannNameBlacklist = nil
+	expected.Streams.AddGroupsToNew = false
+	expected.Streams.InputWeightToTypeMap = nil
+	expectedErr := DamagedConfigError{
+		MissingFields: []string{ // All missing in default without known to be missing
+			// "general.name_aliases", // <- Known
+			"m3u.chann_name_blacklist",
+			// "streams.add_groups_to_new", // <- Known
+			"streams.input_weight_to_type_map",
+		},
+	}
+
+	assert.Exactly(t, expected, actual, "should return this config instance")
+	assert.False(t, isNewCfg, "should return false")
+	// Avoid comparing with assert.ErrorIs() as it somehow fails for DamagedConfigError
+	assert.Exactly(t, expectedErr, errors.UnwrapAll(err), "should return damaged config error")
+}
+
+func newTestConfig() Root {
+	return Root{
 		General: General{
 			FullTranslit:       true,
 			FullTranslitMap:    map[string]string{"ş": "ш", "\\n": ""},
 			SimilarTranslit:    false,
 			SimilarTranslitMap: map[string]string(nil),
+			NameAliases:        true, // New field in v1.3.0
+			NameAliasList: [][]string{ // New field in v1.3.0
+				{"Sample", "Sample TV", "Sample Television Channel"},
+				{"Discovery ID", "Discovery Investigation"},
+			},
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,
@@ -121,34 +183,4 @@ func TestInit(t *testing.T) {
 			},
 		},
 	}
-
-	assert.Exactly(t, expected, actual, "should return this config instance")
-	assert.False(t, isNewCfg, "should return false")
-	assert.NoError(t, err, "should not return error")
-
-	// Check if missing fields were added to config file
-	actualBytes, err := os.ReadFile(path)
-	assert.NoError(t, err, "should read actual config bytes")
-
-	expectedBytes, err := os.ReadFile("init_expected_test.yaml")
-	assert.NoError(t, err, "should read expected config bytes")
-
-	assert.Exactly(t, expectedBytes, actualBytes, "should add missing fields to config file")
-
-	// Test reading damaged config
-	err = file.Copy("init_damaged_test.yaml", path)
-	assert.NoError(t, err, "should copy and overwrite previous test file")
-
-	actual, isNewCfg, err = Init(log, path)
-
-	expected.M3U.ChannNameBlacklist = nil
-	expected.Streams.InputWeightToTypeMap = nil
-	expectedErr := DamagedConfigError{
-		MissingFields: []string{"m3u.chann_name_blacklist", "streams.input_weight_to_type_map"},
-	}
-
-	assert.Exactly(t, expected, actual, "should return this config instance")
-	assert.False(t, isNewCfg, "should return false")
-	// Avoid comparing with assert.ErrorIs() as it somehow fails for DamagedConfigError
-	assert.Exactly(t, expectedErr, errors.UnwrapAll(err), "should return damaged config error")
 }

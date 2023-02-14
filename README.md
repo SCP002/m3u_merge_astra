@@ -92,6 +92,15 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     All symbols are lowercase as comparsion function will convert every character in a name to lowercase.  
     Key: From. Value: To.
 
+  * `name_aliases`  
+    Use name aliases list to detect which M3U channel corresponds a stream?
+
+  * `name_alias_list`  
+    List of lists.
+    Names defined here will be considered identical to any other name in the same nested group.
+    During comparsion, names will be simplified (lowercase, no special characters except the `+` sign),
+    but not transliterated.
+
 * `m3u`  
   M3U related settings of the program.
 

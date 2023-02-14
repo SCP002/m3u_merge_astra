@@ -69,6 +69,20 @@ general:
     у: 'y'
     х: 'x'
 
+  # Use name aliases list to detect which M3U channel corresponds a stream?
+  name_aliases: true
+
+  # List of lists.
+  # Names defined here will be considered identical to any other name in the same nested group.
+  # During comparsion, names will be simplified (lowercase, no special characters except the '+' sign),
+  # but not transliterated.
+  name_alias_list:
+    # - - 'Sample'
+    #   - 'Sample TV'
+    #   - 'Sample Television Channel'
+    # - - 'Discovery ID'
+    #   - 'Discovery Investigation'
+
 # -------------------------------------------------------------------------------------------------------------------
 # M3U related settings of the program.
 m3u:

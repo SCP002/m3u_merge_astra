@@ -34,6 +34,7 @@ func IsNameSame(cfg cfg.General, lName, rName string) bool {
 	if cfg.FullTranslit && remap(lName, cfg.FullTranslitMap) == remap(rName, cfg.FullTranslitMap) {
 		return true
 	}
+	// TODO: cfg.NameAliases and cfg.NameAliasList; toFirstAlias()?
 	return false
 }
 

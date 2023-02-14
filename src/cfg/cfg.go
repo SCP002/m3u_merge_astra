@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -53,6 +54,17 @@ type General struct {
 	//
 	// Key: From. Value: To.
 	SimilarTranslitMap map[string]string `koanf:"similar_translit_map"`
+
+	// NameAliases specifies if name aliases should be used to detect which M3U channel corresponds a stream
+	NameAliases bool `koanf:"name_aliases"`
+
+	// NameAliasList represents the list of lists.
+	//
+	// Names defined here will be considered identical to any other name in the same nested group.
+	//
+	// During comparsion, names will be simplified (lowercase, no special characters except the '+' sign), but not
+	// transliterated.
+	NameAliasList [][]string `koanf:"name_alias_list"`
 }
 
 // M3U represents M3U related settings of the program
@@ -310,11 +322,13 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		"streams.add_groups_to_new",
 		"streams.groups_category_for_new",
 		"streams.enable_on_input_update",
+		"general.name_aliases",
+		"general.name_alias_list",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	if len(missingFields) > 0 {
 		err := DamagedConfigError{MissingFields: missingFields}
- 		return root, false, errors.Wrap(err, "Check config")
+		return root, false, errors.Wrap(err, "Check config")
 	}
 
 	// Add missing known fields
@@ -332,9 +346,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Add groups to new astra streams?"},
-			Key:          "add_groups_to_new",
-			ValType:      yamlUtil.Scalar,
-			Values:       []string{"false"},
+			Data:         yamlUtil.Scalar{Key: "add_groups_to_new", Value: strconv.FormatBool(defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -349,9 +361,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Category name to use for groups of new astra streams."},
-			Key:          "groups_category_for_new",
-			ValType:      yamlUtil.Scalar,
-			Values:       []string{"'All'"},
+			Data:         yamlUtil.Scalar{Key: "groups_category_for_new", Value: fmt.Sprintf("'%v'", defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -366,14 +376,66 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Enable streams if they got new inputs or inputs were updated (but not removed)?"},
-			Key:          "enable_on_input_update",
-			ValType:      yamlUtil.Scalar,
-			Values:       []string{"false"},
+			Data:         yamlUtil.Scalar{Key: "enable_on_input_update", Value: strconv.FormatBool(defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.disable_without_inputs", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
 		}
 		root.Streams.EnableOnInputUpdate = defVal
+	}
+	// v1.2.0 to v1.3.0
+	knownField = knownFields[3]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.General.NameAliases
+		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Use name aliases list to detect which M3U channel corresponds a stream?"},
+			Data:         yamlUtil.Scalar{Key: "name_aliases", Value: strconv.FormatBool(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "general.similar_translit_map", true, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.General.NameAliases = defVal
+	}
+	// v1.2.0 to v1.3.0
+	knownField = knownFields[4]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.General.NameAliasList
+		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"List of lists.",
+				"Names defined here will be considered identical to any other name in the same nested group.",
+				"During comparsion, names will be simplified (lowercase, no special characters except the '+' sign),",
+				"but not transliterated.",
+			},
+			Data: yamlUtil.NestedList{
+				Key: "name_alias_list",
+				Tree: yamlUtil.ValueTree{
+					Children: []yamlUtil.ValueTree{
+						{
+							Value: yamlUtil.Value{Value: "'Sample'", Commented: true},
+							Children: []yamlUtil.ValueTree{
+								{Value: yamlUtil.Value{Value: "'Sample TV'", Commented: true}},
+								{Value: yamlUtil.Value{Value: "'Sample Television Channel'", Commented: true}},
+							},
+						},
+						{
+							Value: yamlUtil.Value{Value: "'Discovery ID'", Commented: true},
+							Children: []yamlUtil.ValueTree{
+								{Value: yamlUtil.Value{Value: "'Discovery Investigation'", Commented: true}},
+							},
+						},
+					},
+				},
+			},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "general.name_aliases", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.General.NameAliasList = defVal
 	}
 
 	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
@@ -413,6 +475,8 @@ func NewDefCfg() Root {
 			FullTranslitMap:    DefFullTranslitMap(),
 			SimilarTranslit:    true,
 			SimilarTranslitMap: DefSimilarTranslitMap(),
+			NameAliases:        true,
+			NameAliasList:      [][]string(nil),
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,
