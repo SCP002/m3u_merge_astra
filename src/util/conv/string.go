@@ -23,8 +23,8 @@ var convRegEx regexp.Regexp = *regexp.MustCompile("[" +
 // IsNameSame returns true if standardized <lName> is equal to standardized <rName> using transliteration settings from
 // <cfg>.
 func IsNameSame(cfg cfg.General, lName, rName string) bool {
-	lName = simplifyName(lName)
-	rName = simplifyName(rName)
+	lName = simpleName(lName)
+	rName = simpleName(rName)
 	if lName == rName {
 		return true
 	}
@@ -34,7 +34,9 @@ func IsNameSame(cfg cfg.General, lName, rName string) bool {
 	if cfg.FullTranslit && remap(lName, cfg.FullTranslitMap) == remap(rName, cfg.FullTranslitMap) {
 		return true
 	}
-	// TODO: cfg.NameAliases and cfg.NameAliasList; toFirstAlias()?
+	if cfg.NameAliases && firstSimpleAlias(lName, cfg.NameAliasList) == firstSimpleAlias(rName, cfg.NameAliasList) {
+		return true
+	}
 	return false
 }
 
@@ -107,8 +109,8 @@ func hasParameter(search string, fragment string) bool {
 	return lo.Every(fragParams, searchParams)
 }
 
-// simplifyName returns simplified <inp> (lowercase, no special characters)
-func simplifyName(inp string) string {
+// simpleName returns simplified <inp> (lowercase, no special characters)
+func simpleName(inp string) string {
 	out := strings.ToLower(inp)
 	return convRegEx.ReplaceAllString(out, "")
 }
@@ -124,4 +126,18 @@ func remap(inp string, dict map[string]string) (out string) {
 		}
 	}
 	return
+}
+
+// firstSimpleAlias returns first simplified alias for <name> from <aliases> or simple <name> if not found
+func firstSimpleAlias(name string, aliases [][]string) string {
+	name = simpleName(name)
+	for _, set := range aliases {
+		simpleSet := lo.Map(set, func(alias string, _ int) string {
+			return simpleName(alias)
+		})
+		if lo.Contains(simpleSet, name) {
+			return simpleSet[0]
+		}
+	}
+	return name
 }

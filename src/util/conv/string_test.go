@@ -12,6 +12,9 @@ func TestIsNameSame(t *testing.T) {
 		FullTranslitMap:    cfg.DefFullTranslitMap(),
 		SimilarTranslitMap: cfg.DefSimilarTranslitMap(),
 	}
+	
+	// Test name simplification regex: the + sign
+	assert.False(t, IsNameSame(cfg, "Some Thing (+2)", "@Something2"), "should not discard the + symbol")
 
 	// Test transliteration and name simplification
 	// Left "НТВ" is a cyrillic visually similar to latin
@@ -43,11 +46,27 @@ func TestIsNameSame(t *testing.T) {
 	assert.True(t, IsNameSame(cfg, "Some Thing", "@Something"), "names should be equvalent")
 	assert.True(t, IsNameSame(cfg, "TV1000 Русское кино", "ТВ 1000 Русское кино"), "names should be equvalent")
 
-	// Test name simplification regex: the + sign
-	assert.False(t, IsNameSame(cfg, "Some Thing (+2)", "@Something2"), "should not discard the + symbol")
-
 	// Test name aliases
-	// TODO: cfg.NameAliases and cfg.NameAliasList
+	cfg.NameAliases = false
+	cfg.NameAliasList = [][]string{
+		{"Name 1", "Name 1 var 2", "Name 1 var 3"},
+		{"Name 2", "Name 2 var 2"},
+		{"Unknown name", "Unknown name var 2", "Unknown name var 3"},
+	}
+	msg := "names should not be equvalent as NameAliases = false"
+	assert.False(t, IsNameSame(cfg, "Name 1", "Name 1 Var 2"), msg)
+
+	cfg.NameAliases = true
+	msg = "names should not be equvalent as transliteration should not apply"
+	assert.False(t, IsNameSame(cfg, "Name 1", "Name 1 Вар 2"), msg)
+
+	assert.True(t, IsNameSame(cfg, "Name 1", "name_1_var_2"), "names should be equvalent")
+	assert.True(t, IsNameSame(cfg, "name_1_var_3", "Name 1"), "names should be equvalent")
+
+	assert.True(t, IsNameSame(cfg, "Name 2", "name_2_var_2"), "names should be equvalent")
+
+	msg = "names should not be equvalent as such name is absent in name alias list"
+	assert.False(t, IsNameSame(cfg, "name_3_var_2", "Name 3"), msg)
 }
 
 func TestLinksEqual(t *testing.T) {
@@ -270,12 +289,28 @@ func TestHasParameter(t *testing.T) {
 	assert.False(t, hasParameter("a&c", "#a&b"), "should not contain parameter")
 }
 
-func TestSimplifyName(t *testing.T) {
-	assert.Exactly(t, "samplename", simplifyName("Sample, Name!\r\n"), "should return simplified name")
-	assert.NotEqual(t, "samplename2", simplifyName("Sample Name (+2)"), "should not discard the + symbol")
+func TestSimpleName(t *testing.T) {
+	assert.Exactly(t, "samplename", simpleName("Sample, Name!\r\n"), "should return simplified name")
+	assert.NotEqual(t, "samplename2", simpleName("Sample Name (+2)"), "should not discard the + symbol")
 }
 
 func TestRemap(t *testing.T) {
 	dict := map[string]string{"A": "1", "B": "2", "C": "3"}
 	assert.Exactly(t, "123D", remap("ABCD", dict), "should replace every char of input with proper value from dictonary")
+}
+
+func TestFirstSimpleAlias(t *testing.T) {
+	aliases := [][]string{
+		{"Name 1", "Name 1 var 2", "Name 1 var 3"},
+		{"Name 2", "Name 2 var 2"},
+		{"Unknown name", "Unknown name var 2", "Unknown name var 3"},
+	}
+
+	assert.Exactly(t, "name1", firstSimpleAlias("Name_1_Var_2", aliases), "should return that alias")
+	assert.Exactly(t, "name1", firstSimpleAlias("Name_1_Var_3", aliases), "should return that alias")
+	assert.Exactly(t, "name1", firstSimpleAlias("Name_1", aliases), "should return that alias")
+
+	assert.Exactly(t, "name2", firstSimpleAlias("Name_2_Var_2", aliases), "should return that alias")
+
+	assert.Exactly(t, "name3", firstSimpleAlias("Name_3", aliases), "should return simplified input if not found")
 }

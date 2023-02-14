@@ -197,8 +197,6 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 			chunk += listValSeq + value.Value + newlineSeq
 		}
 	case NestedList:
-		// TODO: Try to optimize (look at flatten()?)
-		// TODO: Merge NestedList with List?
 		chunk += indent + data.Key + ":" + newlineSeq
 		var maxDepth int
 		for _, branch := range flatten(data.Tree, &maxDepth) {
