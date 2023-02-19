@@ -1,0 +1,50 @@
+general:
+  full_translit: false
+  full_translit_map:
+  similar_translit: false
+  similar_translit_map:
+  name_aliases: false
+  name_alias_list:
+    - - 'Sample'
+      - 'Sample TV'
+      - 'Sample Television Channel'
+    - - 'Discovery ID'
+      - 'Discovery Investigation'
+m3u:
+  resp_timeout: '0s'
+  chann_name_blacklist:
+  chann_group_blacklist:
+  chann_url_blacklist:
+  chann_group_map:
+streams:
+  added_prefix: ''
+  add_new: false
+  add_groups_to_new: false
+  groups_category_for_new: ''
+  add_new_with_known_inputs: false
+  make_new_enabled: false
+  new_type: ''
+  disabled_prefix: ""
+  remove_without_inputs: false
+  disable_without_inputs: false
+  enable_on_input_update: false
+  rename: false
+  add_new_inputs: false
+  unite_inputs: false
+  hash_check_on_add_new_inputs: false
+  sort_inputs: false
+  input_weight_to_type_map:
+  unknown_input_weight: 0
+  input_blacklist:
+  remove_duplicated_inputs: false
+  remove_dead_inputs: false
+  dead_inputs_check_blacklist:
+  input_max_conns: 0
+  input_resp_timeout: '0s'
+  input_update_map:
+  update_inputs: false
+  keep_input_hash: false
+  remove_inputs_by_update_map: false
+  name_to_input_hash_map:
+  group_to_input_hash_map:
+  input_to_input_hash_map:

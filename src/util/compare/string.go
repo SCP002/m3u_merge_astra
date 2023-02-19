@@ -21,7 +21,7 @@ func IsNameSame(cfg cfg.General, lName, rName string) bool {
 	if cfg.FullTranslit && remap(lName, cfg.FullTranslitMap) == remap(rName, cfg.FullTranslitMap) {
 		return true
 	}
-	if cfg.NameAliases && firstSimpleAlias(lName, cfg.NameAliasList) == firstSimpleAlias(rName, cfg.NameAliasList) {
+	if cfg.NameAliases && firstAlias(lName, cfg.NameAliasList) == firstAlias(rName, cfg.NameAliasList) {
 		return true
 	}
 	return false
@@ -40,15 +40,15 @@ func remap(inp string, dict map[string]string) (out string) {
 	return
 }
 
-// firstSimpleAlias returns first simplified alias for <name> from <aliases> or simple <name> if not found
-func firstSimpleAlias(name string, aliases [][]string) string {
-	name = simplify.Name(name)
+// firstAlias returns first alias for <name> from <aliases> or <name> if not found.
+//
+// This function assumes both <name> and <aliases> arguments are simplified before use:
+//
+// See simplify.Name() and cfg.Root.General.SimplifyAliases().
+func firstAlias(name string, aliases [][]string) string {
 	for _, set := range aliases {
-		simpleSet := lo.Map(set, func(alias string, _ int) string {
-			return simplify.Name(alias)
-		})
-		if lo.Contains(simpleSet, name) {
-			return simpleSet[0]
+		if lo.Contains(set, name) {
+			return set[0]
 		}
 	}
 	return name
