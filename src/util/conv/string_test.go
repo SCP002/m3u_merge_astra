@@ -289,11 +289,6 @@ func TestHasParameter(t *testing.T) {
 	assert.False(t, hasParameter("a&c", "#a&b"), "should not contain parameter")
 }
 
-func TestSimpleName(t *testing.T) {
-	assert.Exactly(t, "samplename", simpleName("Sample, Name!\r\n"), "should return simplified name")
-	assert.NotEqual(t, "samplename2", simpleName("Sample Name (+2)"), "should not discard the + symbol")
-}
-
 func TestRemap(t *testing.T) {
 	dict := map[string]string{"A": "1", "B": "2", "C": "3"}
 	assert.Exactly(t, "123D", remap("ABCD", dict), "should replace every char of input with proper value from dictonary")

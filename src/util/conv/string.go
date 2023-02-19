@@ -2,29 +2,19 @@ package conv
 
 import (
 	"m3u_merge_astra/cfg"
+	"m3u_merge_astra/util/simplify"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/samber/lo"
 )
 
-// convRegEx represents every character to remove from name before comparsion
-var convRegEx regexp.Regexp = *regexp.MustCompile("[" +
-	// All control characters such as \x00
-	"[:cntrl:]" +
-	// All blank (whitespace) characters
-	"[:space:]" +
-	// All punctuation characters (except the + symbol: prevents 'Name 2' == 'Name (+2)')
-	"-!\"#$%&'()*,./:;<=>?@[\\]^_`{|}~" +
-	"]+")
-
 // IsNameSame returns true if standardized <lName> is equal to standardized <rName> using transliteration settings from
 // <cfg>.
 func IsNameSame(cfg cfg.General, lName, rName string) bool {
-	lName = simpleName(lName)
-	rName = simpleName(rName)
+	lName = simplify.Name(lName)
+	rName = simplify.Name(rName)
 	if lName == rName {
 		return true
 	}
@@ -109,12 +99,6 @@ func hasParameter(search string, fragment string) bool {
 	return lo.Every(fragParams, searchParams)
 }
 
-// simpleName returns simplified <inp> (lowercase, no special characters)
-func simpleName(inp string) string {
-	out := strings.ToLower(inp)
-	return convRegEx.ReplaceAllString(out, "")
-}
-
 // remap returns remapped <inp> using <dict>
 func remap(inp string, dict map[string]string) (out string) {
 	for _, oldChar := range inp {
@@ -130,10 +114,10 @@ func remap(inp string, dict map[string]string) (out string) {
 
 // firstSimpleAlias returns first simplified alias for <name> from <aliases> or simple <name> if not found
 func firstSimpleAlias(name string, aliases [][]string) string {
-	name = simpleName(name)
+	name = simplify.Name(name)
 	for _, set := range aliases {
 		simpleSet := lo.Map(set, func(alias string, _ int) string {
-			return simpleName(alias)
+			return simplify.Name(alias)
 		})
 		if lo.Contains(simpleSet, name) {
 			return simpleSet[0]
