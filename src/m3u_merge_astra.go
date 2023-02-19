@@ -11,7 +11,6 @@ import (
 	"m3u_merge_astra/merge"
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
-	"m3u_merge_astra/util/slice"
 	"m3u_merge_astra/util/tw"
 
 	goFlags "github.com/jessevdk/go-flags"
@@ -71,8 +70,7 @@ func main() {
 	m3uRepo := m3u.NewRepo(log, tw, cfg)
 
 	m3uChannels := m3uRepo.Parse(m3uResp)
-	log.Info("Sorting M3U channels")
-	m3uChannels = slice.Sort(m3uChannels)
+	m3uChannels = m3uRepo.Sort(m3uChannels)
 	m3uChannels = m3uRepo.ReplaceGroups(m3uChannels)
 	m3uChannels = m3uRepo.RemoveBlocked(m3uChannels)
 
@@ -82,8 +80,7 @@ func main() {
 	mergeRepo := merge.NewRepo(log, tw, cfg)
 
 	astraCfg.Streams = astraRepo.RemoveNamePrefixes(astraCfg.Streams)
-	log.Info("Sorting astra streams")
-	astraCfg.Streams = slice.Sort(astraCfg.Streams)
+	astraCfg.Streams = astraRepo.Sort(astraCfg.Streams)
 	if cfg.Streams.Rename {
 		astraCfg.Streams = mergeRepo.RenameStreams(astraCfg.Streams, m3uChannels)
 	}

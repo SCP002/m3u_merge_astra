@@ -279,6 +279,16 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 	return
 }
 
+// Sort returns copy of <streams> sorted by name
+func (r repo) Sort(streams []Stream) (out []Stream) {
+	r.log.Info("Sorting astra streams\n")
+
+	out = slice.Sort(streams)
+
+	fmt.Fprint(os.Stderr, "\n")
+	return
+}
+
 // RemoveBlockedInputs returns copy of <streams> without blocked inputs
 func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing blocked inputs from streams\n")

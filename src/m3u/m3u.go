@@ -84,6 +84,16 @@ func (r repo) Parse(rawChannels io.ReadCloser) (out []Channel) {
 	return
 }
 
+// Sort returns copy of <channels> sorted by name
+func (r repo) Sort(channels []Channel) (out []Channel) {
+	r.log.Info("Sorting M3U channels\n")
+
+	out = slice.Sort(channels)
+
+	fmt.Fprint(os.Stderr, "\n")
+	return
+}
+
 // ReplaceGroups returns copy of <channels> with groups taken from map in config
 func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 	r.log.Info("Replacing groups of M3U channels\n")

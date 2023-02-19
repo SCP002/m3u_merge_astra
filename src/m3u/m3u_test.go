@@ -75,6 +75,22 @@ func TestParse(t *testing.T) {
 	assert.Exactly(t, expected, cl[4], "should have this channel, overwrite previous #EXTGRP")
 }
 
+func TestSort(t *testing.T) {
+	r := newDefRepo()
+
+	cl1 := []Channel{
+		{Name: "C"}, {Name: "A"}, {}, {Name: "B"},
+	}
+	cl1Original := copier.TestDeep(t, cl1)
+
+	cl2 := r.Sort(cl1)
+	assert.NotSame(t, &cl1, &cl2, "should return copy of channels")
+	assert.Exactly(t, cl1Original, cl1, "should not modify the source")
+
+	expected := []Channel{{Name: ""}, {Name: "A"}, {Name: "B"}, {Name: "C"}}
+	assert.Exactly(t, expected, cl2, "should sort channels by name")
+}
+
 func TestReplaceGroups(t *testing.T) {
 	r := newDefRepo()
 

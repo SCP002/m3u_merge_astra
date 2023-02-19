@@ -689,6 +689,22 @@ func TestRemoveNamePrefixes(t *testing.T) {
 	assert.Exactly(t, sl1[6], sl2[6], "should not change the stream with prefix strings in the middle of the name")
 }
 
+func TestSort(t *testing.T) {
+	r := newDefRepo()
+
+	sl1 := []Stream{
+		{Name: "C"}, {Name: "A"}, {}, {Name: "B"},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := r.Sort(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	expected := []Stream{{Name: ""}, {Name: "A"}, {Name: "B"}, {Name: "C"}}
+	assert.Exactly(t, expected, sl2, "should sort streams by name")
+}
+
 func TestAllRemoveBlockedInputs(t *testing.T) {
 	r := newDefRepo()
 	r.cfg.Streams.InputBlacklist = []regexp.Regexp{
