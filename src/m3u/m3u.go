@@ -116,9 +116,9 @@ func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
 	r.tw.AppendHeader(table.Row{"Name", "Group", "URL"})
 
 	out = lo.Reject(channels, func(ch Channel, _ int) bool {
-		reject := slice.RxAnyMatch(r.cfg.M3U.ChannNameBlacklist, ch.Name) ||
-			slice.RxAnyMatch(r.cfg.M3U.ChannGroupBlacklist, ch.Group) ||
-			slice.RxAnyMatch(r.cfg.M3U.ChannURLBlacklist, ch.URL)
+		reject := slice.AnyRxMatch(r.cfg.M3U.ChannNameBlacklist, ch.Name) ||
+			slice.AnyRxMatch(r.cfg.M3U.ChannGroupBlacklist, ch.Group) ||
+			slice.AnyRxMatch(r.cfg.M3U.ChannURLBlacklist, ch.URL)
 		if reject {
 			r.tw.AppendRow(table.Row{ch.Name, ch.Group, ch.URL})
 		}

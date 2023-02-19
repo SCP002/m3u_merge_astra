@@ -184,7 +184,7 @@ func (s Stream) disable() Stream {
 // removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input
 func (s Stream) removeBlockedInputs(r deps.Global, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
-		reject := slice.RxAnyMatch(r.Cfg().Streams.InputBlacklist, input)
+		reject := slice.AnyRxMatch(r.Cfg().Streams.InputBlacklist, input)
 		if reject {
 			callback(input)
 		}
@@ -405,7 +405,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 	}
 
 	canCheck := func(inp string) bool {
-		if slice.RxAnyMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
+		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
 			return false
 		}
 		if strings.HasPrefix(inp, "http://") || strings.HasPrefix(inp, "https://") {
