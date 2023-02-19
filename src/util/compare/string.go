@@ -1,4 +1,4 @@
-package conv
+package compare
 
 import (
 	"m3u_merge_astra/cfg"
@@ -7,8 +7,8 @@ import (
 	"github.com/samber/lo"
 )
 
-// IsNameSame returns true if standardized <lName> is equal to standardized <rName> using transliteration settings from
-// <cfg>.
+// IsNameSame returns true if standardized <lName> is equal to standardized <rName> using transliteration settings and
+// aliases from <cfg>.
 func IsNameSame(cfg cfg.General, lName, rName string) bool {
 	lName = simplify.Name(lName)
 	rName = simplify.Name(rName)

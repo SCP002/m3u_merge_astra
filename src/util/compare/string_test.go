@@ -1,4 +1,4 @@
-package conv
+package compare
 
 import (
 	"m3u_merge_astra/cfg"
