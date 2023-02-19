@@ -3,7 +3,6 @@ package conv
 import (
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/simplify"
-	"strings"
 
 	"github.com/samber/lo"
 )
@@ -26,13 +25,6 @@ func IsNameSame(cfg cfg.General, lName, rName string) bool {
 		return true
 	}
 	return false
-}
-
-// ContainsAny returns true if <inp> contains any of <elms>
-func ContainsAny(inp string, elms ...string) bool {
-	return lo.SomeBy(elms, func(elm string) bool {
-		return strings.Contains(inp, elm)
-	})
 }
 
 // remap returns remapped <inp> using <dict>

@@ -69,12 +69,6 @@ func TestIsNameSame(t *testing.T) {
 	assert.False(t, IsNameSame(cfg, "name_3_var_2", "Name 3"), msg)
 }
 
-func TestContainsAny(t *testing.T) {
-	assert.True(t, ContainsAny("some words", "some"), "should contain element")
-	assert.True(t, ContainsAny("some words", "unknown", "some"), "should contain element")
-	assert.False(t, ContainsAny("some words", "unknown", "unknown 2"), "should not contain any element")
-}
-
 func TestRemap(t *testing.T) {
 	dict := map[string]string{"A": "1", "B": "2", "C": "3"}
 	assert.Exactly(t, "123D", remap("ABCD", dict), "should replace every char of input with proper value from dictonary")
