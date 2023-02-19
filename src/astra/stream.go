@@ -15,6 +15,7 @@ import (
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
 	"m3u_merge_astra/util/slice/find"
+	urlUtil "m3u_merge_astra/util/url"
 
 	"github.com/alitto/pond"
 	"github.com/cockroachdb/errors"
@@ -115,7 +116,7 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 // If <withHash> is false, ignore hashes (everything after #) during the search.
 func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
-		equal, err := conv.LinksEqual(tURLStr, cURLStr, withHash)
+		equal, err := urlUtil.Equal(tURLStr, cURLStr, withHash)
 		if err != nil {
 			r.Log().Debug(err)
 		}

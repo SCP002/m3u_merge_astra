@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"m3u_merge_astra/deps"
-	"m3u_merge_astra/util/conv"
 	"m3u_merge_astra/util/slice"
+	urlUtil "m3u_merge_astra/util/url"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
@@ -125,7 +125,7 @@ func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
 // If <withHash> is false, ignore hashes (everything after #) during the search.
 func (r repo) HasURL(channels []Channel, url string, withHash bool) bool {
 	return lo.ContainsBy(channels, func(ch Channel) bool {
-		equal, err := conv.LinksEqual(ch.URL, url, withHash)
+		equal, err := urlUtil.Equal(ch.URL, url, withHash)
 		if err != nil {
 			r.log.Debug(err)
 		}
