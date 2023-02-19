@@ -10,11 +10,11 @@ import (
 
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/deps"
-	"m3u_merge_astra/util/conv"
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
 	"m3u_merge_astra/util/slice/find"
+	urlUtil "m3u_merge_astra/util/url"
 
 	"github.com/alitto/pond"
 	"github.com/cockroachdb/errors"
@@ -88,11 +88,11 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 			if updRec.From.MatchString(oldURL) && updRec.To.MatchString(newURL) {
 				// Append old hash to new URL.
 				if cfg.KeepInputHash {
-					oldHash, err := conv.GetHash(oldURL)
+					oldHash, err := urlUtil.GetHash(oldURL)
 					if err != nil {
 						r.Log().Debug(err)
 					}
-					newURL, _, err = conv.AddHash(oldHash, newURL)
+					newURL, _, err = urlUtil.AddHash(oldHash, newURL)
 					if err != nil {
 						r.Log().Debug(err)
 					}
@@ -115,7 +115,7 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 // If <withHash> is false, ignore hashes (everything after #) during the search.
 func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
-		equal, err := conv.LinksEqual(tURLStr, cURLStr, withHash)
+		equal, err := urlUtil.Equal(tURLStr, cURLStr, withHash)
 		if err != nil {
 			r.Log().Debug(err)
 		}
@@ -467,7 +467,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 			for _, rule := range r.cfg.Streams.InputToInputHashMap {
 				if rule.By.MatchString(inp) {
 					var err error
-					inp, changed, err = conv.AddHash(rule.Hash, inp)
+					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
 						r.log.Debug(err)
 					}
@@ -480,7 +480,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 			for _, rule := range r.cfg.Streams.NameToInputHashMap {
 				if rule.By.MatchString(s.Name) {
 					var err error
-					inp, changed, err = conv.AddHash(rule.Hash, inp)
+					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
 						r.log.Debug(err)
 					}
@@ -493,7 +493,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 			for _, rule := range r.cfg.Streams.GroupToInputHashMap {
 				if rule.By.MatchString(s.FirstGroup()) {
 					var err error
-					inp, changed, err = conv.AddHash(rule.Hash, inp)
+					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
 						r.log.Debug(err)
 					}

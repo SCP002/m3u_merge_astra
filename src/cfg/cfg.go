@@ -19,6 +19,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 
+	"m3u_merge_astra/util/simplify"
 	yamlUtil "m3u_merge_astra/util/yaml"
 )
 
@@ -65,6 +66,18 @@ type General struct {
 	// During comparsion, names will be simplified (lowercase, no special characters except the '+' sign), but not
 	// transliterated.
 	NameAliasList [][]string `koanf:"name_alias_list"`
+}
+
+// SimplifyAliases returns simplified alias list in <c>.
+//
+// Made to improve performance of util/compare.IsNameSame().
+func (c General) SimplifyAliases() (out [][]string) {
+	for _, set := range c.NameAliasList {
+		out = append(out, lo.Map(set, func(alias string, _ int) string {
+			return simplify.Name(alias)
+		}))
+	}
+	return
 }
 
 // M3U represents M3U related settings of the program
@@ -260,6 +273,8 @@ func (e DamagedConfigError) Error() string {
 //
 // If config does not exist, creates a default, returns empty instance and true.
 //
+// Output config contains simplified version of Root.General.NameAliasList.
+//
 // Can return errors defined in this package: DamagedConfigError.
 func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 	log.Info("Reading program config\n")
@@ -441,6 +456,9 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
 		return root, false, errors.Wrap(err, "Write modified config")
 	}
+
+	// Prepare aliases list for future use
+	root.General.NameAliasList = root.General.SimplifyAliases()
 
 	return root, false, nil
 }

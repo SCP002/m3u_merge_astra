@@ -2,7 +2,7 @@ package find
 
 import (
 	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/conv"
+	"m3u_merge_astra/util/compare"
 	"m3u_merge_astra/util/slice"
 
 	"github.com/samber/lo"
@@ -25,7 +25,7 @@ func IndexOrElse[T any](list []T, fallback T, predicate func(elm T) bool) ([]T, 
 // Both names standartized before comparsion using transliteration settings from <cfg>.
 func Named[T slice.Named](cfg cfg.General, list []T, name string) (T, int, bool) {
 	return lo.FindIndexOf(list, func(o T) bool {
-		return conv.IsNameSame(cfg, o.GetName(), name)
+		return compare.IsNameSame(cfg, o.GetName(), name)
 	})
 }
 
@@ -36,7 +36,7 @@ func Named[T slice.Named](cfg cfg.General, list []T, name string) (T, int, bool)
 func EverySimilar[T slice.Named](cfg cfg.General, list []T, name string, start int, cb func(foundObj T, foundIdx int)) {
 	for currIdx := start; currIdx < len(list); currIdx++ {
 		currElm := list[currIdx]
-		if conv.IsNameSame(cfg, currElm.GetName(), name) {
+		if compare.IsNameSame(cfg, currElm.GetName(), name) {
 			cb(currElm, currIdx)
 		}
 	}
@@ -47,7 +47,7 @@ func EverySimilar[T slice.Named](cfg cfg.General, list []T, name string, start i
 // Both names standartized before comparsion using transliteration settings from <cfg>.
 func GetSimilar[T slice.Named](cfg cfg.General, list []T, name string) []T {
 	return lo.Filter(list, func(elm T, idx int) bool {
-		return conv.IsNameSame(cfg, elm.GetName(), name)
+		return compare.IsNameSame(cfg, elm.GetName(), name)
 	})
 }
 
@@ -57,7 +57,7 @@ func GetSimilar[T slice.Named](cfg cfg.General, list []T, name string) []T {
 func HasAnySimilar[T slice.Named](cfg cfg.General, list []T, names ...string) bool {
 	return lo.ContainsBy(list, func(elm T) bool {
 		return lo.SomeBy(names, func(name string) bool {
-			return conv.IsNameSame(cfg, elm.GetName(), name)
+			return compare.IsNameSame(cfg, elm.GetName(), name)
 		})
 	})
 }
