@@ -21,7 +21,7 @@ func IsNameSame(cfg cfg.General, lName, rName string) bool {
 	if cfg.FullTranslit && remap(lName, cfg.FullTranslitMap) == remap(rName, cfg.FullTranslitMap) {
 		return true
 	}
-	if cfg.NameAliases && firstAlias(lName, cfg.NameAliasList) == firstAlias(rName, cfg.NameAliasList) {
+	if cfg.NameAliases && firstAlias(lName, cfg.SimpleNameAliasList) == firstAlias(rName, cfg.SimpleNameAliasList) {
 		return true
 	}
 	return false

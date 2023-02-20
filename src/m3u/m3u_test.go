@@ -123,6 +123,10 @@ func TestReplaceGroups(t *testing.T) {
 func TestRemoveBlocked(t *testing.T) {
 	r := newDefRepo()
 
+	r.cfg.General.NameAliasList = [][]string{
+		{"Name 3", "Name 3 Var 2"},
+		{"Name 2", "Name 2 Var 2"},
+	}
 	r.cfg.M3U.ChannNameBlacklist = []regexp.Regexp{
 		*regexp.MustCompile("Name 1"),
 		*regexp.MustCompile("(?i)^NAME 2$"),
@@ -138,21 +142,38 @@ func TestRemoveBlocked(t *testing.T) {
 
 	cl1 := []Channel{
 		/* 0 */ {Name: "Name 2", Group: "Other", URL: "http://other/url"},
-		/* 1 */ {Name: "Other", Group: "The Group 2 Something", URL: "http://other/url"},
-		/* 2 */ {Name: "Other", Group: "Other", URL: "http://url/2/something"},
-		/* 3 */ {Name: "The Name 1 Something", Group: "The Group 1 Something", URL: "http://url/1/something"},
-		/* 4 */ {Name: "Other", Group: "Other", URL: "Other"},
-		/* 5 */ {},
+		/* 1 */ {Name: "Name 2 Var 2", Group: "Other", URL: "http://other/url"},
+		/* 2 */ {Name: "Other", Group: "The Group 2 Something", URL: "http://other/url"},
+		/* 3 */ {Name: "Other", Group: "Other", URL: "http://url/2/something"},
+		/* 4 */ {Name: "The Name 1 Something", Group: "The Group 1 Something", URL: "http://url/1/something"},
+		/* 5 */ {Name: "Other", Group: "Other", URL: "Other"},
+		/* 6 */ {},
 	}
 	cl1Original := copier.TestDeep(t, cl1)
 
+	r.cfg.General.NameAliases = false
 	cl2 := r.RemoveBlocked(cl1)
 	assert.NotSame(t, &cl1, &cl2, "should return copy of channels")
 	assert.Exactly(t, cl1Original, cl1, "should not modify the source")
 
-	assert.Len(t, cl2, 2, "should remove blocked channels")
+	assert.Len(t, cl2, 3, "should remove blocked channels excluding the ones with aliases as NameAliases = false")
 
-	expected := Channel{Name: "Other", Group: "Other", URL: "Other"}
+	expected := Channel{Name: "Name 2 Var 2", Group: "Other", URL: "http://other/url"}
+	assert.Exactly(t, expected, cl2[0], "should keep channels without any property matching blacklist")
+
+	expected = Channel{Name: "Other", Group: "Other", URL: "Other"}
+	assert.Exactly(t, expected, cl2[1], "should keep channels without any property matching blacklist")
+
+	assert.Exactly(t, Channel{}, cl2[2], "should keep empty channel")
+
+	r.cfg.General.NameAliases = true
+	cl2 = r.RemoveBlocked(cl1)
+	assert.NotSame(t, &cl1, &cl2, "should return copy of channels")
+	assert.Exactly(t, cl1Original, cl1, "should not modify the source")
+
+	assert.Len(t, cl2, 2, "should remove blocked channels with the ones with aliases as NameAliases = true")
+
+	expected = Channel{Name: "Other", Group: "Other", URL: "Other"}
 	assert.Exactly(t, expected, cl2[0], "should keep channels without any property matching blacklist")
 
 	assert.Exactly(t, Channel{}, cl2[1], "should keep empty channel")

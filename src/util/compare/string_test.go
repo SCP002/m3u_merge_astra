@@ -52,7 +52,7 @@ func TestIsNameSame(t *testing.T) {
 		{"Name 2", "Name 2 var 2"},
 		{"Unknown name", "Unknown name var 2", "Unknown name var 3"},
 	}
-	cfg.NameAliasList = cfg.SimplifyAliases()
+	cfg.SimpleNameAliasList = cfg.SimplifyAliases()
 
 	cfg.NameAliases = false
 	msg := "names should not be equvalent as NameAliases = false"

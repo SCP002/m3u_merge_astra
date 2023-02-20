@@ -109,6 +109,7 @@ func TestInitDamaged(t *testing.T) {
 	expected := newTestConfig()
 	expected.General.NameAliases = false
 	expected.General.NameAliasList = nil
+	expected.General.SimpleNameAliasList = nil
 	expected.M3U.ChannNameBlacklist = nil
 	expected.Streams.AddGroupsToNew = false
 	expected.Streams.InputWeightToTypeMap = nil
@@ -144,7 +145,7 @@ func TestInitSimplifyAliases(t *testing.T) {
 		{"discoveryid", "discoveryinvestigation"},
 	}
 
-	assert.Exactly(t, expected, actual.General.NameAliasList, "actual config should contain these aliases")
+	assert.Exactly(t, expected, actual.General.SimpleNameAliasList, "actual config should contain these aliases")
 	assert.False(t, isNewCfg, "should return false")
 	assert.NoError(t, err, "should not return error")
 }
@@ -152,12 +153,13 @@ func TestInitSimplifyAliases(t *testing.T) {
 func newTestConfig() Root {
 	return Root{
 		General: General{
-			FullTranslit:       true,
-			FullTranslitMap:    map[string]string{"ş": "ш", "\\n": ""},
-			SimilarTranslit:    false,
-			SimilarTranslitMap: map[string]string(nil),
-			NameAliases:        true,            // New field in v1.3.0
-			NameAliasList:      [][]string(nil), // New field in v1.3.0
+			FullTranslit:        true,
+			FullTranslitMap:     map[string]string{"ş": "ш", "\\n": ""},
+			SimilarTranslit:     false,
+			SimilarTranslitMap:  map[string]string(nil),
+			NameAliases:         true,            // New field in v1.3.0
+			NameAliasList:       [][]string(nil), // New field in v1.3.0
+			SimpleNameAliasList: [][]string(nil), // Field for internal use
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,

@@ -66,6 +66,11 @@ type General struct {
 	// During comparsion, names will be simplified (lowercase, no special characters except the '+' sign), but not
 	// transliterated.
 	NameAliasList [][]string `koanf:"name_alias_list"`
+
+	// NameAliasList represents simplified version of NameAliasList.
+	//
+	// This field will not be included into config and used to improve performance of util/compare.IsNameSame().
+	SimpleNameAliasList [][]string
 }
 
 // SimplifyAliases returns simplified alias list in <c>.
@@ -273,7 +278,7 @@ func (e DamagedConfigError) Error() string {
 //
 // If config does not exist, creates a default, returns empty instance and true.
 //
-// Output config contains simplified version of Root.General.NameAliasList.
+// Builds simplified version of name aliases to Root.General.SimpleNameAliasList.
 //
 // Can return errors defined in this package: DamagedConfigError.
 func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
@@ -320,12 +325,13 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 	metadata := mapstructure.Metadata{}
 	err := ko.UnmarshalWithConf("", &root, koanf.UnmarshalConf{
 		DecoderConfig: &mapstructure.DecoderConfig{
-			DecodeHook:       decoder,
-			ErrorUnused:      true,
-			Metadata:         &metadata,
-			Result:           &root,
-			WeaklyTypedInput: true,
-			ZeroFields:       true,
+			DecodeHook:           decoder,
+			ErrorUnused:          true,
+			IgnoreUntaggedFields: true,
+			Metadata:             &metadata,
+			Result:               &root,
+			WeaklyTypedInput:     true,
+			ZeroFields:           true,
 		},
 	})
 	if err != nil {
@@ -334,13 +340,18 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 
 	// Check if config is damaged (there are more missing fields than was added since v1.0.0)
 	knownFields := []string{
-		"streams.add_groups_to_new",
-		"streams.groups_category_for_new",
-		"streams.enable_on_input_update",
-		"general.name_aliases",
-		"general.name_alias_list",
+		/* 0 */ "streams.add_groups_to_new",
+		/* 1 */ "streams.groups_category_for_new",
+		/* 2 */ "streams.enable_on_input_update",
+		/* 3 */ "general.name_aliases",
+		/* 4 */ "general.name_alias_list",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
+	internalFields := []string{
+		"general.SimpleNameAliasList",
+	}
+	// Remove internal fields from missing to prevent false positive DamagedConfigError
+	missingFields, _ = lo.Difference(missingFields, internalFields)
 	if len(missingFields) > 0 {
 		err := DamagedConfigError{MissingFields: missingFields}
 		return root, false, errors.Wrap(err, "Check config")
@@ -404,8 +415,8 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		defVal := defCfg.General.NameAliases
 		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
 		node := yamlUtil.Node{
-			HeadComment:  []string{"Use name aliases list to detect which M3U channel corresponds a stream?"},
-			Data:         yamlUtil.Scalar{Key: "name_aliases", Value: strconv.FormatBool(defVal)},
+			HeadComment: []string{"Use name aliases list to detect which M3U channel corresponds a stream?"},
+			Data:        yamlUtil.Scalar{Key: "name_aliases", Value: strconv.FormatBool(defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "general.similar_translit_map", true, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -457,8 +468,8 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		return root, false, errors.Wrap(err, "Write modified config")
 	}
 
-	// Prepare aliases list for future use
-	root.General.NameAliasList = root.General.SimplifyAliases()
+	// Build simple aliases list
+	root.General.SimpleNameAliasList = root.General.SimplifyAliases()
 
 	return root, false, nil
 }
@@ -489,12 +500,13 @@ func DefSimilarTranslitMap() map[string]string {
 func NewDefCfg() Root {
 	return Root{
 		General: General{
-			FullTranslit:       true,
-			FullTranslitMap:    DefFullTranslitMap(),
-			SimilarTranslit:    true,
-			SimilarTranslitMap: DefSimilarTranslitMap(),
-			NameAliases:        true,
-			NameAliasList:      [][]string(nil),
+			FullTranslit:        true,
+			FullTranslitMap:     DefFullTranslitMap(),
+			SimilarTranslit:     true,
+			SimilarTranslitMap:  DefSimilarTranslitMap(),
+			NameAliases:         true,
+			NameAliasList:       [][]string(nil),
+			SimpleNameAliasList: [][]string(nil),
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,

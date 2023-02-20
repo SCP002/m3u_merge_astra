@@ -115,8 +115,20 @@ func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
 	r.log.Info("Removing blocked channels\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "URL"})
 
+	// getAliases returns aliases for the <name> or slice of a single <name> if not found
+	getAliases := func(name string) []string {
+		aliases, found := lo.Find(r.cfg.General.NameAliasList, func(set []string) bool {
+			return lo.Contains(set, name)
+		})
+		return lo.Ternary(found, aliases, []string{name})
+	}
+
 	out = lo.Reject(channels, func(ch Channel, _ int) bool {
-		reject := slice.AnyRxMatch(r.cfg.M3U.ChannNameBlacklist, ch.Name) ||
+		names := []string{ch.Name}
+		if r.cfg.General.NameAliases {
+			names = getAliases(ch.Name)
+		}
+		reject := slice.AnyRxMatchAny(r.cfg.M3U.ChannNameBlacklist, names...) ||
 			slice.AnyRxMatch(r.cfg.M3U.ChannGroupBlacklist, ch.Group) ||
 			slice.AnyRxMatch(r.cfg.M3U.ChannURLBlacklist, ch.URL)
 		if reject {
