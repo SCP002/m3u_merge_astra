@@ -46,8 +46,7 @@ func TestDamagedConfigError(t *testing.T) {
 func TestInitDefault(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 
-	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
-	defer os.Remove(path)
+	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
 	// Test creation of the default config
 	actual, isNewCfg, err := Init(log, path)
@@ -69,8 +68,7 @@ func TestInitDefault(t *testing.T) {
 func TestInitAddMissing(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 
-	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
-	defer os.Remove(path)
+	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
 	// Test reading exising non-default config and adding missing fields
 	err := file.Copy("init_input_test.yaml", path)
@@ -97,8 +95,7 @@ func TestInitAddMissing(t *testing.T) {
 func TestInitDamaged(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 
-	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
-	defer os.Remove(path)
+	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
 	// Test reading damaged config
 	err := file.Copy("init_damaged_test.yaml", path)
@@ -131,8 +128,7 @@ func TestInitDamaged(t *testing.T) {
 func TestInitSimplifyAliases(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 
-	path := filepath.Join(os.TempDir(), "m3u_merge_astra_init_test.yaml")
-	defer os.Remove(path)
+	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
 	// Test reading config with name aliases and simplification of them
 	err := file.Copy("init_simplify_aliases_test.yaml", path)
