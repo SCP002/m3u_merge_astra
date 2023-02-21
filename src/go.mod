@@ -42,7 +42,7 @@ require (
 	github.com/onsi/gomega v1.19.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rivo/uniseg v0.4.3 // indirect
+	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/yaegashi/jsonex.go v0.0.0-20191218175351-e6c64c300063 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
