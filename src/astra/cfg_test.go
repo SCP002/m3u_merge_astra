@@ -67,7 +67,7 @@ func TestWriteReadCfg(t *testing.T) {
 		},
 	}
 
-	path := filepath.Join(os.TempDir(), "m3u_merge_astra_test_write_cfg.json")
+	path := filepath.Join(os.TempDir(), "m3u_merge_astra_write_cfg_test.json")
 	defer os.Remove(path)
 
 	// Write to file
