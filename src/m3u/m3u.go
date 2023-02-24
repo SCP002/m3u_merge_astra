@@ -90,7 +90,6 @@ func (r repo) Sort(channels []Channel) (out []Channel) {
 
 	out = slice.Sort(channels)
 
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 

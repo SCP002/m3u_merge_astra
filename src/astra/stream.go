@@ -285,7 +285,6 @@ func (r repo) Sort(streams []Stream) (out []Stream) {
 
 	out = slice.Sort(streams)
 
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
