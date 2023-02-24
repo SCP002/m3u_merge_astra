@@ -10,20 +10,34 @@ import (
 // IsNameSame returns true if standardized <lName> is equal to standardized <rName> using transliteration settings and
 // aliases from <cfg>.
 func IsNameSame(cfg cfg.General, lName, rName string) bool {
-	lName = simplify.Name(lName)
-	rName = simplify.Name(rName)
 	if lName == rName {
 		return true
 	}
-	if cfg.SimilarTranslit && remap(lName, cfg.SimilarTranslitMap) == remap(rName, cfg.SimilarTranslitMap) {
+
+	lSimpleName := simplify.Name(lName)
+	rSimpleName := simplify.Name(rName)
+	if lSimpleName == rSimpleName {
 		return true
 	}
-	if cfg.FullTranslit && remap(lName, cfg.FullTranslitMap) == remap(rName, cfg.FullTranslitMap) {
-		return true
+
+	if cfg.SimilarTranslit {
+		if remap(lSimpleName, cfg.SimilarTranslitMap) == remap(rSimpleName, cfg.SimilarTranslitMap) {
+			return true
+		}
 	}
-	if cfg.NameAliases && firstAlias(lName, cfg.SimpleNameAliasList) == firstAlias(rName, cfg.SimpleNameAliasList) {
-		return true
+
+	if cfg.FullTranslit {
+		if remap(lSimpleName, cfg.FullTranslitMap) == remap(rSimpleName, cfg.FullTranslitMap) {
+			return true
+		}
 	}
+
+	if cfg.NameAliases {
+		if firstAlias(lSimpleName, cfg.SimpleNameAliasList) == firstAlias(rSimpleName, cfg.SimpleNameAliasList) {
+			return true
+		}
+	}
+
 	return false
 }
 
@@ -40,11 +54,7 @@ func remap(inp string, dict map[string]string) (out string) {
 	return
 }
 
-// firstAlias returns first alias for <name> from <aliases> or <name> if not found.
-//
-// This function assumes both <name> and <aliases> arguments are simplified before use:
-//
-// See simplify.Name() and cfg.Root.General.SimplifyAliases().
+// firstAlias returns first alias for <name> from <aliases> or <name> if not found
 func firstAlias(name string, aliases [][]string) string {
 	for _, set := range aliases {
 		if lo.Contains(set, name) {
