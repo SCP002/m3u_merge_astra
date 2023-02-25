@@ -469,7 +469,9 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 	}
 
 	// Build simple aliases list
-	root.General.SimpleNameAliasList = root.General.SimplifyAliases()
+	if root.General.NameAliases {
+		root.General.SimpleNameAliasList = root.General.SimplifyAliases()
+	}
 
 	return root, false, nil
 }

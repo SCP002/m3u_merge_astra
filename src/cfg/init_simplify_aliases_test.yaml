@@ -3,7 +3,7 @@ general:
   full_translit_map:
   similar_translit: false
   similar_translit_map:
-  name_aliases: false
+  name_aliases: true
   name_alias_list:
     - - 'Sample'
       - 'Sample TV'
