@@ -201,43 +201,20 @@ func (s Stream) hasNoInputs() bool {
 	return len(s.Inputs) == 0
 }
 
-// hasDisabledPrefix returns true if name of the stream has DisabledPrefix
-func (s Stream) hasDisabledPrefix(r deps.Global) bool {
-	disabledPrefix := r.Cfg().Streams.DisabledPrefix
-	return disabledPrefix != "" && strings.HasPrefix(s.Name, disabledPrefix)
+// hasPrefix returns true if name of the stream has <prefix>
+func (s Stream) hasPrefix(prefix string) bool {
+	return prefix != "" && strings.HasPrefix(s.Name, prefix)
 }
 
-// setAddedPrefix returns stream named with DisabledPrefix
-func (s Stream) setDisabledPrefix(r deps.Global) Stream {
-	disabledPrefix := r.Cfg().Streams.DisabledPrefix
-	s.Name = disabledPrefix + s.Name
+// setPrefix returns stream named starting with <prefix>
+func (s Stream) setPrefix(prefix string) Stream {
+	s.Name = prefix + s.Name
 	return s
 }
 
-// removeAddedPrefix returns stream without DisabledPrefix
-func (s Stream) removeDisabledPrefix(r deps.Global) Stream {
-	disabledPrefix := r.Cfg().Streams.DisabledPrefix
-	s.Name = strings.TrimPrefix(s.Name, disabledPrefix)
-	return s
-}
-
-// hasAddedPrefix returns true if name of the stream has AddedPrefix
-func (s Stream) hasAddedPrefix(r deps.Global) bool {
-	addedPrefix := r.Cfg().Streams.AddedPrefix
-	return addedPrefix != "" && strings.HasPrefix(s.Name, addedPrefix)
-}
-
-// setAddedPrefix returns stream named with AddedPrefix
-func (s Stream) setAddedPrefix(r deps.Global) Stream {
-	addedPrefix := r.Cfg().Streams.AddedPrefix
-	s.Name = addedPrefix + s.Name
-	return s
-}
-
-// removeAddedPrefix returns stream without AddedPrefix
-func (s Stream) removeAddedPrefix(r deps.Global) Stream {
-	addedPrefix := r.Cfg().Streams.AddedPrefix
-	s.Name = strings.TrimPrefix(s.Name, addedPrefix)
+// removePrefix returns stream named starting without <prefix>
+func (s Stream) removePrefix(prefix string) Stream {
+	s.Name = strings.TrimPrefix(s.Name, prefix)
 	return s
 }
 
@@ -259,12 +236,12 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 	for _, s := range streams {
 		oldName := s.Name
 		for i := 0; i < 2; i++ { // Run twice to remove in any order
-			if s.hasAddedPrefix(r) {
-				s = s.removeAddedPrefix(r)
+			if s.hasPrefix(r.cfg.Streams.AddedPrefix) {
+				s = s.removePrefix(r.cfg.Streams.AddedPrefix)
 				s.MarkAdded = true
 			}
-			if s.hasDisabledPrefix(r) {
-				s = s.removeDisabledPrefix(r)
+			if s.hasPrefix(r.cfg.Streams.DisabledPrefix) {
+				s = s.removePrefix(r.cfg.Streams.DisabledPrefix)
 				s.MarkDisabled = true
 			}
 		}
@@ -563,10 +540,10 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 	for _, s := range streams {
 		oldName := s.Name
 		if s.MarkAdded {
-			s = s.setAddedPrefix(r)
+			s = s.setPrefix(r.cfg.Streams.AddedPrefix)
 		}
 		if s.MarkDisabled {
-			s = s.setDisabledPrefix(r)
+			s = s.setPrefix(r.cfg.Streams.DisabledPrefix)
 		}
 		if oldName != s.Name {
 			r.tw.AppendRow(table.Row{oldName, s.Name, s.FirstGroup()})
