@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"m3u_merge_astra/deps"
+	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/slice"
 	urlUtil "m3u_merge_astra/util/url"
 
@@ -28,9 +28,9 @@ func (ch Channel) GetName() string {
 	return ch.Name
 }
 
-// replaceGroup returns new channel with group taken from config in <r>, running <callback> with new group on change
-func (ch Channel) replaceGroupCb(r deps.Global, callback func(string)) Channel {
-	newGroup := r.Cfg().M3U.ChannGroupMap[ch.Group]
+// replaceGroup returns new channel with group taken from <cfg>, running <callback> with new group on change
+func (ch Channel) replaceGroupCb(cfg cfg.M3U, callback func(string)) Channel {
+	newGroup := cfg.ChannGroupMap[ch.Group]
 	if ch.Group != newGroup && newGroup != "" {
 		callback(newGroup)
 		ch.Group = newGroup
@@ -99,7 +99,7 @@ func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 	r.tw.AppendHeader(table.Row{"Name", "Original group", "New group"})
 
 	for _, ch := range channels {
-		out = append(out, ch.replaceGroupCb(r, func(newGroup string) {
+		out = append(out, ch.replaceGroupCb(r.cfg.M3U, func(newGroup string) {
 			r.tw.AppendRow(table.Row{ch.Name, ch.Group, newGroup})
 		}))
 	}
