@@ -279,9 +279,9 @@ func TestDisableStream(t *testing.T) {
 }
 
 func TestRemoveBlockedInputs(t *testing.T) {
-	r := newDefRepo()
+	cfg := cfg.NewDefCfg().Streams
 
-	r.cfg.Streams.InputBlacklist = []regexp.Regexp{
+	cfg.InputBlacklist = []regexp.Regexp{
 		*regexp.MustCompile("input/1"),
 		*regexp.MustCompile("input/3"),
 	}
@@ -290,7 +290,7 @@ func TestRemoveBlockedInputs(t *testing.T) {
 	s1Original := copier.TestDeep(t, s1)
 
 	removed := []string{}
-	s2 := s1.removeBlockedInputs(r, func(input string) {
+	s2 := s1.removeBlockedInputs(cfg, func(input string) {
 		removed = append(removed, input)
 	})
 

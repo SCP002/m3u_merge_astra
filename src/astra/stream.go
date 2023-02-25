@@ -182,9 +182,9 @@ func (s Stream) disable() Stream {
 }
 
 // removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input
-func (s Stream) removeBlockedInputs(r deps.Global, callback func(string)) Stream {
+func (s Stream) removeBlockedInputs(cfg cfg.Streams, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
-		reject := slice.AnyRxMatch(r.Cfg().Streams.InputBlacklist, input)
+		reject := slice.AnyRxMatch(cfg.InputBlacklist, input)
 		if reject {
 			callback(input)
 		}
@@ -271,7 +271,7 @@ func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
 
 	for _, s := range streams {
-		out = append(out, s.removeBlockedInputs(r, func(input string) {
+		out = append(out, s.removeBlockedInputs(r.cfg.Streams, func(input string) {
 			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), input})
 		}))
 	}
