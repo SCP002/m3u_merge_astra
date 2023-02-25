@@ -186,19 +186,19 @@ func TestKnownInputs(t *testing.T) {
 }
 
 func TestInputsUpdateNote(t *testing.T) {
-	r := newDefRepo()
+	cfg := cfg.NewDefCfg().Streams
 
-	r.cfg.Streams.EnableOnInputUpdate = false
+	cfg.EnableOnInputUpdate = false
 	s := Stream{Enabled: false}
-	assert.Exactly(t, "Stream is disabled", s.InputsUpdateNote(r), "should return this note")
+	assert.Exactly(t, "Stream is disabled", s.InputsUpdateNote(cfg), "should return this note")
 	s = Stream{Enabled: true}
-	assert.Exactly(t, "", s.InputsUpdateNote(r), "should not return a note if enabled")
+	assert.Exactly(t, "", s.InputsUpdateNote(cfg), "should not return a note if enabled")
 
-	r.cfg.Streams.EnableOnInputUpdate = true
+	cfg.EnableOnInputUpdate = true
 	s = Stream{Enabled: false}
-	assert.Exactly(t, "Enabling the stream", s.InputsUpdateNote(r), "should return this note")
+	assert.Exactly(t, "Enabling the stream", s.InputsUpdateNote(cfg), "should return this note")
 	s = Stream{Enabled: true}
-	assert.Exactly(t, "", s.InputsUpdateNote(r), "should not return a note if enabled")
+	assert.Exactly(t, "", s.InputsUpdateNote(cfg), "should not return a note if enabled")
 }
 
 func TestEnableStream(t *testing.T) {

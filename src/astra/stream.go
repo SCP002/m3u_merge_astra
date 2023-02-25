@@ -139,13 +139,9 @@ func (s Stream) KnownInputs(r deps.Global) []string {
 }
 
 // InputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
-func (s Stream) InputsUpdateNote(r deps.Global) string {
+func (s Stream) InputsUpdateNote(cfg cfg.Streams) string {
 	if !s.Enabled {
-		if r.Cfg().Streams.EnableOnInputUpdate {
-			return "Enabling the stream"
-		} else {
-			return "Stream is disabled"
-		}
+		return lo.Ternary(cfg.EnableOnInputUpdate, "Enabling the stream", "Stream is disabled")
 	}
 	return ""
 }
@@ -318,7 +314,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
-					currStream.InputsUpdateNote(r)})
+					currStream.InputsUpdateNote(r.cfg.Streams)})
 				if !currStream.HasInput(r, nextInput, true) {
 					currStream = currStream.AddInput(nextInput)
 					if r.cfg.Streams.EnableOnInputUpdate {
