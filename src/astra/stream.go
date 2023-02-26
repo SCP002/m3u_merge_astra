@@ -21,6 +21,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
 	"github.com/schollz/progressbar/v3"
+	"github.com/sirupsen/logrus"
 )
 
 // Stream represents astra stream object
@@ -113,11 +114,11 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 // HasInput returns true if stream inputs contain <tURLStr> parameter.
 //
 // If <withHash> is false, ignore hashes (everything after #) during the search.
-func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
+func (s Stream) HasInput(log *logrus.Logger, tURLStr string, withHash bool) bool {
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
 		equal, err := urlUtil.Equal(tURLStr, cURLStr, withHash)
 		if err != nil {
-			r.Log().Debug(err)
+			log.Debug(err)
 		}
 		return equal
 	})
@@ -129,23 +130,19 @@ func (s Stream) AddInput(url string) Stream {
 	return s
 }
 
-// KnownInputs returns all inputs matching InputUpdateMap.From expression from config.
-func (s Stream) KnownInputs(r deps.Global) []string {
+// KnownInputs returns all inputs matching InputUpdateMap.From expression from <config>.
+func (s Stream) KnownInputs(config cfg.Streams) []string {
 	return lo.Filter(s.Inputs, func(inp string, _ int) bool {
-		return lo.ContainsBy(r.Cfg().Streams.InputUpdateMap, func(updRec cfg.UpdateRecord) bool {
+		return lo.ContainsBy(config.InputUpdateMap, func(updRec cfg.UpdateRecord) bool {
 			return updRec.From.MatchString(inp)
 		})
 	})
 }
 
 // InputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
-func (s Stream) InputsUpdateNote(r deps.Global) string {
+func (s Stream) InputsUpdateNote(cfg cfg.Streams) string {
 	if !s.Enabled {
-		if r.Cfg().Streams.EnableOnInputUpdate {
-			return "Enabling the stream"
-		} else {
-			return "Stream is disabled"
-		}
+		return lo.Ternary(cfg.EnableOnInputUpdate, "Enabling the stream", "Stream is disabled")
 	}
 	return ""
 }
@@ -182,9 +179,9 @@ func (s Stream) disable() Stream {
 }
 
 // removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input
-func (s Stream) removeBlockedInputs(r deps.Global, callback func(string)) Stream {
+func (s Stream) removeBlockedInputs(cfg cfg.Streams, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
-		reject := slice.AnyRxMatch(r.Cfg().Streams.InputBlacklist, input)
+		reject := slice.AnyRxMatch(cfg.InputBlacklist, input)
 		if reject {
 			callback(input)
 		}
@@ -201,43 +198,20 @@ func (s Stream) hasNoInputs() bool {
 	return len(s.Inputs) == 0
 }
 
-// hasDisabledPrefix returns true if name of the stream has DisabledPrefix
-func (s Stream) hasDisabledPrefix(r deps.Global) bool {
-	disabledPrefix := r.Cfg().Streams.DisabledPrefix
-	return disabledPrefix != "" && strings.HasPrefix(s.Name, disabledPrefix)
+// hasPrefix returns true if name of the stream has <prefix>
+func (s Stream) hasPrefix(prefix string) bool {
+	return prefix != "" && strings.HasPrefix(s.Name, prefix)
 }
 
-// setAddedPrefix returns stream named with DisabledPrefix
-func (s Stream) setDisabledPrefix(r deps.Global) Stream {
-	disabledPrefix := r.Cfg().Streams.DisabledPrefix
-	s.Name = disabledPrefix + s.Name
+// setPrefix returns stream named starting with <prefix>
+func (s Stream) setPrefix(prefix string) Stream {
+	s.Name = prefix + s.Name
 	return s
 }
 
-// removeAddedPrefix returns stream without DisabledPrefix
-func (s Stream) removeDisabledPrefix(r deps.Global) Stream {
-	disabledPrefix := r.Cfg().Streams.DisabledPrefix
-	s.Name = strings.TrimPrefix(s.Name, disabledPrefix)
-	return s
-}
-
-// hasAddedPrefix returns true if name of the stream has AddedPrefix
-func (s Stream) hasAddedPrefix(r deps.Global) bool {
-	addedPrefix := r.Cfg().Streams.AddedPrefix
-	return addedPrefix != "" && strings.HasPrefix(s.Name, addedPrefix)
-}
-
-// setAddedPrefix returns stream named with AddedPrefix
-func (s Stream) setAddedPrefix(r deps.Global) Stream {
-	addedPrefix := r.Cfg().Streams.AddedPrefix
-	s.Name = addedPrefix + s.Name
-	return s
-}
-
-// removeAddedPrefix returns stream without AddedPrefix
-func (s Stream) removeAddedPrefix(r deps.Global) Stream {
-	addedPrefix := r.Cfg().Streams.AddedPrefix
-	s.Name = strings.TrimPrefix(s.Name, addedPrefix)
+// removePrefix returns stream named starting without <prefix>
+func (s Stream) removePrefix(prefix string) Stream {
+	s.Name = strings.TrimPrefix(s.Name, prefix)
 	return s
 }
 
@@ -246,7 +220,7 @@ func (s Stream) removeAddedPrefix(r deps.Global) Stream {
 // If <withHash> is false, ignore hashes (everything after #) during the search.
 func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 	return lo.ContainsBy(streams, func(s Stream) bool {
-		return s.HasInput(r, inp, withHash)
+		return s.HasInput(r.log, inp, withHash)
 	})
 }
 
@@ -259,12 +233,12 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 	for _, s := range streams {
 		oldName := s.Name
 		for i := 0; i < 2; i++ { // Run twice to remove in any order
-			if s.hasAddedPrefix(r) {
-				s = s.removeAddedPrefix(r)
+			if s.hasPrefix(r.cfg.Streams.AddedPrefix) {
+				s = s.removePrefix(r.cfg.Streams.AddedPrefix)
 				s.MarkAdded = true
 			}
-			if s.hasDisabledPrefix(r) {
-				s = s.removeDisabledPrefix(r)
+			if s.hasPrefix(r.cfg.Streams.DisabledPrefix) {
+				s = s.removePrefix(r.cfg.Streams.DisabledPrefix)
 				s.MarkDisabled = true
 			}
 		}
@@ -294,7 +268,7 @@ func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
 
 	for _, s := range streams {
-		out = append(out, s.removeBlockedInputs(r, func(input string) {
+		out = append(out, s.removeBlockedInputs(r.cfg.Streams, func(input string) {
 			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), input})
 		}))
 	}
@@ -341,8 +315,8 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
-					currStream.InputsUpdateNote(r)})
-				if !currStream.HasInput(r, nextInput, true) {
+					currStream.InputsUpdateNote(r.cfg.Streams)})
+				if !currStream.HasInput(r.log, nextInput, true) {
 					currStream = currStream.AddInput(nextInput)
 					if r.cfg.Streams.EnableOnInputUpdate {
 						currStream = currStream.Enable()
@@ -563,10 +537,10 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 	for _, s := range streams {
 		oldName := s.Name
 		if s.MarkAdded {
-			s = s.setAddedPrefix(r)
+			s = s.setPrefix(r.cfg.Streams.AddedPrefix)
 		}
 		if s.MarkDisabled {
-			s = s.setDisabledPrefix(r)
+			s = s.setPrefix(r.cfg.Streams.DisabledPrefix)
 		}
 		if oldName != s.Name {
 			r.tw.AppendRow(table.Row{oldName, s.Name, s.FirstGroup()})
