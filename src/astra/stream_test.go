@@ -3,6 +3,7 @@ package astra
 import (
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/copier"
+	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"net/http"
 	"regexp"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/zenizh/go-capturer"
 )
@@ -133,29 +135,29 @@ func TestUpdateStreamInput(t *testing.T) {
 }
 
 func TestHasInput(t *testing.T) {
-	r := newDefRepo()
+	log := logger.New(logrus.DebugLevel)
 
 	s := Stream{Inputs: []string{"http://other/input", "http://known/input#a"}}
 
-	assert.False(t, s.HasInput(r, "http://known/input", true), "should not contain URL without hash")
-	assert.True(t, s.HasInput(r, "http://known/input#a", true), "should contain URL")
+	assert.False(t, s.HasInput(log, "http://known/input", true), "should not contain URL without hash")
+	assert.True(t, s.HasInput(log, "http://known/input#a", true), "should contain URL")
 
-	assert.True(t, s.HasInput(r, "http://known/input", false), "should contain URL without hash")
-	assert.True(t, s.HasInput(r, "http://known/input#b", false), "should contain URL with different hashes")
+	assert.True(t, s.HasInput(log, "http://known/input", false), "should contain URL without hash")
+	assert.True(t, s.HasInput(log, "http://known/input#b", false), "should contain URL with different hashes")
 
-	assert.False(t, s.HasInput(r, "http://foreign/input", true), "should not contain URL")
-	assert.False(t, s.HasInput(r, "http://foreign/input#a", true), "should not contain URL")
+	assert.False(t, s.HasInput(log, "http://foreign/input", true), "should not contain URL")
+	assert.False(t, s.HasInput(log, "http://foreign/input#a", true), "should not contain URL")
 
-	assert.False(t, s.HasInput(r, "http://foreign/input", false), "should not contain URL")
-	assert.False(t, s.HasInput(r, "http://foreign/input#b", false), "should not contain URL")
+	assert.False(t, s.HasInput(log, "http://foreign/input", false), "should not contain URL")
+	assert.False(t, s.HasInput(log, "http://foreign/input#b", false), "should not contain URL")
 
 	s = Stream{Inputs: []string{"http://other/input#a", "http:/other/input/2#b"}}
 
-	assert.False(t, s.HasInput(r, "http://foreign/input", true), "should not contain URL")
-	assert.False(t, s.HasInput(r, "http://foreign/input#a", true), "should not contain URL")
+	assert.False(t, s.HasInput(log, "http://foreign/input", true), "should not contain URL")
+	assert.False(t, s.HasInput(log, "http://foreign/input#a", true), "should not contain URL")
 
-	assert.False(t, s.HasInput(r, "http://foreign/input", false), "should not contain URL")
-	assert.False(t, s.HasInput(r, "http://foreign/input#b", false), "should not contain URL")
+	assert.False(t, s.HasInput(log, "http://foreign/input", false), "should not contain URL")
+	assert.False(t, s.HasInput(log, "http://foreign/input#b", false), "should not contain URL")
 }
 
 func TestAddInput(t *testing.T) {

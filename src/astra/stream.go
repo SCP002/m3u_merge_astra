@@ -21,6 +21,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
 	"github.com/schollz/progressbar/v3"
+	"github.com/sirupsen/logrus"
 )
 
 // Stream represents astra stream object
@@ -113,11 +114,11 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 // HasInput returns true if stream inputs contain <tURLStr> parameter.
 //
 // If <withHash> is false, ignore hashes (everything after #) during the search.
-func (s Stream) HasInput(r deps.Global, tURLStr string, withHash bool) bool {
+func (s Stream) HasInput(log *logrus.Logger, tURLStr string, withHash bool) bool {
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
 		equal, err := urlUtil.Equal(tURLStr, cURLStr, withHash)
 		if err != nil {
-			r.Log().Debug(err)
+			log.Debug(err)
 		}
 		return equal
 	})
@@ -219,7 +220,7 @@ func (s Stream) removePrefix(prefix string) Stream {
 // If <withHash> is false, ignore hashes (everything after #) during the search.
 func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 	return lo.ContainsBy(streams, func(s Stream) bool {
-		return s.HasInput(r, inp, withHash)
+		return s.HasInput(r.log, inp, withHash)
 	})
 }
 
@@ -315,7 +316,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 			for _, nextInput := range nextStream.Inputs {
 				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
 					currStream.InputsUpdateNote(r.cfg.Streams)})
-				if !currStream.HasInput(r, nextInput, true) {
+				if !currStream.HasInput(r.log, nextInput, true) {
 					currStream = currStream.AddInput(nextInput)
 					if r.cfg.Streams.EnableOnInputUpdate {
 						currStream = currStream.Enable()
