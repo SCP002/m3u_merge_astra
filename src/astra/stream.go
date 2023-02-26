@@ -129,10 +129,10 @@ func (s Stream) AddInput(url string) Stream {
 	return s
 }
 
-// KnownInputs returns all inputs matching InputUpdateMap.From expression from config.
-func (s Stream) KnownInputs(r deps.Global) []string {
+// KnownInputs returns all inputs matching InputUpdateMap.From expression from <config>.
+func (s Stream) KnownInputs(config cfg.Streams) []string {
 	return lo.Filter(s.Inputs, func(inp string, _ int) bool {
-		return lo.ContainsBy(r.Cfg().Streams.InputUpdateMap, func(updRec cfg.UpdateRecord) bool {
+		return lo.ContainsBy(config.InputUpdateMap, func(updRec cfg.UpdateRecord) bool {
 			return updRec.From.MatchString(inp)
 		})
 	})

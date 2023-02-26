@@ -171,15 +171,15 @@ func TestAddInput(t *testing.T) {
 }
 
 func TestKnownInputs(t *testing.T) {
-	r := newDefRepo()
+	config := cfg.NewDefCfg().Streams
 
-	r.cfg.Streams.InputUpdateMap = []cfg.UpdateRecord{
+	config.InputUpdateMap = []cfg.UpdateRecord{
 		{From: *regexp.MustCompile("known/input/1")},
 		{From: *regexp.MustCompile("known/input/2")},
 	}
 
 	s := Stream{Inputs: []string{"http://known/input/2#a", "http://other/input", "http://known/input/1"}}
-	ki := s.KnownInputs(r)
+	ki := s.KnownInputs(config)
 
 	expected := []string{"http://known/input/2#a", "http://known/input/1"}
 	assert.Exactly(t, expected, ki, "should have these inputs")

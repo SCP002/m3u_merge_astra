@@ -68,7 +68,7 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 
 	for _, s := range streams {
 		similarChannels := find.GetSimilar(r.cfg.General, channels, s.Name)
-		for _, knownInp := range s.KnownInputs(r) {
+		for _, knownInp := range s.KnownInputs(r.cfg.Streams) {
 			if !m3uRepo.HasURL(similarChannels, knownInp, false) {
 				s = s.RemoveInputsCb(knownInp, func() {
 					r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), knownInp})
