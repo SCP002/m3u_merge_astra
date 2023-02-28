@@ -236,6 +236,7 @@ type Streams struct {
 
 	// GroupToInputHashMap represents mapping of stream group regular expression to stream input hash which should
 	// be added.
+	// Stream groups should be defined to match expressions in the form of 'Category: Group'.
 	GroupToInputHashMap []HashAddRule `koanf:"group_to_input_hash_map"`
 
 	// InputToInputHashMap represents mapping of stream input regular expression to stream input hash which should

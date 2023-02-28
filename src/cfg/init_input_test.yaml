@@ -169,10 +169,11 @@ streams:
       hash: 'no_sync'
 
   # Mapping of stream group regular expression to stream input hash which should be added.
+  # Stream groups should be defined to match expressions in the form of 'Category: Group'.
   group_to_input_hash_map:
-    - by: '(?i)^HD Channels$'
+    - by: '(?i)All: HD Channels$'
       hash: 'buffer_time=10'
-    - by: '(?i)RADIO'
+    - by: '(?i).*RADIO$'
       hash: 'no_sync'
 
   # Mapping of stream input regular expression to stream input hash which should be added.

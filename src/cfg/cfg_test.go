@@ -213,8 +213,8 @@ func newTestConfig() Root {
 				{By: *regexp.MustCompile(`[- _]FM$`), Hash: "no_sync"},
 			},
 			GroupToInputHashMap: []HashAddRule{
-				{By: *regexp.MustCompile(`(?i)^HD Channels$`), Hash: "buffer_time=10"},
-				{By: *regexp.MustCompile(`(?i)RADIO`), Hash: "no_sync"},
+				{By: *regexp.MustCompile(`(?i)All: HD Channels$`), Hash: "buffer_time=10"},
+				{By: *regexp.MustCompile(`(?i).*RADIO$`), Hash: "no_sync"},
 			},
 			InputToInputHashMap: []HashAddRule{
 				{By: *regexp.MustCompile(`:8080`), Hash: "ua=VLC/3.0.9 LibVLC/3.0.9"},
