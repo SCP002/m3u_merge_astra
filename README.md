@@ -264,7 +264,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     > To be able to add specific hashes per stream name, for example '#buffer_time=...' to HD streams.
 
   * `group_to_input_hash_map`  
-    Mapping of stream group regular expression to stream input hash which should be added.
+    Mapping of stream group regular expression to stream input hash which should be added.  
     Stream groups should be defined to match expressions in the form of 'Category: Group'.
     > Why does it exist?  
     > To be able to add specific hashes per stream group, for example '#no_sync' to radio streams.
