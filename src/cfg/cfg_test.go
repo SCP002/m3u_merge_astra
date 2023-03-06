@@ -129,7 +129,6 @@ func TestInitDamaged(t *testing.T) {
 
 	assert.Exactly(t, expected, actual, "should return this config instance")
 	assert.False(t, isNewCfg, "should return false")
-	// Avoid comparing with assert.ErrorIs() as it somehow fails for DamagedConfigError
 	assert.Exactly(t, expectedErr, errors.UnwrapAll(err), "should return damaged config error")
 }
 
@@ -150,7 +149,6 @@ func TestInitValidateCaptureGroups(t *testing.T) {
 		Regexp: *regexp.MustCompile(`rx_without_capture_group`),
 		Reason: "Expecting at least one capture group",
 	}
-	// Avoid comparing with assert.ErrorIs() as it somehow fails for BadRegexpError
 	assert.Exactly(t, expectedErr, errors.UnwrapAll(err), "should return bad regexp error")
 }
 

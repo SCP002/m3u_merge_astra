@@ -55,7 +55,7 @@ func TestInsert(t *testing.T) {
 	afterPath = "unknown_root_path"
 	node = Node{Data: Scalar{Key: "new_key", Value: "true"}}
 	output, err = Insert(input, afterPath, false, node)
-	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err), "should return unknown path error")
+	assert.Exactly(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err), "should return unknown path error")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "sequences_section.unknown_subkey"
@@ -69,13 +69,13 @@ func TestInsert(t *testing.T) {
 		},
 	}}
 	output, err = Insert(input, afterPath, false, node)
-	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err), "should return unknown path error")
+	assert.Exactly(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err), "should return unknown path error")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "lists_section.list.item_2"
 	node = Node{Data: Scalar{Key: "new_key", Value: "true"}}
 	output, err = Insert(input, afterPath, false, node)
-	assert.ErrorIs(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err),
+	assert.Exactly(t, PathNotFoundError{Path: afterPath}, errors.UnwrapAll(err),
 		"should not resolve node value as proper path")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
@@ -380,37 +380,37 @@ func TestInsertIndex(t *testing.T) {
 	// Error cases (path can not be found)
 	path := "unknown_root_path"
 	index, depth, err := insertIndex(input, path, true, 2)
-	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for unexisting paths")
+	assert.Exactly(t, PathNotFoundError{Path: path}, err, "should return error for unexisting paths")
 	assert.Exactly(t, 0, index, "should return 0 index on error")
 	assert.Exactly(t, 0, depth, "should return 0 depth on error")
 
 	path = "nested_section.nested_section_3"
 	index, depth, err = insertIndex(input, path, true, 2)
-	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for not full paths")
+	assert.Exactly(t, PathNotFoundError{Path: path}, err, "should return error for not full paths")
 	assert.Exactly(t, 0, index, "should return 0 index on error")
 	assert.Exactly(t, 0, depth, "should return 0 depth on error")
 
 	path = "sequence"
 	index, depth, err = insertIndex(input, path, true, 2)
-	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for not full paths")
+	assert.Exactly(t, PathNotFoundError{Path: path}, err, "should return error for not full paths")
 	assert.Exactly(t, 0, index, "should return 0 index on error")
 	assert.Exactly(t, 0, depth, "should return 0 depth on error")
 
 	path = "nested_section.nested_section_2.key"
 	index, depth, err = insertIndex(input, path, true, 2)
-	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for path keys with wrong nesting")
+	assert.Exactly(t, PathNotFoundError{Path: path}, err, "should return error for path keys with wrong nesting")
 	assert.Exactly(t, 0, index, "should return 0 index on error")
 	assert.Exactly(t, 0, depth, "should return 0 depth on error")
 
 	path = "nested_section.sequence"
 	index, depth, err = insertIndex(input, path, true, 2)
-	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for path keys with wrong nesting")
+	assert.Exactly(t, PathNotFoundError{Path: path}, err, "should return error for path keys with wrong nesting")
 	assert.Exactly(t, 0, index, "should return 0 index on error")
 	assert.Exactly(t, 0, depth, "should return 0 depth on error")
 
 	path = "sequences_section.lists_section"
 	index, depth, err = insertIndex(input, path, true, 2)
-	assert.ErrorIs(t, PathNotFoundError{Path: path}, err, "should return error for path keys with wrong nesting")
+	assert.Exactly(t, PathNotFoundError{Path: path}, err, "should return error for path keys with wrong nesting")
 	assert.Exactly(t, 0, index, "should return 0 index on error")
 	assert.Exactly(t, 0, depth, "should return 0 depth on error")
 
