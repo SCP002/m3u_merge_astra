@@ -133,6 +133,27 @@ func TestInitDamaged(t *testing.T) {
 	assert.Exactly(t, expectedErr, errors.UnwrapAll(err), "should return damaged config error")
 }
 
+func TestInitValidateCaptureGroups(t *testing.T) {
+	log := logger.New(logrus.DebugLevel)
+
+	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
+
+	// Test reading config with 'remove_duplicated_inputs_by_rx_list'
+	err := file.Copy("init_validate_capture_groups_test.yaml", path)
+	assert.NoError(t, err, "should copy and overwrite previous test file")
+
+	_, isNewCfg, err := Init(log, path)
+
+	assert.False(t, isNewCfg, "should return false")
+
+	expectedErr := BadRegexpError{
+		Regexp: *regexp.MustCompile(`rx_without_capture_group`),
+		Reason: "Expecting at least one capture group",
+	}
+	// Avoid comparing with assert.ErrorIs() as it somehow fails for BadRegexpError
+	assert.Exactly(t, expectedErr, errors.UnwrapAll(err), "should return bad regexp error")
+}
+
 func TestInitSimplifyAliases(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 

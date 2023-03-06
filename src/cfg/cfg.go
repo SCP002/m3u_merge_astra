@@ -301,7 +301,7 @@ func (e BadRegexpError) Error() string {
 // Builds simplified version of name aliases to Root.General.SimpleNameAliasList.
 //
 // Can return errors defined in this package: DamagedConfigError, BadRegexpError.
-func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) { // TODO: Test BadRegexpError
+func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 	log.Info("Reading program config\n")
 
 	ko := koanf.New(".")
