@@ -189,6 +189,14 @@ type Streams struct {
 	// removed.
 	RemoveDuplicatedInputs bool `koanf:"remove_duplicated_inputs"`
 
+	// RemoveDuplicatedInputsByRxList represens the list of regular expressions.
+	//
+	// If any first capture group (anything surrounded by the first '()') of regular expression match URL of input of a
+	// stream, any other inputs of that stream which first capture group is the same will be removed from stream.
+	//
+	// This setting is not controlled by 'remove_duplicated_inputs'.
+	RemoveDuplicatedInputsByRxList []regexp.Regexp `koanf:"remove_duplicated_inputs_by_rx_list"`
+
 	// RemoveDeadInputs specifies if inputs of astra streams which do not respond should be removed.
 	//
 	// Currently supports only HTTP(S).
@@ -275,14 +283,25 @@ func (e DamagedConfigError) Error() string {
 	return fmt.Sprintf("%v: %v", msg, strings.Join(e.MissingFields, ", "))
 }
 
+// BadRegexpError represents error thrown if program config has invalid regular expression
+type BadRegexpError struct {
+	Reason string
+	Regexp regexp.Regexp
+}
+
+// Error is used to satisfy golang error interface
+func (e BadRegexpError) Error() string {
+	return fmt.Sprintf("%v; Regular expression: %v", e.Reason, e.Regexp.String())
+}
+
 // Init returns config instance and false if config at <cfgFilePath> already exist.
 //
 // If config does not exist, creates a default, returns empty instance and true.
 //
 // Builds simplified version of name aliases to Root.General.SimpleNameAliasList.
 //
-// Can return errors defined in this package: DamagedConfigError.
-func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
+// Can return errors defined in this package: DamagedConfigError, BadRegexpError.
+func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) { // TODO: Test BadRegexpError
 	log.Info("Reading program config\n")
 
 	ko := koanf.New(".")
@@ -346,6 +365,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		/* 2 */ "streams.enable_on_input_update",
 		/* 3 */ "general.name_aliases",
 		/* 4 */ "general.name_alias_list",
+		/* 5 */ "streams.remove_duplicated_inputs_by_rx_list",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	internalFields := []string{
@@ -464,7 +484,43 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.General.NameAliasList = defVal
 	}
+	// v1.3.0 to v1.4.0
+	knownField = knownFields[5]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.RemoveDuplicatedInputsByRxList
+		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"List of regular expressions.",
+				"If any first capture group (anything surrounded by the first '()') of regular expression match URL " +
+					"of input of a stream, any other inputs of that stream which first capture group is the same " +
+					"will be removed from stream.",
+				"",
+				"This setting is not controlled by 'remove_duplicated_inputs'.",
+			},
+			Data: yamlUtil.List{
+				Key: "remove_duplicated_inputs_by_rx_list",
+				Values: []yamlUtil.Value{
+					{Value: `'^.*:\/\/([^#?/]*)' # By host`, Commented: true},
+					{Value: `'^.*:\/\/.*?\/([^#?]*)' # By path`, Commented: true},
+				}},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.remove_duplicated_inputs", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.RemoveDuplicatedInputsByRxList = defVal
+	}
 
+	// Validate amount of capture groups
+	for _, rx := range root.Streams.RemoveDuplicatedInputsByRxList {
+		if rx.NumSubexp() < 1 {
+			msg := "Expecting at least one capture group"
+			return root, false, errors.Wrap(BadRegexpError{Regexp: rx, Reason: msg}, "Validate config")
+		}
+	}
+
+	// Write modified config
 	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
 		return root, false, errors.Wrap(err, "Write modified config")
 	}
@@ -519,37 +575,38 @@ func NewDefCfg() Root {
 			ChannGroupMap:       map[string]string(nil),
 		},
 		Streams: Streams{
-			AddedPrefix:              "_ADDED: ",
-			AddNew:                   true,
-			AddGroupsToNew:           false,
-			GroupsCategoryForNew:     "All",
-			AddNewWithKnownInputs:    false,
-			MakeNewEnabled:           false,
-			NewType:                  SPTS,
-			DisabledPrefix:           "_DISABLED: ",
-			RemoveWithoutInputs:      false,
-			DisableWithoutInputs:     true,
-			EnableOnInputUpdate:      false,
-			Rename:                   false,
-			AddNewInputs:             true,
-			UniteInputs:              true,
-			HashCheckOnAddNewInputs:  false,
-			SortInputs:               true,
-			InputWeightToTypeMap:     map[int]regexp.Regexp(nil),
-			UnknownInputWeight:       50,
-			InputBlacklist:           []regexp.Regexp(nil),
-			RemoveDuplicatedInputs:   true,
-			RemoveDeadInputs:         false,
-			DeadInputsCheckBlacklist: []regexp.Regexp(nil),
-			InputMaxConns:            1,
-			InputRespTimeout:         time.Second * 10,
-			InputUpdateMap:           []UpdateRecord(nil),
-			UpdateInputs:             false,
-			KeepInputHash:            true,
-			RemoveInputsByUpdateMap:  false,
-			NameToInputHashMap:       []HashAddRule(nil),
-			GroupToInputHashMap:      []HashAddRule(nil),
-			InputToInputHashMap:      []HashAddRule(nil),
+			AddedPrefix:                    "_ADDED: ",
+			AddNew:                         true,
+			AddGroupsToNew:                 false,
+			GroupsCategoryForNew:           "All",
+			AddNewWithKnownInputs:          false,
+			MakeNewEnabled:                 false,
+			NewType:                        SPTS,
+			DisabledPrefix:                 "_DISABLED: ",
+			RemoveWithoutInputs:            false,
+			DisableWithoutInputs:           true,
+			EnableOnInputUpdate:            false,
+			Rename:                         false,
+			AddNewInputs:                   true,
+			UniteInputs:                    true,
+			HashCheckOnAddNewInputs:        false,
+			SortInputs:                     true,
+			InputWeightToTypeMap:           map[int]regexp.Regexp(nil),
+			UnknownInputWeight:             50,
+			InputBlacklist:                 []regexp.Regexp(nil),
+			RemoveDuplicatedInputs:         true,
+			RemoveDuplicatedInputsByRxList: []regexp.Regexp(nil),
+			RemoveDeadInputs:               false,
+			DeadInputsCheckBlacklist:       []regexp.Regexp(nil),
+			InputMaxConns:                  1,
+			InputRespTimeout:               time.Second * 10,
+			InputUpdateMap:                 []UpdateRecord(nil),
+			UpdateInputs:                   false,
+			KeepInputHash:                  true,
+			RemoveInputsByUpdateMap:        false,
+			NameToInputHashMap:             []HashAddRule(nil),
+			GroupToInputHashMap:            []HashAddRule(nil),
+			InputToInputHashMap:            []HashAddRule(nil),
 		},
 	}
 }

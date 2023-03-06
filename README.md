@@ -215,6 +215,14 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
   * `remove_duplicated_inputs`  
     Remove inputs of astra streams which already present in config?
 
+  * `remove_duplicated_inputs_by_rx_list`  
+    List of regular expressions.  
+    If any first capture group (anything surrounded by the first `()`) of regular expression match URL of input of a
+    stream, any other inputs of that stream which first capture group is the same will be removed from stream.  
+    This setting is not controlled by `remove_duplicated_inputs`.
+    > Why does it exist?  
+    > To be able to remove dulticated inputs per stream by specific conditions, for example by host name.
+
   * `remove_dead_inputs`  
     Remove inputs of astra streams which do not respond?  
     Currently supports only HTTP(S).

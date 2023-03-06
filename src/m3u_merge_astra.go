@@ -88,6 +88,9 @@ func main() {
 	if cfg.Streams.RemoveDuplicatedInputs {
 		astraCfg.Streams = astraRepo.RemoveDuplicatedInputs(astraCfg.Streams)
 	}
+	if len(cfg.Streams.RemoveDuplicatedInputsByRxList) > 0 {
+		astraCfg.Streams = astraRepo.RemoveDuplicatedInputsByRx(astraCfg.Streams)
+	}
 	if cfg.Streams.UpdateInputs {
 		astraCfg.Streams = mergeRepo.UpdateInputs(astraCfg.Streams, m3uChannels)
 	}

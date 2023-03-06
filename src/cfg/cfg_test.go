@@ -43,6 +43,12 @@ func TestDamagedConfigError(t *testing.T) {
 	assert.Exactly(t, expected, err.Error())
 }
 
+func TestBadRegexpError(t *testing.T) {
+	err := error(BadRegexpError{Reason: "Bad", Regexp: *regexp.MustCompile(`.*`)})
+	expected := "Bad; Regular expression: .*"
+	assert.Exactly(t, expected, err.Error())
+}
+
 func TestInitDefault(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 
@@ -110,12 +116,14 @@ func TestInitDamaged(t *testing.T) {
 	expected.M3U.ChannNameBlacklist = nil
 	expected.Streams.AddGroupsToNew = false
 	expected.Streams.InputWeightToTypeMap = nil
+	expected.Streams.RemoveDuplicatedInputsByRxList = nil
 	expectedErr := DamagedConfigError{
 		MissingFields: []string{ // All missing in default without known to be missing
 			// "general.name_aliases", // <- Known
 			"m3u.chann_name_blacklist",
 			// "streams.add_groups_to_new", // <- Known
 			"streams.input_weight_to_type_map",
+			// "streams.remove_duplicated_inputs_by_rx_list", // <- Known
 		},
 	}
 
@@ -193,8 +201,9 @@ func newTestConfig() Root {
 				*regexp.MustCompile(`https?://filter_me\.com`),
 				*regexp.MustCompile(`192\.168\.88\.14/play`),
 			},
-			RemoveDuplicatedInputs: true,
-			RemoveDeadInputs:       false,
+			RemoveDuplicatedInputs:         true,
+			RemoveDuplicatedInputsByRxList: []regexp.Regexp(nil), // New field in v1.4.0
+			RemoveDeadInputs:               false,
 			DeadInputsCheckBlacklist: []regexp.Regexp{
 				*regexp.MustCompile(`https?://dont-check\.com/play`),
 				*regexp.MustCompile(`192\.168\.88\.`),

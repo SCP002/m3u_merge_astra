@@ -178,6 +178,37 @@ func (s Stream) disable() Stream {
 	return s
 }
 
+// removeDuplicatedInputsByRx returns stream with only unique inputs by first capture groups of regular expressions
+// defined in config in <r>.
+//
+// Runs <callback> for every removed input.
+func (s Stream) removeDuplicatedInputsByRx(r deps.Global, callback func(string)) Stream {
+	cfg := r.Cfg().Streams
+
+	// inputsCGMap is used to check if first capture group of input is the first one encountered in the list.
+	// Value of the map is not used.
+	inputsCGMap := map[string]bool{}
+
+	for _, rx := range cfg.RemoveDuplicatedInputsByRxList {
+		for _, inp := range s.Inputs {
+			matchList := rx.FindStringSubmatch(inp)
+			if len(matchList) < 2 {
+				r.Log().Debugf("Found no matches of regular expression '%v' for input '%v'", rx.String(), inp)
+				continue
+			}
+			captureGroup := matchList[1]
+			if _, duplicate := inputsCGMap[captureGroup]; duplicate {
+				callback(inp)
+				s.Inputs = slice.RemoveLast(s.Inputs, inp)
+			} else {
+				inputsCGMap[captureGroup] = true
+			}
+		}
+	}
+
+	return s
+}
+
 // removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input
 func (s Stream) removeBlockedInputs(cfg cfg.Streams, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
@@ -296,6 +327,23 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 			}
 		}
 		out = append(out, s)
+	}
+
+	r.tw.Render()
+	fmt.Fprint(os.Stderr, "\n")
+	return
+}
+
+// RemoveDuplicatedInputsByRx returns copy of <streams> with only unique inputs per stream by first capture groups of
+// regular expressions defined in config.
+func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
+	r.log.Info("Removing duplicated inputs per stream by regular expressions\n")
+	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
+
+	for _, s := range streams {
+		out = append(out, s.removeDuplicatedInputsByRx(r, func(input string) {
+			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), input})
+		}))
 	}
 
 	r.tw.Render()

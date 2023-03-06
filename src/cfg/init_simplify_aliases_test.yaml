@@ -37,6 +37,7 @@ streams:
   unknown_input_weight: 0
   input_blacklist:
   remove_duplicated_inputs: false
+  remove_duplicated_inputs_by_rx_list:
   remove_dead_inputs: false
   dead_inputs_check_blacklist:
   input_max_conns: 0

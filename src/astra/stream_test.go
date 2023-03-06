@@ -280,6 +280,39 @@ func TestDisableStream(t *testing.T) {
 	assert.Exactly(t, expected, s2, "should disable the stream")
 }
 
+func TestRemoveDuplicatedInputsByRx(t *testing.T) {
+	r := newDefRepo()
+
+	r.cfg.Streams.RemoveDuplicatedInputsByRxList = []regexp.Regexp{
+		*regexp.MustCompile(`^.*:\/\/([^#?/]*)`),     // By host
+		*regexp.MustCompile(`^.*:\/\/.*?\/([^#?]*)`), // By path
+	}
+
+	s1 := Stream{Inputs: []string{
+		"http://host1/path1",
+		"http://host1/path2",
+		"http://host1/path3",
+		"http://host2/path1",
+		"http://host2/path4",
+		"http://host3/path5",
+		"",
+	}}
+	s1Original := copier.TestDeep(t, s1)
+
+	removed := []string{}
+	s2 := s1.removeDuplicatedInputsByRx(r, func(input string) {
+		removed = append(removed, input)
+	})
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected := []string{"http://host1/path1", "http://host3/path5", ""}
+	assert.Exactly(t, expected, s2.Inputs, "should remove inputs duplicated by host and path")
+
+	expected = []string{"http://host1/path2", "http://host1/path3", "http://host2/path4", "http://host2/path1"}
+	assert.Exactly(t, expected, removed, "callback should return these removed iputs")
+}
+
 func TestRemoveBlockedInputs(t *testing.T) {
 	cfg := cfg.NewDefCfg().Streams
 
@@ -302,8 +335,8 @@ func TestRemoveBlockedInputs(t *testing.T) {
 	expected := []string{"http://input/2"}
 	assert.Exactly(t, expected, s2.Inputs, "should have these inputs")
 
-	assert.Exactly(t, []string{"http://input/1", "http://input/1", "http://input/3"}, removed,
-		"callback should return these removed iputs")
+	expected = []string{"http://input/1", "http://input/1", "http://input/3"}
+	assert.Exactly(t, expected, removed, "callback should return these removed iputs")
 }
 
 func TestRemoveDuplicatedInputs(t *testing.T) {
@@ -333,6 +366,40 @@ func TestRemoveDuplicatedInputs(t *testing.T) {
 
 	expected = []string{"http://input/6"}
 	assert.Exactly(t, expected, sl2[3].Inputs, "should remove inputs existing in previous streams")
+}
+
+func TestAllRemoveDuplicatedInputsByRx(t *testing.T) {
+	r := newDefRepo()
+
+	r.cfg.Streams.RemoveDuplicatedInputsByRxList = []regexp.Regexp{
+		*regexp.MustCompile(`^.*:\/\/([^#?/]*)`),     // By host
+		*regexp.MustCompile(`^.*:\/\/.*?\/([^#?]*)`), // By path
+	}
+
+	sl1 := []Stream{
+		/* 0 */ {Inputs: []string{"http://host1/path1", "http://host2/path2", "http://host1/path3"}},
+		/* 1 */ {Inputs: []string{"http://host1/path1", "http://host1/path2", "http://host2/path1"}},
+		/* 2 */ {Inputs: []string{"http://host1/path1", "http://host2/path2"}},
+		/* 3 */ {Inputs: []string{"http://host1/path1", "http://host2/path1"}},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := r.RemoveDuplicatedInputsByRx(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	expected := []string{"http://host1/path1", "http://host2/path2"}
+	assert.Exactly(t, expected, sl2[0].Inputs, "should remove inputs duplicated by host")
+
+	expected = []string{"http://host1/path1"}
+	assert.Exactly(t, expected, sl2[1].Inputs, "should remove inputs duplicated by host and path")
+
+	assert.Exactly(t, sl1[2], sl2[2], "should not modify stream with unique inputs")
+
+	expected = []string{"http://host1/path1"}
+	assert.Exactly(t, expected, sl2[1].Inputs, "should remove inputs duplicated by path")
 }
 
 func TestUniteInputs(t *testing.T) {
