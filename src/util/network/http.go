@@ -51,10 +51,8 @@ func NewHttpServer(mux http.Handler, httpPort int, httpsPort int, onErr func(err
 
 // NewHttpClient returns new HTTP client.
 //
-// If <fake> is true, make connections to localhost regardless of target host specified.
-//
 // <timeout> is a time limit for requests made by returned client.
-func NewHttpClient(fake bool, timeout time.Duration) *http.Client {
+func NewHttpClient(timeout time.Duration) *http.Client {
 	tlsCfg := &tls.Config{
 		InsecureSkipVerify: true,
 	}
@@ -64,16 +62,24 @@ func NewHttpClient(fake bool, timeout time.Duration) *http.Client {
 			TLSClientConfig: tlsCfg,
 		},
 	}
-	if fake {
-		client.Transport = &http.Transport{
-			TLSClientConfig: tlsCfg,
-			Dial: func(network, addr string) (net.Conn, error) {
-				// Replace request destination host with localhost:port (same as :port)
-				port := strings.Split(addr, ":")[1]
-				return net.Dial(network, fmt.Sprintf(":%v", port))
-			},
-		}
-	}
+	return client
+}
 
+// NewFakeHttpClient returns new HTTP client which make connections to localhost regardless of target host specified.
+//
+// <timeout> is a time limit for requests made by returned client.
+func NewFakeHttpClient(timeout time.Duration) *http.Client {
+	client := NewHttpClient(timeout)
+	tlsCfg := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	client.Transport = &http.Transport{
+		TLSClientConfig: tlsCfg,
+		Dial: func(network, addr string) (net.Conn, error) {
+			// Replace request destination host with localhost:port (same as :port)
+			port := strings.Split(addr, ":")[1]
+			return net.Dial(network, fmt.Sprintf(":%v", port))
+		},
+	}
 	return client
 }

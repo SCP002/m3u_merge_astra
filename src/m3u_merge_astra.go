@@ -56,7 +56,7 @@ func main() {
 
 	// Fetch M3U channels
 	log.Info("Fetching M3U channels\n")
-	httpClient := network.NewHttpClient(false, cfg.M3U.RespTimeout)
+	httpClient := network.NewHttpClient(cfg.M3U.RespTimeout)
 	m3uResp, err := openuri.Open(flags.M3UPath, openuri.WithHTTPClient(httpClient))
 	if err != nil {
 		log.Panic(err)
@@ -111,7 +111,7 @@ func main() {
 	}
 	astraCfg.Categories = astraRepo.AddNewGroups(astraCfg.Categories, astraCfg.Streams)
 	if cfg.Streams.RemoveDeadInputs {
-		httpClient := network.NewHttpClient(false, cfg.Streams.InputRespTimeout)
+		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
 		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, astraCfg.Streams, true)
 	}
 	astraCfg.Streams = astraRepo.AddHashes(astraCfg.Streams)

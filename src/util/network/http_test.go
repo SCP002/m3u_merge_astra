@@ -40,7 +40,7 @@ func TestNewHttpServer(t *testing.T) {
 	defer httpSrv.Close()
 	defer httpsSrv.Close()
 
-	client := NewHttpClient(false, time.Second*3)
+	client := NewHttpClient(time.Second * 3)
 
 	resp, err := client.Get("http://127.0.0.1:7878/ok/1")
 	assert.Exactly(t, 200, resp.StatusCode, "should return OK status")
@@ -106,7 +106,7 @@ func TestNewHttpServer(t *testing.T) {
 	assert.Nil(t, resp, "should return empty reposnse")
 	assert.Exactly(t, Timeout, GetErrType(err), "should return timeout error")
 
-	client = NewHttpClient(true, time.Second*3)
+	client = NewFakeHttpClient(time.Second * 3)
 
 	resp, err = client.Get("http://example.com:7878/ok/1")
 	assert.Exactly(t, 200, resp.StatusCode, "should return OK status")
