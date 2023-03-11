@@ -494,8 +494,9 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 			HeadComment: []string{
 				"List of regular expressions.",
 				"If any first capture group (anything surrounded by the first '()') of regular expression match URL " +
-					"of input of a stream, any other inputs of that stream which first capture group is the same " +
-					"will be removed from stream.",
+					"of input of a",
+				"stream, any other inputs of that stream which first capture group is the same will be removed from " +
+					"stream.",
 				"",
 				"This setting is not controlled by 'remove_duplicated_inputs'.",
 			},
