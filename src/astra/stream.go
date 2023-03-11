@@ -182,8 +182,8 @@ func (s Stream) disable() Stream {
 // defined in config in <r>.
 //
 // Runs <callback> for every removed input.
-func (s Stream) removeDuplicatedInputsByRx(r deps.Global, callback func(string)) Stream {
-	cfg := r.Cfg().Streams
+func (s Stream) removeDuplicatedInputsByRx(r repo, callback func(string)) Stream {
+	cfg := r.cfg.Streams
 
 	// inputsCGMap is used to check if first capture group of input is the first one encountered in the list.
 	// Value of the map is not used.
@@ -194,7 +194,7 @@ func (s Stream) removeDuplicatedInputsByRx(r deps.Global, callback func(string))
 			matchList := rx.FindStringSubmatch(inp)
 			if len(matchList) < 2 {
 				msg := "astra.Stream.removeDuplicatedInputsByRx: Found no matches of regexp '%v' for input '%v'"
-				r.Log().Debugf(msg, rx.String(), inp)
+				r.log.Debugf(msg, rx.String(), inp)
 				continue
 			}
 			captureGroup := matchList[1]
