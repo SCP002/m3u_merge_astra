@@ -91,11 +91,11 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 				if cfg.KeepInputHash {
 					oldHash, err := urlUtil.GetHash(oldURL)
 					if err != nil {
-						r.Log().Debug(err)
+						r.Log().Debugf("astra.Stream.UpdateInput: %v", err)
 					}
 					newURL, _, err = urlUtil.AddHash(oldHash, newURL)
 					if err != nil {
-						r.Log().Debug(err)
+						r.Log().Debugf("astra.Stream.UpdateInput: %v", err)
 					}
 				}
 				if oldURL == newURL {
@@ -118,7 +118,7 @@ func (s Stream) HasInput(log *logrus.Logger, tURLStr string, withHash bool) bool
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
 		equal, err := urlUtil.Equal(tURLStr, cURLStr, withHash)
 		if err != nil {
-			log.Debug(err)
+			log.Debugf("astra.Stream.HasInput: %v", err)
 		}
 		return equal
 	})
@@ -193,7 +193,8 @@ func (s Stream) removeDuplicatedInputsByRx(r deps.Global, callback func(string))
 		for _, inp := range s.Inputs {
 			matchList := rx.FindStringSubmatch(inp)
 			if len(matchList) < 2 {
-				r.Log().Debugf("Found no matches of regular expression '%v' for input '%v'", rx.String(), inp)
+				msg := "astra.Stream.removeDuplicatedInputsByRx: Found no matches of regexp '%v' for input '%v'"
+				r.Log().Debugf(msg, rx.String(), inp)
 				continue
 			}
 			captureGroup := matchList[1]
@@ -458,7 +459,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 		for _, inp := range s.Inputs {
 			s, sIdx, inp := s, sIdx, inp
 			pool.Submit(func() {
-				r.log.Debugf("Start task sIdx %v, inp %v", sIdx, inp)
+				r.log.Debugf("astra.repo.RemoveDeadInputs: Start task sIdx %v, inp %v", sIdx, inp)
 				if canCheck(inp) {
 					reason := getReason(inp)
 					if reason != "" {
@@ -471,7 +472,8 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 				if bar {
 					err := progBar.Add(1)
 					if err != nil {
-						r.log.Debugf("Unable to increase: %v", errors.Wrap(err, "Progress bar"))
+						msg := "astra.repo.RemoveDeadInputs: Unable to increase: %v"
+						r.log.Debugf(msg, errors.Wrap(err, "Progress bar"))
 					}
 				}
 			})
@@ -500,7 +502,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 					var err error
 					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
-						r.log.Debug(err)
+						r.log.Debugf("astra.repo.AddHashes: %v", err)
 					}
 					if changed {
 						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})
@@ -513,7 +515,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 					var err error
 					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
-						r.log.Debug(err)
+						r.log.Debugf("astra.repo.AddHashes: %v", err)
 					}
 					if changed {
 						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})
@@ -526,7 +528,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 					var err error
 					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
-						r.log.Debug(err)
+						r.log.Debugf("astra.repo.AddHashes: %v", err)
 					}
 					if changed {
 						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})

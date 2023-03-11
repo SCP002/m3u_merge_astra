@@ -148,7 +148,7 @@ func (r repo) HasURL(channels []Channel, url string, withHash bool) bool {
 	return lo.ContainsBy(channels, func(ch Channel) bool {
 		equal, err := urlUtil.Equal(ch.URL, url, withHash)
 		if err != nil {
-			r.log.Debug(err)
+			r.log.Debugf("m3u.repo.HasURL: %v" ,err)
 		}
 		return equal
 	})

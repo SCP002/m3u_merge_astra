@@ -23,7 +23,7 @@ func main() {
 	log := logger.New(logrus.InfoLevel)
 
 	// Parse command line arguments
-	log.Debug("Parsing command line arguments\n")
+	log.Debug("main.main: Parsing command line arguments\n")
 	flags, err := cli.Parse()
 	if flags.Version {
 		fmt.Println("v1.3.1")

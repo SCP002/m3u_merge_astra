@@ -738,11 +738,11 @@ func TestRemoveDeadInputs(t *testing.T) {
 
 	// Create request handlers
 	handleAlive := func(w http.ResponseWriter, req *http.Request) {
-		r.log.Debugf("Got request to %v", req.URL)
+		r.log.Debugf("astra.TestRemoveDeadInputs: Got request to %v", req.URL)
 		w.WriteHeader(200)
 	}
 	handleTimeout := func(w http.ResponseWriter, req *http.Request) {
-		r.log.Debugf("Got request to %v", req.URL)
+		r.log.Debugf("astra.TestRemoveDeadInputs: Got request to %v", req.URL)
 		time.Sleep(time.Second * 5)
 	}
 
