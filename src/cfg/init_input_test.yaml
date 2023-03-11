@@ -46,8 +46,8 @@ m3u:
   # List of regular expressions.
   # If any expression match URL of a channel, this channel will be removed from M3U input before merging.
   chann_url_blacklist:
-    - 'https?://filter_me\.com'
-    - '192\.168\.88\.14/play'
+    - 'https?:\/\/filter_me\.com'
+    - '192\.168\.88\.14\/play'
 
   # Invalid to valid M3U channel group mapping.
   # Key: From. Value: To.
@@ -116,8 +116,8 @@ streams:
   # If any expression match URL of a stream's input, this input will be removed from astra streams before adding new
   # ones.
   input_blacklist:
-    - 'https?://filter_me\.com'
-    - '192\.168\.88\.14/play'
+    - 'https?:\/\/filter_me\.com'
+    - '192\.168\.88\.14\/play'
 
   # Remove inputs of astra streams which already present in config?
   remove_duplicated_inputs: true
@@ -129,7 +129,7 @@ streams:
   # List of regular expressions.
   # If any expression match URL of a stream's input, this input will not be checked for availability.
   dead_inputs_check_blacklist:
-    - 'https?://dont-check\.com/play'
+    - 'https?:\/\/dont-check\.com\/play'
     - '192\.168\.88\.'
 
   # Maximum amount of simultaneous connections to validate inputs of astra streams.
@@ -180,7 +180,7 @@ streams:
   input_to_input_hash_map:
     - by: ':8080'
       hash: 'ua=VLC/3.0.9 LibVLC/3.0.9'
-    - by: '^rts?p://'
+    - by: '^rts?p:\/\/'
       hash: 'no_reload'
-    # - by: '/some_path/'
+    # - by: '\/some_path\/'
     #   hash: 'some_hash'

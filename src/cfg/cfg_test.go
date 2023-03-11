@@ -189,8 +189,8 @@ func newTestConfig() Root {
 			ChannNameBlacklist:  []regexp.Regexp{*regexp.MustCompile(`Nonsense TV`), *regexp.MustCompile(`(?i)^Test$`)},
 			ChannGroupBlacklist: nil,
 			ChannURLBlacklist: []regexp.Regexp{
-				*regexp.MustCompile(`https?://filter_me\.com`),
-				*regexp.MustCompile(`192\.168\.88\.14/play`),
+				*regexp.MustCompile(`https?:\/\/filter_me\.com`),
+				*regexp.MustCompile(`192\.168\.88\.14\/play`),
 			},
 			ChannGroupMap: map[string]string{"": "General", "-": "General", "For kids": "Kids"},
 		},
@@ -217,14 +217,14 @@ func newTestConfig() Root {
 			},
 			UnknownInputWeight: 50,
 			InputBlacklist: []regexp.Regexp{
-				*regexp.MustCompile(`https?://filter_me\.com`),
-				*regexp.MustCompile(`192\.168\.88\.14/play`),
+				*regexp.MustCompile(`https?:\/\/filter_me\.com`),
+				*regexp.MustCompile(`192\.168\.88\.14\/play`),
 			},
 			RemoveDuplicatedInputs:         true,
 			RemoveDuplicatedInputsByRxList: []regexp.Regexp(nil), // New field in v1.4.0
 			RemoveDeadInputs:               false,
 			DeadInputsCheckBlacklist: []regexp.Regexp{
-				*regexp.MustCompile(`https?://dont-check\.com/play`),
+				*regexp.MustCompile(`https?:\/\/dont-check\.com\/play`),
 				*regexp.MustCompile(`192\.168\.88\.`),
 			},
 			InputMaxConns:    10,
@@ -246,7 +246,7 @@ func newTestConfig() Root {
 			},
 			InputToInputHashMap: []HashAddRule{
 				{By: *regexp.MustCompile(`:8080`), Hash: "ua=VLC/3.0.9 LibVLC/3.0.9"},
-				{By: *regexp.MustCompile(`^rts?p://`), Hash: "no_reload"},
+				{By: *regexp.MustCompile(`^rts?p:\/\/`), Hash: "no_reload"},
 			},
 		},
 	}
