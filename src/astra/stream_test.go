@@ -1068,7 +1068,7 @@ func TestAddNamePrefixes(t *testing.T) {
 		r.cfg.Streams.DisabledPrefix = ""
 		_ = r.AddNamePrefixes(sl1)
 	})
-	assert.False(t, strings.Contains(out, "Name_"))
+	assert.NotContains(t, out, "Name_")
 }
 
 func TestGetInputsAmount(t *testing.T) {
