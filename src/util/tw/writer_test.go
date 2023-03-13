@@ -15,13 +15,11 @@ func TestNew(t *testing.T) {
 func TestRender(t *testing.T) {
 	w := New()
 
-	w.SetColumnConfigs([]table.ColumnConfig{{Number: 1, WidthMax: 10}, {Number: 2, WidthMax: 20}})
 	w.AppendHeader(table.Row{"Column 1", "Column 2"})
-	w.AppendRow(table.Row{"Data 1 " + strings.Repeat("x", 10), "Data 2"})
+	w.AppendRow(table.Row{"Data 1 " + strings.Repeat("x", 150), "Data 2"})
 	w.Render()
 
-	w.SetColumnConfigs([]table.ColumnConfig{{Number: 1, WidthMax: 20}, {Number: 2, WidthMax: 10}})
 	w.AppendHeader(table.Row{"Column 3", "Column 4"})
-	w.AppendRow(table.Row{"Data 3", "Data 4 " + strings.Repeat("x", 10)})
+	w.AppendRow(table.Row{"Data 3" + strings.Repeat("x", 150), "Data 4 " + strings.Repeat("x", 150)})
 	w.Render()
 }

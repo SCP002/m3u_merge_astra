@@ -20,6 +20,7 @@ require (
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/zenizh/go-capturer v0.0.0-20211219060012-52ea6c8fed04
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
+	golang.org/x/term v0.5.0
 )
 
 require (
@@ -47,7 +48,6 @@ require (
 	github.com/yaegashi/jsonex.go v0.0.0-20191218175351-e6c64c300063 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
