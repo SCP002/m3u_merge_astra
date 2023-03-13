@@ -6,10 +6,16 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/stretchr/testify/assert"
+	"github.com/zenizh/go-capturer"
 )
 
 func TestNew(t *testing.T) {
-	assert.NotNil(t, New(), "should initialize table writer")
+	out := capturer.CaptureStderr(func() {
+		w := New()
+		w.AppendRow(table.Row{"Test"})
+		w.Render()
+	})
+	assert.Contains(t, out, "Test")
 }
 
 func TestRender(t *testing.T) {
