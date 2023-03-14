@@ -19,13 +19,25 @@ func TestNew(t *testing.T) {
 }
 
 func TestRender(t *testing.T) {
-	w := New()
+	out := capturer.CaptureStderr(func() {
+		w := New()
 
-	w.AppendHeader(table.Row{"Column 1", "Column 2"})
-	w.AppendRow(table.Row{"Data 1 " + strings.Repeat("x", 150), "Data 2"})
-	w.Render()
+		w.AppendHeader(table.Row{"Column 1"})
+		w.AppendRow(table.Row{"Data 1"})
+		w.AppendFooter(table.Row{"Footer 1"})
+		w.Render()
 
-	w.AppendHeader(table.Row{"Column 3", "Column 4"})
-	w.AppendRow(table.Row{"Data 3" + strings.Repeat("x", 150), "Data 4 " + strings.Repeat("x", 150)})
-	w.Render()
+		w.AppendHeader(table.Row{"Column 2"})
+		w.AppendRow(table.Row{"Data 2"})
+		w.AppendFooter(table.Row{"Footer 2"})
+		w.Render()
+	})
+
+	assert.Contains(t, out, strings.ToUpper("Column 1"))
+	assert.Contains(t, out, "Data 1")
+	assert.Contains(t, out, strings.ToUpper("Footer 1"))
+
+	assert.Contains(t, out, strings.ToUpper("Column 2"))
+	assert.Contains(t, out, "Data 2")
+	assert.Contains(t, out, strings.ToUpper("Footer 2"))
 }
