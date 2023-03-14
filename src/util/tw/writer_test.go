@@ -18,6 +18,19 @@ func TestNew(t *testing.T) {
 	assert.Contains(t, out, "Test")
 }
 
+func TestAppendHeader(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		w := New()
+		w.AppendHeader(table.Row{"Column 1", "Column 2"})
+		w.AppendRow(table.Row{strings.Repeat("x", 150), strings.Repeat("x", 150)})
+		w.Render()
+	})
+	// Testing against terminal width in 120 characters as it's a fallback value: function calculating terminal width
+	// always fail in tests.
+	assert.Contains(t, out, "│ " + strings.Repeat("x", 56) + " │") // (120 / 2) - 2 * 2 = 60 - 4 = 56
+	assert.Contains(t, out, "│ " + strings.Repeat("x", 38) + strings.Repeat(" ", 18) + " │") // 38 + 18 = 56
+}
+
 func TestRender(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		w := New()
