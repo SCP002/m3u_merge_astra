@@ -11,6 +11,7 @@ import (
 	"m3u_merge_astra/merge"
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
+	"m3u_merge_astra/util/slice"
 	"m3u_merge_astra/util/tw"
 
 	goFlags "github.com/jessevdk/go-flags"
@@ -73,8 +74,12 @@ func main() {
 
 	m3uChannels := m3uRepo.Parse(m3uResp)
 	m3uChannels = m3uRepo.Sort(m3uChannels)
-	m3uChannels = m3uRepo.ReplaceGroups(m3uChannels)
-	m3uChannels = m3uRepo.RemoveBlocked(m3uChannels)
+	if len(cfg.M3U.ChannGroupMap) > 0 {
+		m3uChannels = m3uRepo.ReplaceGroups(m3uChannels)
+	}
+	if !slice.IsAllEmpty(cfg.M3U.ChannNameBlacklist, cfg.M3U.ChannGroupBlacklist, cfg.M3U.ChannURLBlacklist) {
+		m3uChannels = m3uRepo.RemoveBlocked(m3uChannels)
+	}
 
 	// Update astra streams with data from M3U channels and run extra operations such as sorting or disabling streams
 	// without inputs
@@ -86,7 +91,9 @@ func main() {
 	if cfg.Streams.Rename {
 		astraCfg.Streams = mergeRepo.RenameStreams(astraCfg.Streams, m3uChannels)
 	}
-	astraCfg.Streams = astraRepo.RemoveBlockedInputs(astraCfg.Streams)
+	if len(cfg.Streams.InputBlacklist) > 0 {
+		astraCfg.Streams = astraRepo.RemoveBlockedInputs(astraCfg.Streams)
+	}
 	if cfg.Streams.RemoveDuplicatedInputs {
 		astraCfg.Streams = astraRepo.RemoveDuplicatedInputs(astraCfg.Streams)
 	}
@@ -116,7 +123,10 @@ func main() {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
 		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, astraCfg.Streams, true)
 	}
-	astraCfg.Streams = astraRepo.AddHashes(astraCfg.Streams)
+	if !slice.IsAllEmpty(cfg.Streams.NameToInputHashMap, cfg.Streams.GroupToInputHashMap,
+		cfg.Streams.InputToInputHashMap) {
+		astraCfg.Streams = astraRepo.AddHashes(astraCfg.Streams)
+	}
 	if cfg.Streams.RemoveWithoutInputs {
 		astraCfg.Streams = astraRepo.RemoveWithoutInputs(astraCfg.Streams)
 	} else if cfg.Streams.DisableWithoutInputs {

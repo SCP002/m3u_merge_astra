@@ -51,3 +51,13 @@ func TestContainsAny(t *testing.T) {
 	assert.True(t, ContainsAny("some words", "unknown", "some"), "should contain element")
 	assert.False(t, ContainsAny("some words", "unknown", "unknown 2"), "should not contain any element")
 }
+
+func TestIsAllEmpty(t *testing.T) {
+	type test struct {}
+	assert.True(t, IsAllEmpty([]int{}, []int{}))
+	assert.False(t, IsAllEmpty([]string{"something"}, []string{""}))
+	assert.True(t, IsAllEmpty(make([]bool, 0), []bool{}))
+	assert.False(t, IsAllEmpty([]bool{}, make([]bool, 1)))
+	assert.True(t, IsAllEmpty([]test{}, nil))
+	assert.False(t, IsAllEmpty(nil, []test{{}}))
+}

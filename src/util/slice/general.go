@@ -52,3 +52,8 @@ func ContainsAny(inp string, elms ...string) bool {
 		return strings.Contains(inp, elm)
 	})
 }
+
+// IsAllEmpty reurns true if every slice in <inp> is empty
+func IsAllEmpty[T any](inp ...[]T) bool {
+	return len(lo.Flatten(inp)) == 0
+}
