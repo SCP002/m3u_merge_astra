@@ -116,3 +116,13 @@ func TestNewHttpServer(t *testing.T) {
 	assert.Exactly(t, 200, resp.StatusCode, "should return OK status")
 	assert.NoError(t, err, "should not return error")
 }
+
+func TestNewHttpClient(t *testing.T) {
+	// Tested in TestNewHttpServer
+	assert.NotNil(t, NewHttpClient(0), "should create new http client")
+}
+
+func TestNewFakeHttpClient(t *testing.T) {
+	// Tested in TestNewHttpServer
+	assert.NotNil(t, NewFakeHttpClient(0), "should create new fake http client")
+}
