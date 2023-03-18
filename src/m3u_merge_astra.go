@@ -34,13 +34,13 @@ func main() {
 		os.Exit(0)
 	}
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 
 	// Read program config
 	cfg, isNewCfg, err := cfg.Init(log, flags.ProgramCfgPath)
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 	if isNewCfg {
 		log.Infof("New config is written to %v, please verify it and start this program again", flags.ProgramCfgPath)
@@ -51,7 +51,7 @@ func main() {
 	log.Info("Reading astra config\n")
 	astraCfg, err := astra.ReadCfg(flags.AstraCfgInput)
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 
 	// Fetch M3U channels
@@ -59,7 +59,7 @@ func main() {
 	httpClient := network.NewHttpClient(cfg.M3U.RespTimeout)
 	m3uResp, err := openuri.Open(flags.M3UPath, openuri.WithHTTPClient(httpClient))
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 	defer m3uResp.Close()
 
@@ -126,6 +126,6 @@ func main() {
 	log.Info("Writing astra config\n")
 	err = astra.WriteCfg(astraCfg, flags.AstraCfgOutput)
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 }
