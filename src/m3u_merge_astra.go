@@ -19,11 +19,10 @@ import (
 )
 
 func main() {
-	// Init logger
-	log := logger.New(logrus.InfoLevel)
+	// Init default logger
+	log := logger.New(logrus.FatalLevel)
 
 	// Parse command line arguments
-	log.Debug("main.main: Parsing command line arguments\n")
 	flags, err := cli.Parse()
 	if flags.Version {
 		fmt.Println("v1.3.1")
@@ -36,6 +35,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Set log level
+	log.SetLevel(flags.LogLevel)
 
 	// Read program config
 	cfg, isNewCfg, err := cfg.Init(log, flags.ProgramCfgPath)

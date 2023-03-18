@@ -19,6 +19,7 @@ It takes input astra config from `--astraCfgInput`, adds M3U channels into it fr
 | -------------------- | ----------------------------------------------------------------------------------------------- |
 | -v, --version        | Print the program version                                                                       |
 | -h, --help           | Print help message                                                                              |
+| -l, --logLevel       | Logging level. Can be from `0` (least verbose) to `6` (most verbose). Default is `4`            |
 | -c, --programCfgPath | Program config file path to read from or initialize a default (default: `m3u_merge_astra.yaml`) |
 | -m, --m3uPath        | M3U file path to get channels from. Can be a local file or URL                                  |
 | -i, --astraCfgInput  | Input astra config. Can be `clipboard`, `stdio` or **file path**                                |

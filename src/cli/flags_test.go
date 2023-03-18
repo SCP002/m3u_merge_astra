@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	goFlags "github.com/jessevdk/go-flags"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,10 +23,26 @@ func TestParse(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 	assert.True(t, flags.Version, "flag should be specified")
 
+	os.Args = []string{"", "--logLevel=-1"}
+	_, err = Parse()
+	assert.Error(t, err, "should return error for negative log level")
+	assert.True(t, IsErrOfType(err, goFlags.ErrMarshal), "should return marshal error")
+
+	os.Args = []string{"", "--logLevel=5"}
+	flags, err = Parse()
+	assert.NoError(t, err, "should not return error")
+	assert.Exactly(t, logrus.DebugLevel, flags.LogLevel, "flag should have this value")
+
+	os.Args = []string{"", "--logLevel=999"}
+	flags, err = Parse()
+	assert.NoError(t, err, "should not return error")
+	assert.Exactly(t, logrus.Level(999), flags.LogLevel, "flag should have this value")
+
 	os.Args = []string{"", "--programCfgPath=/cfg/path", "--m3uPath=/m3u/path", "--astraCfgInput=stdio",
 		"--astraCfgOutput=/astra/output"}
 	flags, err = Parse()
 	assert.NoError(t, err, "should not return error")
+	assert.Exactly(t, logrus.InfoLevel, flags.LogLevel, "flag should have this value")
 	assert.Exactly(t, "/cfg/path", flags.ProgramCfgPath, "flag should have this value")
 	assert.Exactly(t, "/m3u/path", flags.M3UPath, "flag should have this value")
 	assert.Exactly(t, string(Stdio), flags.AstraCfgInput, "flag should have this value")
