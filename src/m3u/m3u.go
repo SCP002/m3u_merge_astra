@@ -29,7 +29,7 @@ func (ch Channel) GetName() string {
 }
 
 // replaceGroup returns new channel with group taken from <cfg>, running <callback> with new group on change
-func (ch Channel) replaceGroupCb(cfg cfg.M3U, callback func(string)) Channel {
+func (ch Channel) replaceGroup(cfg cfg.M3U, callback func(string)) Channel {
 	newGroup := cfg.ChannGroupMap[ch.Group]
 	if ch.Group != newGroup && newGroup != "" {
 		callback(newGroup)
@@ -99,7 +99,7 @@ func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 	r.tw.AppendHeader(table.Row{"Name", "Original group", "New group"})
 
 	for _, ch := range channels {
-		out = append(out, ch.replaceGroupCb(r.cfg.M3U, func(newGroup string) {
+		out = append(out, ch.replaceGroup(r.cfg.M3U, func(newGroup string) {
 			r.tw.AppendRow(table.Row{ch.Name, ch.Group, newGroup})
 		}))
 	}

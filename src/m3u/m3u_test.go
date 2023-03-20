@@ -26,7 +26,7 @@ func TestReplaceGroup(t *testing.T) {
 	newGroups := []string{}
 	c1 := Channel{Name: "From Group 2", Group: "From Group 2", URL: "From Group 2"}
 	c1Original := copier.TestDeep(t, c1)
-	c2 := c1.replaceGroupCb(cfg, func(newGroup string) {
+	c2 := c1.replaceGroup(cfg, func(newGroup string) {
 		newGroups = append(newGroups, newGroup)
 	})
 
@@ -38,7 +38,7 @@ func TestReplaceGroup(t *testing.T) {
 
 	c1 = Channel{Group: "Group 1"}
 	c1Original = copier.TestDeep(t, c1)
-	c2 = c1.replaceGroupCb(cfg, func(newGroup string) {
+	c2 = c1.replaceGroup(cfg, func(newGroup string) {
 		t.Fail()
 	})
 
