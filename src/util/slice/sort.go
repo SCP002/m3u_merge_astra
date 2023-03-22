@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-// Sort returns copy of <list> sorted by Name field
+// Sort returns deep copy of <list> sorted by Name field
 func Sort[T Named](list []T) (out []T) {
 	out = copier.MustDeep(list)
 

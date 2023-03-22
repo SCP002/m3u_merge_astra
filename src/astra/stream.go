@@ -256,8 +256,8 @@ func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 	})
 }
 
-// RemoveNamePrefixes returns copy of <streams> without name prefixes on every stream and MarkAdded or MarkDisabled
-// fields set instead
+// RemoveNamePrefixes returns shallow copy of <streams> without name prefixes on every stream and MarkAdded or
+// MarkDisabled fields set instead
 func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 	r.log.Info("Temporarily removing name prefixes from streams\n")
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
@@ -285,7 +285,7 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 	return
 }
 
-// Sort returns copy of <streams> sorted by name
+// Sort returns deep copy of <streams> sorted by name
 func (r repo) Sort(streams []Stream) (out []Stream) {
 	r.log.Info("Sorting astra streams\n")
 
@@ -294,7 +294,7 @@ func (r repo) Sort(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveBlockedInputs returns copy of <streams> without blocked inputs
+// RemoveBlockedInputs returns shallow copy of <streams> without blocked inputs
 func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing blocked inputs from streams\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
@@ -310,7 +310,7 @@ func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveDuplicatedInputs returns copy of <streams> with only unique inputs
+// RemoveDuplicatedInputs returns shallow copy of <streams> with only unique inputs
 func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing duplicated inputs from streams\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
@@ -335,8 +335,8 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveDuplicatedInputsByRx returns copy of <streams> with only unique inputs per stream by first capture groups of
-// regular expressions defined in config.
+// RemoveDuplicatedInputsByRx returns shallow copy of <streams> with only unique inputs per stream by first capture
+// groups of regular expressions defined in config.
 func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 	r.log.Info("Removing duplicated inputs per stream by regular expressions\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
@@ -352,7 +352,7 @@ func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 	return
 }
 
-// UniteInputs returns copy of <streams> with inputs of every equally named stream moved to the first stream found.
+// UniteInputs returns deep copy of <streams> with inputs of every equally named stream moved to the first stream found.
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
@@ -383,7 +383,7 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// SortInputs returns copy of <streams> with all inputs sorted by InputWeightToTypeMap in config
+// SortInputs returns deep copy of <streams> with all inputs sorted by InputWeightToTypeMap in config
 func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Sorting inputs of streams\n")
 
@@ -407,8 +407,8 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveDeadInputs returns copy of <streams> without inputs which do not respond in time or respond with status code
-// >= 400.
+// RemoveDeadInputs returns deep copy of <streams> without inputs which do not respond in time or respond with status
+// code >= 400.
 //
 // If <bar> is true, display progress bar.
 //
@@ -487,7 +487,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 	return
 }
 
-// AddHashes returns copy of <streams> with hashes added to every input as defined in config with *ToInputHashMap
+// AddHashes returns deep copy of <streams> with hashes added to every input as defined in config with *ToInputHashMap
 func (r repo) AddHashes(streams []Stream) (out []Stream) {
 	r.log.Info("Adding hashes to inputs of streams\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Hash", "Result"})
@@ -544,7 +544,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveWithoutInputs returns copy of <streams> without streams which have no inputs
+// RemoveWithoutInputs returns shallow copy of <streams> without streams which have no inputs
 func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing streams without inputs\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group"})
@@ -561,7 +561,7 @@ func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// DisableWithoutInputs returns copy of <streams> with all streams disabled if they have no inputs
+// DisableWithoutInputs returns shallow copy of <streams> with all streams disabled if they have no inputs
 func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Disabling streams without inputs\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group"})
@@ -579,7 +579,8 @@ func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveNamePrefixes returns copy of <streams> with name prefixes on every stream if MarkAdded or MarkDisabled is true
+// RemoveNamePrefixes returns shallow copy of <streams> with name prefixes on every stream if MarkAdded or MarkDisabled
+// is true.
 func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 	r.log.Info("Adding name prefixes to streams\n")
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})

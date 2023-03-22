@@ -42,7 +42,7 @@ func EverySimilar[T slice.Named](cfg cfg.General, list []T, name string, start i
 	}
 }
 
-// GetSimilar returns copy of <list> only with entries whose .Name() matching the <name>.
+// GetSimilar returns shallow copy of <list> only with entries whose .Name() matching the <name>.
 //
 // Both names standartized before comparsion using transliteration settings from <cfg>.
 func GetSimilar[T slice.Named](cfg cfg.General, list []T, name string) []T {

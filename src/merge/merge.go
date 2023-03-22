@@ -13,7 +13,8 @@ import (
 	"github.com/samber/lo"
 )
 
-// RenameStreams returns copy of <streams> with names taken from <channels> if their standardized names are equal
+// RenameStreams returns shallow copy of <streams> with names taken from <channels> if their standardized names are
+// equal.
 func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Renaming streams\n")
 	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
@@ -32,8 +33,8 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 	return
 }
 
-// UpdateInputs returns copy of <streams> with every first matching input of every stream replaced with matching URL's
-// of m3u channels according to cfg.Streams.InputUpdateMap.
+// UpdateInputs returns shallow copy of <streams> with every first matching input of every stream replaced with matching
+// URL's of m3u channels according to cfg.Streams.InputUpdateMap.
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream on update.
 func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
@@ -59,7 +60,7 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	return
 }
 
-// RemoveInputsByUpdateMap returns copy of <streams> without inputs which match at least one
+// RemoveInputsByUpdateMap returns shallow copy of <streams> without inputs which match at least one
 // cfg.Streams.InputUpdateMap.From expression but none found in <channels>.
 func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Removing absent inputs according the update map\n")
@@ -83,7 +84,7 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 	return
 }
 
-// AddNewInputs returns copy of <streams> with new inputs if such found in <channels>.
+// AddNewInputs returns shallow copy of <streams> with new inputs if such found in <channels>.
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
@@ -108,7 +109,7 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	return
 }
 
-// AddNewStreams returns copy of <streams> with new streams generated from <channels> if no such found in <streams>
+// AddNewStreams returns <streams> with new streams generated from <channels> if no such found in <streams>
 func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []astra.Stream {
 	r.log.Info("Adding new streams\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})

@@ -35,7 +35,7 @@ type Group struct {
 	Name string `json:"name"`
 }
 
-// AddNewGroups returns copy of categories <cats> with new categories and groups from <streams>
+// AddNewGroups returns deep copy of categories <cats> with new categories and groups from <streams>
 func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
 	r.log.Info("Adding new groups\n")
 	r.tw.AppendHeader(table.Row{"Category", "Group"})
