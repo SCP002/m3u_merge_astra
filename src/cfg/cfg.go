@@ -19,6 +19,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 
+	"m3u_merge_astra/util/parse"
 	"m3u_merge_astra/util/simplify"
 	yamlUtil "m3u_merge_astra/util/yaml"
 )
@@ -393,7 +394,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Add groups to new astra streams?"},
-			Data:         yamlUtil.Scalar{Key: "add_groups_to_new", Value: strconv.FormatBool(defVal)},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_new", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -408,7 +409,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Category name to use for groups of new astra streams."},
-			Data:         yamlUtil.Scalar{Key: "groups_category_for_new", Value: fmt.Sprintf("'%v'", defVal)},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: fmt.Sprintf("'%v'", defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.add_groups_to_new", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -423,7 +424,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Enable streams if they got new inputs or inputs were updated (but not removed)?"},
-			Data:         yamlUtil.Scalar{Key: "enable_on_input_update", Value: strconv.FormatBool(defVal)},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.disable_without_inputs", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -437,7 +438,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
 		node := yamlUtil.Node{
 			HeadComment: []string{"Use name aliases list to detect which M3U channel corresponds a stream?"},
-			Data:        yamlUtil.Scalar{Key: "name_aliases", Value: strconv.FormatBool(defVal)},
+			Data:        yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "general.similar_translit_map", true, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -458,7 +459,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 				"but not transliterated.",
 			},
 			Data: yamlUtil.NestedList{
-				Key: "name_alias_list",
+				Key: parse.LastPathItem(knownField, "."),
 				Tree: yamlUtil.ValueTree{
 					Children: []yamlUtil.ValueTree{
 						{
@@ -501,7 +502,7 @@ func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
 				"This setting is not controlled by 'remove_duplicated_inputs'.",
 			},
 			Data: yamlUtil.List{
-				Key: "remove_duplicated_inputs_by_rx_list",
+				Key: parse.LastPathItem(knownField, "."),
 				Values: []yamlUtil.Value{
 					{Value: `'^.*:\/\/([^#?/]*)' # By host`, Commented: true},
 					{Value: `'^.*:\/\/.*?\/([^#?]*)' # By path`, Commented: true},
