@@ -37,13 +37,22 @@ func TestInfoCFi(t *testing.T) {
 	assert.Contains(t, out, `INFO message: field 1 "value 1", field 2 "10"`)
 }
 
+func TestDebugf(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(logrus.DebugLevel)
+
+		log.Debugf("_%v_", "message")
+	})
+	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebugf.func1; L44): _message_`)
+}
+
 func TestDebugCFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		log := New(logrus.DebugLevel)
 
 		log.DebugCFi("message", "field 1", "value 1", "field 2", 10)
 	})
-	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L44): message: field 1 "value 1", field 2 "10"`
+	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L53): message: field 1 "value 1", field 2 "10"`
 	assert.Contains(t, out, msg)
 }
 
@@ -59,5 +68,5 @@ func TestBuildFields(t *testing.T) {
 }
 
 func TestGetCallerInfo(t *testing.T) {
-	assert.Exactly(t, `m3u_merge_astra/util/logger.TestGetCallerInfo; L62`, getCallerInfo(1))
+	assert.Exactly(t, `m3u_merge_astra/util/logger.TestGetCallerInfo; L71`, getCallerInfo(1))
 }
