@@ -405,6 +405,7 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 //
 // Currently supports only HTTP(S).
 func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out []Stream) {
+	// canCheck returns true if <inp> can be checked
 	canCheck := func(inp string) bool {
 		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
 			return false
@@ -415,6 +416,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 		return false
 	}
 
+	// getReason returns reason why <inp> should be removed
 	getReason := func(inp string) string {
 		resp, err := httpClient.Get(inp)
 		if err == nil {
@@ -435,19 +437,25 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 	inputsAmount := getInputsAmount(streams)
 	inputsDone := 0
 
+	// getProgress returns formatted progress of inputs processed
+	getProgress := func() string {
+		mut.Lock()
+		percent := (inputsDone * 100) / inputsAmount
+		progress := fmt.Sprintf("%v / %v (%v%%)", inputsDone, inputsAmount, percent)
+		mut.Unlock()
+		return progress
+	}
+
 	out = copier.MustDeep(streams)
 	for sIdx, s := range out {
 		for _, inp := range s.Inputs {
 			s, sIdx, inp := s, sIdx, inp
 			pool.Submit(func() {
-				progress := fmt.Sprintf("%v / %v", inputsDone, inputsAmount)
-				percent := fmt.Sprintf("%v%%", (inputsDone * 100) / inputsAmount)
-				r.log.DebugCFi("Checking input",
+				r.log.DebugCFi("Start checking input",
 					"stream name", s.Name,
 					"stream index", sIdx,
 					"input", inp,
-					"progress", progress,
-					"percent", percent,
+					"progress", getProgress(),
 				)
 				if canCheck(inp) {
 					reason := getReason(inp)
@@ -463,7 +471,16 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 						mut.Unlock()
 					}
 				}
+
+				mut.Lock()
 				inputsDone++
+				mut.Unlock()
+				r.log.DebugCFi("End checking input",
+					"stream name", s.Name,
+					"stream index", sIdx,
+					"input", inp,
+					"progress", getProgress(),
+				)
 			})
 		}
 	}
