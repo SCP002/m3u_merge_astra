@@ -51,9 +51,9 @@ func TestBuildFields(t *testing.T) {
 	assert.Exactly(t, ``, buildFields([]any{}))
 	assert.Exactly(t, ``, buildFields([]any{""}))
 	assert.Exactly(t, `a`, buildFields([]any{"a"}))
-	assert.Exactly(t, `a`, buildFields([]any{"a", ""}))
+	assert.Exactly(t, `a ""`, buildFields([]any{"a", ""}))
 	assert.Exactly(t, `"10"`, buildFields([]any{"", 10}))
-	assert.Exactly(t, `"10", b`, buildFields([]any{"", 10, "b", ""}))
+	assert.Exactly(t, `"10", b ""`, buildFields([]any{"", 10, "b", ""}))
 	assert.Exactly(t, `a "10"`, buildFields([]any{"a", 10}))
 	assert.Exactly(t, `a "10", b "c"`, buildFields([]any{"a", 10, "b", "c"}))
 }

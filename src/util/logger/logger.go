@@ -53,9 +53,6 @@ func buildFields(fields []any) (out string) {
 
 	for i, field := range fields {
 		fieldStr := fmt.Sprint(field)
-		if fieldStr == "" {
-			continue
-		}
 		if i % 2 == 0 {
 			out += fieldStr + " "
 		} else {
