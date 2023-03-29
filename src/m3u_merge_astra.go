@@ -12,7 +12,6 @@ import (
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
-	"m3u_merge_astra/util/tw"
 
 	goFlags "github.com/jessevdk/go-flags"
 	"github.com/sirupsen/logrus"
@@ -66,11 +65,8 @@ func main() {
 	}
 	defer m3uResp.Close()
 
-	// Init table writer
-	tw := tw.New()
-
 	// Parse and preprocess M3U channels
-	m3uRepo := m3u.NewRepo(log, tw, cfg)
+	m3uRepo := m3u.NewRepo(log, cfg)
 
 	m3uChannels := m3uRepo.Parse(m3uResp)
 	m3uChannels = m3uRepo.Sort(m3uChannels)
@@ -83,8 +79,8 @@ func main() {
 
 	// Update astra streams with data from M3U channels and run extra operations such as sorting or disabling streams
 	// without inputs
-	astraRepo := astra.NewRepo(log, tw, cfg)
-	mergeRepo := merge.NewRepo(log, tw, cfg)
+	astraRepo := astra.NewRepo(log, cfg)
+	mergeRepo := merge.NewRepo(log, cfg)
 
 	astraCfg.Streams = astraRepo.RemoveNamePrefixes(astraCfg.Streams)
 	astraCfg.Streams = astraRepo.Sort(astraCfg.Streams)
