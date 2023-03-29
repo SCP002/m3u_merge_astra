@@ -33,15 +33,15 @@ func New(lvl logrus.Level) *Logger {
 	return &Logger{&log}
 }
 
-// Infoc prints info level <msg> with formatted and colored <fields>
-func (l Logger) Infoc(msg string, fields ...any) {
+// InfoCFi prints info level <msg> with formatted and colored <fields>
+func (l Logger) InfoCFi(msg string, fields ...any) {
 	l.Infof("%v: %v", msg, buildFields(fields))
 }
 
-// Debugc prints debug level <msg> with formatted and colored <fields>.
+// DebugCFi prints debug level <msg> with formatted and colored <fields>.
 //
 // <msg> is prefixed with caller info.
-func (l Logger) Debugc(msg string, fields ...any) {
+func (l Logger) DebugCFi(msg string, fields ...any) {
 	msgWithCaller := fmt.Sprintf(`(%v): %v`, getCallerInfo(2), msg)
 
 	l.Debugf("%v: %v", msgWithCaller, buildFields(fields))

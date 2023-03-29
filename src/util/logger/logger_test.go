@@ -28,22 +28,22 @@ func TestNew(t *testing.T) {
 	assert.Regexp(t, regexp.MustCompile(`\[.*\] PANIC message`), out)
 }
 
-func TestInfoc(t *testing.T) {
+func TestInfoCFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		log := New(logrus.InfoLevel)
 
-		log.Infoc("message", "field 1", "value 1", "field 2", 10)
+		log.InfoCFi("message", "field 1", "value 1", "field 2", 10)
 	})
 	assert.Contains(t, out, `INFO message: field 1 "value 1", field 2 "10"`)
 }
 
-func TestDebugc(t *testing.T) {
+func TestDebugCFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		log := New(logrus.DebugLevel)
 
-		log.Debugc("message", "field 1", "value 1", "field 2", 10)
+		log.DebugCFi("message", "field 1", "value 1", "field 2", 10)
 	})
-	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugc.func1; L44): message: field 1 "value 1", field 2 "10"`
+	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L44): message: field 1 "value 1", field 2 "10"`
 	assert.Contains(t, out, msg)
 }
 
