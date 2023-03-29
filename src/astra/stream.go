@@ -3,7 +3,6 @@ package astra
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -18,10 +17,7 @@ import (
 	urlUtil "m3u_merge_astra/util/url"
 
 	"github.com/alitto/pond"
-	"github.com/cockroachdb/errors"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
-	"github.com/schollz/progressbar/v3"
 )
 
 // Stream represents astra stream object
@@ -259,9 +255,6 @@ func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 // RemoveNamePrefixes returns shallow copy of <streams> without name prefixes on every stream and MarkAdded or
 // MarkDisabled fields set instead
 func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
-	r.log.Info("Temporarily removing name prefixes from streams\n")
-	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
-
 	for _, s := range streams {
 		oldName := s.Name
 		for i := 0; i < 2; i++ { // Run twice to remove in any order
@@ -275,13 +268,15 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 			}
 		}
 		if oldName != s.Name {
-			r.tw.AppendRow(table.Row{oldName, s.Name, s.FirstGroup()})
+			r.log.InfoCFi("Temporarily removing name prefix from stream",
+				"old name", oldName,
+				"new name", s.Name,
+				"group", s.FirstGroup(),
+			)
 		}
 		out = append(out, s)
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
@@ -296,32 +291,28 @@ func (r repo) Sort(streams []Stream) (out []Stream) {
 
 // RemoveBlockedInputs returns shallow copy of <streams> without blocked inputs
 func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
-	r.log.Info("Removing blocked inputs from streams\n")
-	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
-
 	for _, s := range streams {
 		out = append(out, s.removeBlockedInputs(r.cfg.Streams, func(input string) {
-			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), input})
+			r.log.InfoCFi("Removing blocked input from stream", "name", s.Name, "group", s.FirstGroup(), "input", input)
 		}))
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
 // RemoveDuplicatedInputs returns shallow copy of <streams> with only unique inputs
 func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
-	r.log.Info("Removing duplicated inputs from streams\n")
-	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
-
 	// inputsMap is used to check if input is the first one encountered in the list. Value of the map is not used.
 	inputsMap := map[string]bool{}
 
 	for _, s := range streams {
 		for _, inp := range s.Inputs {
 			if _, duplicate := inputsMap[inp]; duplicate {
-				r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), inp})
+				r.log.InfoCFi("Removing duplicated input from stream",
+					"name", s.Name,
+					"group", s.FirstGroup(),
+					"input", inp,
+				)
 				s.Inputs = slice.RemoveLast(s.Inputs, inp)
 			} else {
 				inputsMap[inp] = true
@@ -330,25 +321,22 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 		out = append(out, s)
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
 // RemoveDuplicatedInputsByRx returns shallow copy of <streams> with only unique inputs per stream by first capture
 // groups of regular expressions defined in config.
 func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
-	r.log.Info("Removing duplicated inputs per stream by regular expressions\n")
-	r.tw.AppendHeader(table.Row{"Name", "Group", "Input"})
-
 	for _, s := range streams {
 		out = append(out, s.removeDuplicatedInputsByRx(r, func(input string) {
-			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), input})
+			r.log.InfoCFi("Removing duplicated input per stream by regular expressions",
+				"name", s.Name,
+				"group", s.FirstGroup(),
+				"input", input,
+			)
 		}))
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
@@ -356,15 +344,18 @@ func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
-	r.log.Info("Uniting inputs of streams\n")
-	r.tw.AppendHeader(table.Row{"From ID", "From name", "Input", "To ID", "To name", "Note"})
-
 	out = copier.MustDeep(streams)
 	for currIdx, currStream := range out {
 		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
-				r.tw.AppendRow(table.Row{nextStream.ID, nextStream.Name, nextInput, currStream.ID, currStream.Name,
-					currStream.InputsUpdateNote(r.cfg.Streams)})
+				r.log.InfoCFi("Uniting inputs of streams",
+					"from ID", nextStream.ID,
+					"from name", nextStream.Name,
+					"input", nextInput,
+					"to ID", currStream.ID,
+					"to name", currStream.Name,
+					"note", currStream.InputsUpdateNote(r.cfg.Streams),
+				)
 				if !currStream.HasInput(r.log, nextInput, true) {
 					currStream = currStream.AddInput(nextInput)
 					if r.cfg.Streams.EnableOnInputUpdate {
@@ -378,14 +369,12 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 		})
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
 // SortInputs returns deep copy of <streams> with all inputs sorted by InputWeightToTypeMap in config
 func (r repo) SortInputs(streams []Stream) (out []Stream) {
-	r.log.Info("Sorting inputs of streams\n")
+	r.log.Info("Sorting inputs of streams")
 
 	out = copier.MustDeep(streams)
 	for _, s := range out {
@@ -416,9 +405,6 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 //
 // Currently supports only HTTP(S).
 func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out []Stream) {
-	r.log.Info("Removing dead inputs from streams\n")
-	r.tw.AppendHeader(table.Row{"Name", "Group", "Input", "Reason"})
-
 	canCheck := func(inp string) bool {
 		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
 			return false
@@ -446,40 +432,51 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 
 	pool := pond.New(r.cfg.Streams.InputMaxConns, 0, pond.MinWorkers(0))
 	var mut sync.Mutex
+	inputsAmount := getInputsAmount(streams)
+	inputsDone := 0
 
 	out = copier.MustDeep(streams)
 	for sIdx, s := range out {
 		for _, inp := range s.Inputs {
 			s, sIdx, inp := s, sIdx, inp
 			pool.Submit(func() {
-				r.log.Debugf("astra.repo.RemoveDeadInputs: Start task sIdx %v, inp %v", sIdx, inp)
+				progress := fmt.Sprintf("%v / %v", inputsDone, inputsAmount)
+				percent := fmt.Sprintf("%v%", (inputsDone / inputsAmount) * 100)
+				r.log.DebugCFi("Checking input",
+					"stream name", sIdx,
+					"input", inp,
+					"progress", progress,
+					"percent", percent,
+				)
 				if canCheck(inp) {
 					reason := getReason(inp)
 					if reason != "" {
 						mut.Lock()
-						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), inp, reason})
+						r.log.InfoCFi("Removing dead input from stream",
+							"name", s.Name,
+							"group", s.FirstGroup(),
+							"input", inp,
+							"reason", reason,
+						)
 						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
 						mut.Unlock()
 					}
 				}
+				inputsDone++
 			})
 		}
 	}
 
 	pool.StopAndWait()
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
 // AddHashes returns deep copy of <streams> with hashes added to every input as defined in config with *ToInputHashMap
 func (r repo) AddHashes(streams []Stream) (out []Stream) {
-	r.log.Info("Adding hashes to inputs of streams\n")
-	r.tw.AppendHeader(table.Row{"Name", "Group", "Hash", "Result"})
-
 	out = copier.MustDeep(streams)
 	var changed bool
+
 	for sIdx, s := range out {
 		for inpIdx, inp := range s.Inputs {
 			// By inputs
@@ -491,7 +488,12 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 						r.log.Debugf("astra.repo.AddHashes: %v", err)
 					}
 					if changed {
-						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})
+						r.log.InfoCFi("Adding hash to input of stream",
+							"name", s.Name,
+							"group", s.FirstGroup(),
+							"hash", rule.Hash,
+							"result", inp,
+						)
 					}
 				}
 			}
@@ -504,7 +506,12 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 						r.log.Debugf("astra.repo.AddHashes: %v", err)
 					}
 					if changed {
-						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})
+						r.log.InfoCFi("Adding hash to input of stream",
+							"name", s.Name,
+							"group", s.FirstGroup(),
+							"hash", rule.Hash,
+							"result", inp,
+						)
 					}
 				}
 			}
@@ -517,7 +524,12 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 						r.log.Debugf("astra.repo.AddHashes: %v", err)
 					}
 					if changed {
-						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), rule.Hash, inp})
+						r.log.InfoCFi("Adding hash to input of stream",
+							"name", s.Name,
+							"group", s.FirstGroup(),
+							"hash", rule.Hash,
+							"result", inp,
+						)
 					}
 				}
 			}
@@ -525,52 +537,37 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 		}
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
 // RemoveWithoutInputs returns shallow copy of <streams> without streams which have no inputs
 func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
-	r.log.Info("Removing streams without inputs\n")
-	r.tw.AppendHeader(table.Row{"Name", "Group"})
-
 	out = lo.Reject(streams, func(s Stream, _ int) bool {
 		if s.hasNoInputs() {
-			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup()})
+			r.log.InfoCFi("Removing stream without inputs", "name", s.Name, "group", s.FirstGroup())
 		}
 		return s.hasNoInputs()
 	})
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
 // DisableWithoutInputs returns shallow copy of <streams> with all streams disabled if they have no inputs
 func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
-	r.log.Info("Disabling streams without inputs\n")
-	r.tw.AppendHeader(table.Row{"Name", "Group"})
-
 	for _, s := range streams {
 		if s.Enabled && s.hasNoInputs() {
-			r.tw.AppendRow(table.Row{s.Name, s.FirstGroup()})
+			r.log.InfoCFi("Disabling stream without inputs", "name", s.Name, "group", s.FirstGroup())
 			s = s.disable()
 		}
 		out = append(out, s)
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
 // RemoveNamePrefixes returns shallow copy of <streams> with name prefixes on every stream if MarkAdded or MarkDisabled
 // is true.
 func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
-	r.log.Info("Adding name prefixes to streams\n")
-	r.tw.AppendHeader(table.Row{"Old name", "New name", "Group"})
-
 	for _, s := range streams {
 		oldName := s.Name
 		if s.MarkAdded {
@@ -580,13 +577,15 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 			s = s.setPrefix(r.cfg.Streams.DisabledPrefix)
 		}
 		if oldName != s.Name {
-			r.tw.AppendRow(table.Row{oldName, s.Name, s.FirstGroup()})
+			r.log.InfoCFi("Adding name prefix to stream",
+				"old name", oldName,
+				"new name", s.Name,
+				"group", s.FirstGroup(),
+			)
 		}
 		out = append(out, s)
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
