@@ -117,7 +117,7 @@ func main() {
 	astraCfg.Categories = astraRepo.AddNewGroups(astraCfg.Categories, astraCfg.Streams)
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
-		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, astraCfg.Streams, true)
+		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, astraCfg.Streams)
 	}
 	if !slice.IsAllEmpty(cfg.Streams.NameToInputHashMap, cfg.Streams.GroupToInputHashMap,
 		cfg.Streams.InputToInputHashMap) {

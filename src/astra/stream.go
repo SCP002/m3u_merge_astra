@@ -410,21 +410,14 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 // RemoveDeadInputs returns deep copy of <streams> without inputs which do not respond in time or respond with status
 // code >= 400.
 //
-// If <bar> is true, display progress bar.
-//
 // Not checking Content-Type header as server can return text/html but stream still will be playable.
 //
 // Not checking response body as some streams can periodically respond with no content but still be playable.
 //
 // Currently supports only HTTP(S).
-func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bool) (out []Stream) {
+func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out []Stream) {
 	r.log.Info("Removing dead inputs from streams\n")
 	r.tw.AppendHeader(table.Row{"Name", "Group", "Input", "Reason"})
-
-	var progBar *progressbar.ProgressBar
-	if bar {
-		progBar = progressbar.Default(int64(getInputsAmount(streams)), "Done:")
-	}
 
 	canCheck := func(inp string) bool {
 		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
@@ -467,13 +460,6 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream, bar bo
 						r.tw.AppendRow(table.Row{s.Name, s.FirstGroup(), inp, reason})
 						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
 						mut.Unlock()
-					}
-				}
-				if bar {
-					err := progBar.Add(1)
-					if err != nil {
-						msg := "astra.repo.RemoveDeadInputs: Unable to increase: %v"
-						r.log.Debugf(msg, errors.Wrap(err, "Progress bar"))
 					}
 				}
 			})

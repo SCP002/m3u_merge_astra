@@ -778,8 +778,8 @@ func TestRemoveDeadInputs(t *testing.T) {
 	}
 	sl1Original := copier.TestDeep(t, sl1)
 
-	client := network.NewHttpClient(time.Second*3)
-	sl2 := r.RemoveDeadInputs(client, sl1, false)
+	client := network.NewHttpClient(time.Second * 3)
+	sl2 := r.RemoveDeadInputs(client, sl1)
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
 
@@ -808,10 +808,10 @@ func TestRemoveDeadInputs(t *testing.T) {
 	}
 	sl1Original = copier.TestDeep(t, sl1)
 
-	client = network.NewFakeHttpClient(time.Second*3)
+	client = network.NewFakeHttpClient(time.Second * 3)
 
 	for i := 0; i < 10000; i++ {
-		sl2 = r.RemoveDeadInputs(client, sl1, false)
+		sl2 = r.RemoveDeadInputs(client, sl1)
 		if ok := assert.NotSame(t, &sl1, &sl2, "should return copy of streams"); !ok {
 			t.FailNow()
 		}
