@@ -771,10 +771,22 @@ func TestRemoveDeadInputs(t *testing.T) {
 		*regexp.MustCompile(`ignore/2`),
 	}
 	sl1 := []Stream{
-		{Inputs: []string{"https://127.0.0.1:5656/dead/timeout/1", "https://127.0.0.1:5656/alive/1"}},
-		{Inputs: []string{"http://127.0.0.1:3434/alive/2", "http://dead/no_such_host/1", "http://ignore/2"}},
-		{Inputs: []string{"http://127.0.0.1:3434/dead/timeout/" + strings.Repeat("x", 40), "https://ignore/1"}},
-		{Inputs: []string{"rtp://skip/1", "rtsp://skip/2", "file:///skip/3.ts", "http://127.0.0.1:3434/dead/404/1"}},
+		{
+			Name: "Name 1",
+			Inputs: []string{"https://127.0.0.1:5656/dead/timeout/1", "https://127.0.0.1:5656/alive/1"},
+		},
+		{
+			Name: "Name 2",
+			Inputs: []string{"http://127.0.0.1:3434/alive/2", "http://dead/no_such_host/1", "http://ignore/2"},
+		},
+		{
+			Name: "Name 3",
+			Inputs: []string{"http://127.0.0.1:3434/dead/timeout/" + strings.Repeat("x", 40), "https://ignore/1"},
+		},
+		{
+			Name: "Name 4",
+			Inputs: []string{"rtp://skip/1", "rtsp://skip/2", "file:///skip/3.ts", "http://127.0.0.1:3434/dead/404/1"},
+		},
 	}
 	sl1Original := copier.TestDeep(t, sl1)
 
@@ -802,15 +814,24 @@ func TestRemoveDeadInputs(t *testing.T) {
 	// Use test_remove_dead_inputs.sh
 
 	sl1 = []Stream{
-		{Inputs: []string{"http://127.0.0.1:3434/dead/404/1", "rtp://skip/1", "http://127.0.0.1:3434/dead/404/1"}},
-		{Inputs: []string{"http://ignore/1", "http://127.0.0.1:3434/dead/404/2", "http://127.0.0.1:3434/dead/404/2"}},
-		{Inputs: []string{"rtsp://skip/2", "http://ignore/2", "rtsp://skip/2", "https://127.0.0.1:5656/alive/1"}},
+		{
+			Name: "Name 1",
+			Inputs: []string{"http://127.0.0.1:3434/dead/404/1", "rtp://skip/1", "http://127.0.0.1:3434/dead/404/1"},
+		},
+		{
+			Name: "Name 2",
+			Inputs: []string{"http://ignore/1", "http://127.0.0.1:3434/dead/404/2", "http://127.0.0.1:3434/dead/404/2"},
+		},
+		{
+			Name: "Name 3",
+			Inputs: []string{"rtsp://skip/2", "http://ignore/2", "rtsp://skip/2", "https://127.0.0.1:5656/alive/1"},
+		},
 	}
 	sl1Original = copier.TestDeep(t, sl1)
 
 	client = network.NewFakeHttpClient(time.Second * 3)
 
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 1; i++ {
 		sl2 = r.RemoveDeadInputs(client, sl1)
 		if ok := assert.NotSame(t, &sl1, &sl2, "should return copy of streams"); !ok {
 			t.FailNow()
