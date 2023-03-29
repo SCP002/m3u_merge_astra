@@ -441,9 +441,10 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 			s, sIdx, inp := s, sIdx, inp
 			pool.Submit(func() {
 				progress := fmt.Sprintf("%v / %v", inputsDone, inputsAmount)
-				percent := fmt.Sprintf("%v%", (inputsDone / inputsAmount) * 100)
+				percent := fmt.Sprintf("%v%%", (inputsDone * 100) / inputsAmount)
 				r.log.DebugCFi("Checking input",
-					"stream name", sIdx,
+					"stream name", s.Name,
+					"stream index", sIdx,
 					"input", inp,
 					"progress", progress,
 					"percent", percent,
@@ -451,13 +452,13 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 				if canCheck(inp) {
 					reason := getReason(inp)
 					if reason != "" {
-						mut.Lock()
 						r.log.InfoCFi("Removing dead input from stream",
 							"name", s.Name,
 							"group", s.FirstGroup(),
 							"input", inp,
 							"reason", reason,
 						)
+						mut.Lock()
 						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
 						mut.Unlock()
 					}
