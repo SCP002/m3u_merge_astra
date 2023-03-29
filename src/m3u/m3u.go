@@ -37,7 +37,7 @@ func (ch Channel) replaceGroup(cfg cfg.M3U, callback func(string)) Channel {
 
 // Parse parses <rawChannels> into []Channel
 func (r repo) Parse(rawChannels io.ReadCloser) (out []Channel) {
-	r.log.Info("Parsing M3U channels\n")
+	r.log.Info("Parsing M3U channels")
 
 	nameRx := regexp.MustCompile(`^#EXTINF:.*?,(.*)`)
 	groupTitleRx := regexp.MustCompile(`^#EXTINF:.*group-title="(.*?)"`)
@@ -83,7 +83,7 @@ func (r repo) Parse(rawChannels io.ReadCloser) (out []Channel) {
 
 // Sort returns deep copy of <channels> sorted by name
 func (r repo) Sort(channels []Channel) (out []Channel) {
-	r.log.Info("Sorting M3U channels\n")
+	r.log.Info("Sorting M3U channels")
 
 	out = slice.Sort(channels)
 

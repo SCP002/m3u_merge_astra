@@ -282,7 +282,7 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 
 // Sort returns deep copy of <streams> sorted by name
 func (r repo) Sort(streams []Stream) (out []Stream) {
-	r.log.Info("Sorting astra streams\n")
+	r.log.Info("Sorting astra streams")
 
 	out = slice.Sort(streams)
 

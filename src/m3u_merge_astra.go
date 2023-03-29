@@ -50,14 +50,14 @@ func main() {
 	}
 
 	// Read astra config
-	log.Info("Reading astra config\n")
+	log.Info("Reading astra config")
 	astraCfg, err := astra.ReadCfg(flags.AstraCfgInput)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Fetch M3U channels
-	log.Info("Fetching M3U channels\n")
+	log.Info("Fetching M3U channels")
 	httpClient := network.NewHttpClient(cfg.M3U.RespTimeout)
 	m3uResp, err := openuri.Open(flags.M3UPath, openuri.WithHTTPClient(httpClient))
 	if err != nil {
@@ -131,7 +131,7 @@ func main() {
 	astraCfg.Streams = astraRepo.AddNamePrefixes(astraCfg.Streams)
 
 	// Write astra config
-	log.Info("Writing astra config\n")
+	log.Info("Writing astra config")
 	err = astra.WriteCfg(astraCfg, flags.AstraCfgOutput)
 	if err != nil {
 		log.Fatal(err)

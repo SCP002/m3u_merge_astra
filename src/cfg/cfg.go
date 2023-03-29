@@ -303,7 +303,7 @@ func (e BadRegexpError) Error() string {
 //
 // Can return errors defined in this package: DamagedConfigError, BadRegexpError.
 func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
-	log.Info("Reading program config\n")
+	log.Info("Reading program config")
 
 	ko := koanf.New(".")
 
@@ -319,7 +319,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	var root Root
 	if err := loadConfig(); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			log.Info("Config file not found, creating a default\n")
+			log.Info("Config file not found, creating a default")
 			if err := writeDefConfig(); err != nil {
 				return root, false, errors.Wrap(err, "Write default config")
 			}
@@ -390,7 +390,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	knownField := knownFields[0]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AddGroupsToNew
-		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Add groups to new astra streams?"},
@@ -405,7 +405,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	knownField = knownFields[1]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.GroupsCategoryForNew
-		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Category name to use for groups of new astra streams."},
@@ -420,7 +420,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	knownField = knownFields[2]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.EnableOnInputUpdate
-		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Enable streams if they got new inputs or inputs were updated (but not removed)?"},
@@ -435,7 +435,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	knownField = knownFields[3]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.General.NameAliases
-		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
 			HeadComment: []string{"Use name aliases list to detect which M3U channel corresponds a stream?"},
 			Data:        yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
@@ -449,7 +449,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	knownField = knownFields[4]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.General.NameAliasList
-		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment: []string{
@@ -489,7 +489,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	knownField = knownFields[5]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.RemoveDuplicatedInputsByRxList
-		log.Infof("Adding missing field to config: %v: %v\n", knownField, defVal)
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment: []string{
