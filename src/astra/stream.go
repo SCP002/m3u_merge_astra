@@ -11,6 +11,7 @@ import (
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/deps"
 	"m3u_merge_astra/util/copier"
+	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
 	"m3u_merge_astra/util/slice/find"
@@ -21,7 +22,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
 	"github.com/schollz/progressbar/v3"
-	"github.com/sirupsen/logrus"
 )
 
 // Stream represents astra stream object
@@ -114,7 +114,7 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 // HasInput returns true if stream inputs contain <tURLStr> parameter.
 //
 // If <withHash> is false, ignore hashes (everything after #) during the search.
-func (s Stream) HasInput(log *logrus.Logger, tURLStr string, withHash bool) bool {
+func (s Stream) HasInput(log *logger.Logger, tURLStr string, withHash bool) bool {
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
 		equal, err := urlUtil.Equal(tURLStr, cURLStr, withHash)
 		if err != nil {

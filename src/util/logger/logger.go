@@ -33,7 +33,7 @@ func New(lvl logrus.Level) *Logger {
 	return &Logger{&log}
 }
 
-// Infoc prints info level <msg> with formatted and colored <fields> 
+// Infoc prints info level <msg> with formatted and colored <fields>
 func (l Logger) Infoc(msg string, fields ...any) {
 	l.Infof("%v: %v", msg, buildFields(fields))
 }

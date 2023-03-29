@@ -17,8 +17,8 @@ import (
 	"github.com/knadh/koanf/providers/file"
 	"github.com/mitchellh/mapstructure"
 	"github.com/samber/lo"
-	"github.com/sirupsen/logrus"
 
+	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/parse"
 	"m3u_merge_astra/util/simplify"
 	yamlUtil "m3u_merge_astra/util/yaml"
@@ -302,7 +302,7 @@ func (e BadRegexpError) Error() string {
 // Builds simplified version of name aliases to Root.General.SimpleNameAliasList.
 //
 // Can return errors defined in this package: DamagedConfigError, BadRegexpError.
-func Init(log *logrus.Logger, cfgFilePath string) (Root, bool, error) {
+func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	log.Info("Reading program config\n")
 
 	ko := koanf.New(".")
