@@ -38,6 +38,15 @@ func (l Logger) InfoCFi(msg string, fields ...any) {
 	l.Logger.Infof("%v: %v", msg, buildFields(fields))
 }
 
+// Debug prints debug level <msg>.
+//
+// Output is prefixed with caller info.
+func (l Logger) Debug(msg string) {
+	msgWithCaller := fmt.Sprintf(`(%v): %v`, getCallerInfo(2), msg)
+
+	l.Logger.Debug(msgWithCaller)
+}
+
 // Debugf prints debug level message <args> formatted according to a <format> specifier.
 //
 // Output is prefixed with caller info.
