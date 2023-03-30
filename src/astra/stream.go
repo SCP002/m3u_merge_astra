@@ -344,6 +344,8 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 				if !currStream.HasInput(r.log, nextInput, true) {
 					currStream = currStream.AddInput(nextInput)
 					if r.cfg.Streams.EnableOnInputUpdate {
+						r.log.DebugCFi("enable_on_input_update is on, enabling the stream", "ID", currStream.ID,
+							"name", currStream.Name)
 						currStream = currStream.Enable()
 					}
 					out[currIdx] = currStream
