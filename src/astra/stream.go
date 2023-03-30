@@ -336,7 +336,7 @@ func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	out = copier.MustDeep(streams)
 	for currIdx, currStream := range out {
-		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx+1, func(nextStream Stream, nextIdx int) {
+		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.log.InfoCFi("Uniting inputs of streams", "from ID", nextStream.ID, "from name", nextStream.Name,
 					"input", nextInput, "to ID", currStream.ID, "to name", currStream.Name,
