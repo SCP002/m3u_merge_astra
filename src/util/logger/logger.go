@@ -17,7 +17,7 @@ type Logger struct {
 	*logrus.Logger
 }
 
-// New returns new configured logger
+// New returns new configured logger with log level <lvl>
 func New(lvl logrus.Level) *Logger {
 	formatter := prefixed.TextFormatter{
 		FullTimestamp:   true,
