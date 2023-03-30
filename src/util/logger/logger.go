@@ -41,7 +41,7 @@ func (l Logger) InfoCFi(msg string, fields ...any) {
 // Debug prints debug level <msg>.
 //
 // Output is prefixed with caller info.
-func (l Logger) Debug(msg string) {
+func (l Logger) Debug(msg any) {
 	msgWithCaller := fmt.Sprintf(`(%v): %v`, getCallerInfo(2), msg)
 
 	l.Logger.Debug(msgWithCaller)
