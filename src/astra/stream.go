@@ -87,11 +87,11 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 				if cfg.KeepInputHash {
 					oldHash, err := urlUtil.GetHash(oldURL)
 					if err != nil {
-						r.Log().Debugf("astra.Stream.UpdateInput: %v", err)
+						r.Log().Debug(err)
 					}
 					newURL, _, err = urlUtil.AddHash(oldHash, newURL)
 					if err != nil {
-						r.Log().Debugf("astra.Stream.UpdateInput: %v", err)
+						r.Log().Debug(err)
 					}
 				}
 				if oldURL == newURL {
@@ -114,7 +114,7 @@ func (s Stream) HasInput(log *logger.Logger, tURLStr string, withHash bool) bool
 	return lo.ContainsBy(s.Inputs, func(cURLStr string) bool {
 		equal, err := urlUtil.Equal(tURLStr, cURLStr, withHash)
 		if err != nil {
-			log.Debugf("astra.Stream.HasInput: %v", err)
+			log.Debug(err)
 		}
 		return equal
 	})
@@ -189,8 +189,7 @@ func (s Stream) removeDuplicatedInputsByRx(r repo, callback func(string)) Stream
 		for _, inp := range s.Inputs {
 			matchList := rx.FindStringSubmatch(inp)
 			if len(matchList) < 2 {
-				msg := "astra.Stream.removeDuplicatedInputsByRx: Found no matches of regexp '%v' for input '%v'"
-				r.log.Debugf(msg, rx.String(), inp)
+				r.log.DebugCFi("Found no matches", "regexp", rx.String(), "for input", inp)
 				continue
 			}
 			captureGroup := matchList[1]
@@ -503,7 +502,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 					var err error
 					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
-						r.log.Debugf("astra.repo.AddHashes: %v", err)
+						r.log.Debug(err)
 					}
 					if changed {
 						r.log.InfoCFi("Adding hash to input of stream",
@@ -521,7 +520,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 					var err error
 					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
-						r.log.Debugf("astra.repo.AddHashes: %v", err)
+						r.log.Debug(err)
 					}
 					if changed {
 						r.log.InfoCFi("Adding hash to input of stream",
@@ -539,7 +538,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 					var err error
 					inp, changed, err = urlUtil.AddHash(rule.Hash, inp)
 					if err != nil {
-						r.log.Debugf("astra.repo.AddHashes: %v", err)
+						r.log.Debug(err)
 					}
 					if changed {
 						r.log.InfoCFi("Adding hash to input of stream",
