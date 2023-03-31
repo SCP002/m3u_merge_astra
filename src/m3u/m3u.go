@@ -94,7 +94,7 @@ func (r repo) Sort(channels []Channel) (out []Channel) {
 func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 	for _, ch := range channels {
 		out = append(out, ch.replaceGroup(r.cfg.M3U, func(newGroup string) {
-			r.log.InfoCFi("Replacing group of M3U channels", "name", ch.Name, "original group", ch.Group,
+			r.log.InfoCFi("Replacing group of M3U channel", "name", ch.Name, "old group", ch.Group,
 				"new group", newGroup)
 		}))
 	}
