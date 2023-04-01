@@ -2,9 +2,7 @@ package m3u
 
 import (
 	"bufio"
-	"fmt"
 	"io"
-	"os"
 	"regexp"
 	"strings"
 
@@ -12,7 +10,6 @@ import (
 	"m3u_merge_astra/util/slice"
 	urlUtil "m3u_merge_astra/util/url"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
 )
 
@@ -40,7 +37,7 @@ func (ch Channel) replaceGroup(cfg cfg.M3U, callback func(string)) Channel {
 
 // Parse parses <rawChannels> into []Channel
 func (r repo) Parse(rawChannels io.ReadCloser) (out []Channel) {
-	r.log.Info("Parsing M3U channels\n")
+	r.log.Info("Parsing M3U channels")
 
 	nameRx := regexp.MustCompile(`^#EXTINF:.*?,(.*)`)
 	groupTitleRx := regexp.MustCompile(`^#EXTINF:.*group-title="(.*?)"`)
@@ -86,7 +83,7 @@ func (r repo) Parse(rawChannels io.ReadCloser) (out []Channel) {
 
 // Sort returns deep copy of <channels> sorted by name
 func (r repo) Sort(channels []Channel) (out []Channel) {
-	r.log.Info("Sorting M3U channels\n")
+	r.log.Info("Sorting M3U channels")
 
 	out = slice.Sort(channels)
 
@@ -95,25 +92,18 @@ func (r repo) Sort(channels []Channel) (out []Channel) {
 
 // ReplaceGroups returns shallow copy of <channels> with groups taken from map in config
 func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
-	r.log.Info("Replacing groups of M3U channels\n")
-	r.tw.AppendHeader(table.Row{"Name", "Original group", "New group"})
-
 	for _, ch := range channels {
 		out = append(out, ch.replaceGroup(r.cfg.M3U, func(newGroup string) {
-			r.tw.AppendRow(table.Row{ch.Name, ch.Group, newGroup})
+			r.log.InfoCFi("Replacing group of M3U channel", "name", ch.Name, "old group", ch.Group,
+				"new group", newGroup)
 		}))
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
 // RemoveBlocked returns shallow copy of <channels> without blocked ones
 func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
-	r.log.Info("Removing blocked channels\n")
-	r.tw.AppendHeader(table.Row{"Name", "Group", "URL"})
-
 	// getAliases returns aliases for the <name> or slice of a single <name> if not found
 	getAliases := func(name string) []string {
 		aliases, found := lo.Find(r.cfg.General.NameAliasList, func(set []string) bool {
@@ -131,13 +121,11 @@ func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
 			slice.AnyRxMatch(r.cfg.M3U.ChannGroupBlacklist, ch.Group) ||
 			slice.AnyRxMatch(r.cfg.M3U.ChannURLBlacklist, ch.URL)
 		if reject {
-			r.tw.AppendRow(table.Row{ch.Name, ch.Group, ch.URL})
+			r.log.InfoCFi("Removing blocked channel", "name", ch.Name, "group", ch.Group, "URL", ch.URL)
 		}
 		return reject
 	})
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return
 }
 
@@ -148,7 +136,7 @@ func (r repo) HasURL(channels []Channel, url string, withHash bool) bool {
 	return lo.ContainsBy(channels, func(ch Channel) bool {
 		equal, err := urlUtil.Equal(ch.URL, url, withHash)
 		if err != nil {
-			r.log.Debugf("m3u.repo.HasURL: %v" ,err)
+			r.log.Debug(err)
 		}
 		return equal
 	})

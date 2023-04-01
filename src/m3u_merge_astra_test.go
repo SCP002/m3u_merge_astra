@@ -56,6 +56,6 @@ func TestMainCrash(t *testing.T) {
 	err = os.WriteFile(astraCfgInputPath, astraCfgInputBytes, 0644)
 	assert.NoError(t, err, "should write input astra config file")
 
-	os.Args = []string{"", "-c", programCfgPath, "-m", m3uPath, "-i", astraCfgInputPath, "-o", os.DevNull}
+	os.Args = []string{"", "-l", "6", "-c", programCfgPath, "-m", m3uPath, "-i", astraCfgInputPath, "-o", os.DevNull}
 	main()
 }

@@ -1,7 +1,6 @@
 package astra
 
 import (
-	"fmt"
 	"io"
 	"os"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/SCP002/clipboard"
 	json "github.com/SCP002/jsonexraw"
 	"github.com/cockroachdb/errors"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/samber/lo"
 )
 
@@ -37,9 +35,6 @@ type Group struct {
 
 // AddNewGroups returns deep copy of categories <cats> with new categories and groups from <streams>
 func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
-	r.log.Info("Adding new groups\n")
-	r.tw.AppendHeader(table.Row{"Category", "Group"})
-
 	cats = copier.MustDeep(cats)
 
 	// Transform []Stream into []Category
@@ -58,12 +53,10 @@ func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
 			return c.Name == sCat.Name
 		})
 		cats[idx].Groups = slice.AppendNew(cats[idx].Groups, func(g Group) {
-			r.tw.AppendRow(table.Row{sCat.Name, g.Name})
+			r.log.InfoCFi("Adding new group", "category", sCat.Name, "group", g.Name)
 		}, sCat.Groups...)
 	}
 
-	r.tw.Render()
-	fmt.Fprint(os.Stderr, "\n")
 	return cats
 }
 

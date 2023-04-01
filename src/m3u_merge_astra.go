@@ -12,7 +12,6 @@ import (
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
-	"m3u_merge_astra/util/tw"
 
 	goFlags "github.com/jessevdk/go-flags"
 	"github.com/sirupsen/logrus"
@@ -51,14 +50,14 @@ func main() {
 	}
 
 	// Read astra config
-	log.Info("Reading astra config\n")
+	log.Info("Reading astra config")
 	astraCfg, err := astra.ReadCfg(flags.AstraCfgInput)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Fetch M3U channels
-	log.Info("Fetching M3U channels\n")
+	log.Info("Fetching M3U channels")
 	httpClient := network.NewHttpClient(cfg.M3U.RespTimeout)
 	m3uResp, err := openuri.Open(flags.M3UPath, openuri.WithHTTPClient(httpClient))
 	if err != nil {
@@ -66,11 +65,8 @@ func main() {
 	}
 	defer m3uResp.Close()
 
-	// Init table writer
-	tw := tw.New()
-
 	// Parse and preprocess M3U channels
-	m3uRepo := m3u.NewRepo(log, tw, cfg)
+	m3uRepo := m3u.NewRepo(log, cfg)
 
 	m3uChannels := m3uRepo.Parse(m3uResp)
 	m3uChannels = m3uRepo.Sort(m3uChannels)
@@ -83,8 +79,8 @@ func main() {
 
 	// Update astra streams with data from M3U channels and run extra operations such as sorting or disabling streams
 	// without inputs
-	astraRepo := astra.NewRepo(log, tw, cfg)
-	mergeRepo := merge.NewRepo(log, tw, cfg)
+	astraRepo := astra.NewRepo(log, cfg)
+	mergeRepo := merge.NewRepo(log, cfg)
 
 	astraCfg.Streams = astraRepo.RemoveNamePrefixes(astraCfg.Streams)
 	astraCfg.Streams = astraRepo.Sort(astraCfg.Streams)
@@ -121,7 +117,7 @@ func main() {
 	astraCfg.Categories = astraRepo.AddNewGroups(astraCfg.Categories, astraCfg.Streams)
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
-		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, astraCfg.Streams, true)
+		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, astraCfg.Streams)
 	}
 	if !slice.IsAllEmpty(cfg.Streams.NameToInputHashMap, cfg.Streams.GroupToInputHashMap,
 		cfg.Streams.InputToInputHashMap) {
@@ -135,7 +131,7 @@ func main() {
 	astraCfg.Streams = astraRepo.AddNamePrefixes(astraCfg.Streams)
 
 	// Write astra config
-	log.Info("Writing astra config\n")
+	log.Info("Writing astra config")
 	err = astra.WriteCfg(astraCfg, flags.AstraCfgOutput)
 	if err != nil {
 		log.Fatal(err)

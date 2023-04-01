@@ -11,6 +11,7 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
+	"github.com/zenizh/go-capturer"
 )
 
 func TestRenameStreams(t *testing.T) {
@@ -41,6 +42,18 @@ func TestRenameStreams(t *testing.T) {
 
 	expected = astra.Stream{Name: "Other name A"}
 	assert.Exactly(t, expected, sl2[2], "should not rename stream if no channel counterpart name found")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		sl1 := []astra.Stream{{Name: "Known name", Groups: map[string]string{"Cat": "Grp"}}}
+
+		cl1 := []m3u.Channel{{Name: "Known_Name"}}
+
+		_ = r.RenameStreams(sl1, cl1)
+	})
+	assert.Contains(t, out, `old name "Known name", new name "Known_Name", group "Cat: Grp"`)
 }
 
 func TestUpdateInputs(t *testing.T) {
@@ -132,6 +145,22 @@ func TestUpdateInputs(t *testing.T) {
 	sl2 = r.UpdateInputs(sl1, cl1)
 
 	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.InputUpdateMap = []cfg.UpdateRecord{
+			{From: *regexp.MustCompile("known/input/1"), To: *regexp.MustCompile("known/input/1")},
+		}
+
+		sl1 := []astra.Stream{{Enabled: true, Name: "Known name", Inputs: []string{"http://known/input/1"}}}
+
+		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://new/known/input/1"}}
+
+		_ = r.UpdateInputs(sl1, cl1)
+	})
+	msg := `name "Known name", old URL "http://known/input/1", new URL "http://new/known/input/1", note ""`
+	assert.Contains(t, out, msg)
 }
 
 func TestRemoveInputsByUpdateMap(t *testing.T) {
@@ -178,6 +207,21 @@ func TestRemoveInputsByUpdateMap(t *testing.T) {
 		DisabledInputs: make([]string, 0),
 	}
 	assert.Exactly(t, expected, sl2[2], "known inputs not found in channels should be removed, unknown should stay")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.InputUpdateMap = []cfg.UpdateRecord{{From: *regexp.MustCompile("known/input/1")}}
+
+		sl1 := []astra.Stream{
+			{Name: "Known name", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{"http://known/input/1"}},
+		}
+
+		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://other/url"}}
+
+		_ = r.RemoveInputsByUpdateMap(sl1, cl1)
+	})
+	assert.Contains(t, out, `name "Known name", group "Cat: Grp", input "http://known/input/1"`)
 }
 
 func TestAddNewInputs(t *testing.T) {
@@ -277,6 +321,20 @@ func TestAddNewInputs(t *testing.T) {
 	sl2 = r.AddNewInputs(sl1, cl1)
 
 	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		sl1 := []astra.Stream{
+			{Enabled: true, Name: "Known name", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{}},
+		}
+
+		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://url/1"}}
+
+		_ = r.AddNewInputs(sl1, cl1)
+	})
+	assert.Contains(t, out, `name "Known name", group "Cat: Grp", URL "http://url/1", note ""`)
 }
 
 func TestAddNewStreams(t *testing.T) {
@@ -366,6 +424,19 @@ func TestAddNewStreams(t *testing.T) {
 
 	assert.Exactly(t, sl1, sl2, "should not change as AddNewStreamsWithKnownInputs = false and hash difference should"+
 		"be ignored")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.AddGroupsToNew = true
+
+		sl1 := []astra.Stream{}
+
+		cl1 := []m3u.Channel{{Name: "Name 1", Group: "Grp", URL: "http://url/1"}}
+
+		_ = r.AddNewStreams(sl1, cl1)
+	})
+	assert.Contains(t, out, `name "Name 1", group "All: Grp", input "http://url/1"`)
 }
 
 func TestGenerateUID(t *testing.T) {

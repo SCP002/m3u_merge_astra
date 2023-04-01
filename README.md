@@ -40,7 +40,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 ## Tips
 
 * `--astraCfgOutput stdio`, `--version` and `--help` goes to **stdout**.  
-  Logs, tables, progress bars and blank lines goes to **stderr**.
+  Logs goes to **stderr**.
 
 * It can be used in chain, for example:  
 
