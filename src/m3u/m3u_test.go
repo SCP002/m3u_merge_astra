@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/utahta/go-openuri"
+	"github.com/zenizh/go-capturer"
 )
 
 func TestGetName(t *testing.T) {
@@ -119,6 +120,18 @@ func TestReplaceGroups(t *testing.T) {
 
 	expected = Channel{Group: "To Group 1"}
 	assert.Exactly(t, expected, cl2[2], "should replace known group")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		r.cfg.M3U.ChannGroupMap = map[string]string{"From Group 1": "To Group 1"}
+
+		cl1 := []Channel{{Name: "Name 1", Group: "From Group 1"}}
+
+		_ = r.ReplaceGroups(cl1)
+	})
+	assert.Contains(t, out, `name "Name 1", old group "From Group 1", new group "To Group 1"`)
 }
 
 func TestRemoveBlocked(t *testing.T) {
@@ -178,6 +191,18 @@ func TestRemoveBlocked(t *testing.T) {
 	assert.Exactly(t, expected, cl2[0], "should keep channels without any property matching blacklist")
 
 	assert.Exactly(t, Channel{}, cl2[1], "should keep empty channel")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		r.cfg.M3U.ChannNameBlacklist = []regexp.Regexp{*regexp.MustCompile("Name 1")}
+
+		cl1 := []Channel{{Name: "Name 1", Group: "Group 1", URL: "http://url/1"}}
+
+		_ = r.RemoveBlocked(cl1)
+	})
+	assert.Contains(t, out, `name "Name 1", group "Group 1", URL "http://url/1"`)
 }
 
 func TestHasUrl(t *testing.T) {

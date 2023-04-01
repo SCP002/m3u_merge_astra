@@ -9,6 +9,7 @@ import (
 	"m3u_merge_astra/util/copier"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zenizh/go-capturer"
 )
 
 func TestAddNewGroups(t *testing.T) {
@@ -44,6 +45,18 @@ func TestAddNewGroups(t *testing.T) {
 		{Name: "Category 3", Groups: []Group{{Name: "A"}, {Name: "B"}}},
 	}
 	assert.Exactly(t, expected, cl2, "should add new category with the specified groups")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		cl1 := []Category{}
+
+		sl1 := []Stream{{Groups: map[string]string{"Cat": "Grp"}}}
+
+		_ = r.AddNewGroups(cl1, sl1)
+	})
+	assert.Contains(t, out, `category "Cat", group "Grp`)
 }
 
 func TestWriteReadCfg(t *testing.T) {

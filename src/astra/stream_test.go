@@ -1,6 +1,7 @@
 package astra
 
 import (
+	"fmt"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/logger"
@@ -366,6 +367,21 @@ func TestRemoveDuplicatedInputs(t *testing.T) {
 
 	expected = []string{"http://input/6"}
 	assert.Exactly(t, expected, sl2[3].Inputs, "should remove inputs existing in previous streams")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		r.cfg.Streams.InputBlacklist = []regexp.Regexp{*regexp.MustCompile("input/1")}
+
+		sl1 := []Stream{
+			{Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{"http://input/1"}},
+			{Name: "Name 2", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{"http://input/1"}},
+		}
+
+		_ = r.RemoveDuplicatedInputs(sl1)
+	})
+	assert.Contains(t, out, `name "Name 2", group "Cat: Grp", input "http://input/1"`)
 }
 
 func TestAllRemoveDuplicatedInputsByRx(t *testing.T) {
@@ -400,6 +416,26 @@ func TestAllRemoveDuplicatedInputsByRx(t *testing.T) {
 
 	expected = []string{"http://host1/path1"}
 	assert.Exactly(t, expected, sl2[1].Inputs, "should remove inputs duplicated by path")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		r.cfg.Streams.RemoveDuplicatedInputsByRxList = []regexp.Regexp{
+			*regexp.MustCompile(`^.*:\/\/([^#?/]*)`), // By host
+		}
+
+		sl1 := []Stream{
+			{
+				Name:   "Name 1",
+				Groups: map[string]string{"Cat": "Grp"},
+				Inputs: []string{"http://input/1", "http://input/1"},
+			},
+		}
+
+		_ = r.RemoveDuplicatedInputsByRx(sl1)
+	})
+	assert.Contains(t, out, `name "Name 1", group "Cat: Grp", input "http://input/1"`)
 }
 
 func TestUniteInputs(t *testing.T) {
@@ -467,6 +503,19 @@ func TestUniteInputs(t *testing.T) {
 	sl2 = r.UniteInputs(sl1)
 
 	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		sl1 := []Stream{
+			{ID: "0", Name: "Name 1", Inputs: []string{"http://input/a"}},
+			{ID: "1", Name: "Name_1", Inputs: []string{"http://input/b"}},
+		}
+
+		_ = r.UniteInputs(sl1)
+	})
+	assert.Contains(t, out, `from ID "1", from name "Name_1", input "http://input/b", to ID "0", to name "Name 1"`)
 }
 
 func TestSortInputs(t *testing.T) {
@@ -686,6 +735,17 @@ func TestRemoveNamePrefixes(t *testing.T) {
 	assert.Exactly(t, expected, sl2[5], "should remove prefixes and set both MarkAdded and MarkDisabled to true")
 
 	assert.Exactly(t, sl1[6], sl2[6], "should not change the stream with prefix strings in the middle of the name")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		addedPrefix := r.cfg.Streams.AddedPrefix
+
+		sl1 := []Stream{{Name: addedPrefix + "Name 1", Groups: map[string]string{"Cat": "Grp"}}}
+
+		_ = r.RemoveNamePrefixes(sl1)
+	})
+	assert.Contains(t, out, `old name "_ADDED: Name 1", new name "Name 1", group "Cat: Grp"`)
 }
 
 func TestSort(t *testing.T) {
@@ -730,6 +790,18 @@ func TestAllRemoveBlockedInputs(t *testing.T) {
 	assert.Len(t, sl2[1].Inputs, 0, "should remove all specified inputs")
 
 	assert.Len(t, sl2[2].Inputs, 0, "should stay 0")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		r.cfg.Streams.InputBlacklist = []regexp.Regexp{*regexp.MustCompile("input/1")}
+
+		sl1 := []Stream{{Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{"http://input/1"}}}
+
+		_ = r.RemoveBlockedInputs(sl1)
+	})
+	assert.Contains(t, out, `name "Name 1", group "Cat: Grp", input "http://input/1"`)
 }
 
 func TestRemoveDeadInputs(t *testing.T) {
@@ -772,23 +844,23 @@ func TestRemoveDeadInputs(t *testing.T) {
 	}
 	sl1 := []Stream{
 		{
-			Name: "Name 1",
-			Groups: map[string]string{"Category": "Group"},
+			Name:   "Name 1",
+			Groups: map[string]string{"Cat": "Grp"},
 			Inputs: []string{"https://127.0.0.1:5656/dead/timeout/1", "https://127.0.0.1:5656/alive/1"},
 		},
 		{
-			Name: "Name 2",
-			Groups: map[string]string{"Category": "Group"},
+			Name:   "Name 2",
+			Groups: map[string]string{"Cat": "Grp"},
 			Inputs: []string{"http://127.0.0.1:3434/alive/2", "http://dead/no_such_host/1", "http://ignore/2"},
 		},
 		{
-			Name: "Name 3",
-			Groups: map[string]string{"Category": "Group"},
+			Name:   "Name 3",
+			Groups: map[string]string{"Cat": "Grp"},
 			Inputs: []string{"http://127.0.0.1:3434/dead/timeout/" + strings.Repeat("x", 40), "https://ignore/1"},
 		},
 		{
-			Name: "Name 4",
-			Groups: map[string]string{"Category": "Group"},
+			Name:   "Name 4",
+			Groups: map[string]string{"Cat": "Grp"},
 			Inputs: []string{"rtp://skip/1", "rtsp://skip/2", "file:///skip/3.ts", "http://127.0.0.1:3434/dead/404/1"},
 		},
 	}
@@ -819,18 +891,18 @@ func TestRemoveDeadInputs(t *testing.T) {
 
 	sl1 = []Stream{
 		{
-			Name: "Name 1",
-			Groups: map[string]string{"Category": "Group"},
+			Name:   "Name 1",
+			Groups: map[string]string{"Cat": "Grp"},
 			Inputs: []string{"http://127.0.0.1:3434/dead/404/1", "rtp://skip/1", "http://127.0.0.1:3434/dead/404/1"},
 		},
 		{
-			Name: "Name 2",
-			Groups: map[string]string{"Category": "Group"},
+			Name:   "Name 2",
+			Groups: map[string]string{"Cat": "Grp"},
 			Inputs: []string{"http://ignore/1", "http://127.0.0.1:3434/dead/404/2", "http://127.0.0.1:3434/dead/404/2"},
 		},
 		{
-			Name: "Name 3",
-			Groups: map[string]string{"Category": "Group"},
+			Name:   "Name 3",
+			Groups: map[string]string{"Cat": "Grp"},
 			Inputs: []string{"rtsp://skip/2", "http://ignore/2", "rtsp://skip/2", "https://127.0.0.1:5656/alive/1"},
 		},
 	}
@@ -862,6 +934,22 @@ func TestRemoveDeadInputs(t *testing.T) {
 			t.FailNow()
 		}
 	}
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		sl1 := []Stream{{
+			Name:   "Name 1",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"https://127.0.0.1:5656/dead/timeout/1"}},
+		}
+
+		client := network.NewHttpClient(time.Second * 3)
+		_ = r.RemoveDeadInputs(client, sl1)
+	})
+	msg := `name "Name 1", group "Cat: Grp", input "https://127.0.0.1:5656/dead/timeout/1", reason "Timeout"`
+	assert.Contains(t, out, msg)
 }
 
 func TestAddHashes(t *testing.T) {
@@ -993,6 +1081,19 @@ func TestAddHashes(t *testing.T) {
 		Inputs: []string{"http://known/input/1#e&c", "http://other/input/1#c"},
 	}
 	assert.Exactly(t, expected, sl2[8], "should add hash to every matching input by every parameter")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.NameToInputHashMap = []cfg.HashAddRule{
+			{By: *regexp.MustCompile(`Name 1`), Hash: "a"},
+		}
+
+		sl1 := []Stream{{Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{"http://input/1"}}}
+
+		_ = r.AddHashes(sl1)
+	})
+	assert.Contains(t, out, `name "Name 1", group "Cat: Grp", hash "a", result "http://input/1#a"`)
 }
 
 func TestRemoveWithoutInputs(t *testing.T) {
@@ -1017,6 +1118,16 @@ func TestRemoveWithoutInputs(t *testing.T) {
 	}
 
 	assert.Exactly(t, expected, sl2, "should remove streams without inputs")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		sl1 := []Stream{{Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}}}
+
+		_ = r.RemoveWithoutInputs(sl1)
+	})
+	assert.Contains(t, out, `name "Name 1", group "Cat: Grp"`)
 }
 
 func TestDisableWithoutInputs(t *testing.T) {
@@ -1058,6 +1169,16 @@ func TestDisableWithoutInputs(t *testing.T) {
 	assert.Exactly(t, sl1[6], sl2[6], "should not modify disabled stream or stream with inputs")
 
 	assert.Exactly(t, sl1[7], sl2[7], "should not modify disabled streams")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		sl1 := []Stream{{Enabled: true, Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}}}
+
+		_ = r.DisableWithoutInputs(sl1)
+	})
+	assert.Contains(t, out, `name "Name 1", group "Cat: Grp"`)
 }
 
 func TestAddNamePrefixes(t *testing.T) {
@@ -1089,14 +1210,28 @@ func TestAddNamePrefixes(t *testing.T) {
 		Name: r.cfg.Streams.DisabledPrefix + r.cfg.Streams.AddedPrefix + "Name_4"}
 	assert.Exactly(t, expected, sl2[3], "should add both disabled and added prefixes to the name")
 
-	// Check if table rows are not printed if prefixes are empty
-	out := capturer.CaptureOutput(func() {
-		r = newDefRepo()
+	// Check if logs are not printed if prefixes are empty
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
 		r.cfg.Streams.AddedPrefix = ""
 		r.cfg.Streams.DisabledPrefix = ""
+
+		sl1 := []Stream{{MarkAdded: true, Name: "Name_1"}}
+
 		_ = r.AddNamePrefixes(sl1)
 	})
-	assert.NotContains(t, out, "Name_")
+	assert.NotContains(t, out, "Name_1")
+
+	// Check if logs are not printed if prefixes are empty
+	out = capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		sl1 := []Stream{{MarkAdded: true, Name: "Name_1", Groups: map[string]string{"Cat": "Grp"}}}
+
+		_ = r.AddNamePrefixes(sl1)
+	})
+	msg := fmt.Sprintf(`old name "Name_1", new name "%vName_1", group "Cat: Grp"`, r.cfg.Streams.AddedPrefix)
+	assert.Contains(t, out, msg)
 }
 
 func TestGetInputsAmount(t *testing.T) {
