@@ -61,14 +61,14 @@ func (s Stream) GetName() string {
 
 // FirstGroup returns alphabetically first "category: group" pair or empty string if groups are empty
 func (s Stream) FirstGroup() string {
-	if len(s.Groups) > 0 {
-		entries := lo.Entries(s.Groups)
-		sort.SliceStable(entries, func(i, j int) bool {
-			return entries[i].Key < entries[j].Key
-		})
-		return fmt.Sprintf("%v: %v", entries[0].Key, entries[0].Value)
+	if len(s.Groups) == 0 {
+		return ""
 	}
-	return ""
+	entries := lo.Entries(s.Groups)
+	sort.SliceStable(entries, func(i, j int) bool {
+		return entries[i].Key < entries[j].Key
+	})
+	return fmt.Sprintf("%v: %v", entries[0].Key, entries[0].Value)
 }
 
 // UpdateInput updates first encountered input if both it and <newURL> match the InputUpdateMap from config in <r>.
