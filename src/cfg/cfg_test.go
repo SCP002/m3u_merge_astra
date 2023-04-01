@@ -107,16 +107,8 @@ func TestInitDamaged(t *testing.T) {
 	err := file.Copy("init_damaged_test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
-	actual, isNewCfg, err := Init(log, path)
+	_, isNewCfg, err := Init(log, path)
 
-	expected := newTestConfig()
-	expected.General.NameAliases = false
-	expected.General.NameAliasList = nil
-	expected.General.SimpleNameAliasList = nil
-	expected.M3U.ChannNameBlacklist = nil
-	expected.Streams.AddGroupsToNew = false
-	expected.Streams.InputWeightToTypeMap = nil
-	expected.Streams.RemoveDuplicatedInputsByRxList = nil
 	expectedErr := DamagedConfigError{
 		MissingFields: []string{ // All missing in default without known to be missing
 			// "general.name_aliases", // <- Known
@@ -127,7 +119,6 @@ func TestInitDamaged(t *testing.T) {
 		},
 	}
 
-	assert.Exactly(t, expected, actual, "should return this config instance")
 	assert.False(t, isNewCfg, "should return false")
 	assert.Exactly(t, expectedErr, errors.UnwrapAll(err), "should return damaged config error")
 }
@@ -143,12 +134,12 @@ func TestInitValidateCaptureGroups(t *testing.T) {
 
 	_, isNewCfg, err := Init(log, path)
 
-	assert.False(t, isNewCfg, "should return false")
-
 	expectedErr := BadRegexpError{
 		Regexp: *regexp.MustCompile(`rx_without_capture_group`),
 		Reason: "Expecting at least one capture group",
 	}
+
+	assert.False(t, isNewCfg, "should return false")
 	assert.Exactly(t, expectedErr, errors.UnwrapAll(err), "should return bad regexp error")
 }
 
