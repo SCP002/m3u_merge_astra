@@ -24,6 +24,7 @@ streams:
   add_new_with_known_inputs: false
   make_new_enabled: false
   new_type: ''
+  new_http_keep_active: 0
   disabled_prefix: ""
   remove_without_inputs: false
   disable_without_inputs: false

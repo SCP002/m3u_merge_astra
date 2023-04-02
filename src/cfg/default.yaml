@@ -142,6 +142,9 @@ streams:
   # mpts - Multi-Program Transport Stream. Preparing multiplexes to DVB modulators.
   new_type: 'spts'
 
+  # Delay before stop stream if no active connections for new streams.
+  new_http_keep_active: 0
+
   # Disabled stream name prefix.
   # Safe to set to ''.
   disabled_prefix: '_DISABLED: '

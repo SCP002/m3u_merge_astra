@@ -23,12 +23,13 @@ func TestNewStream(t *testing.T) {
 	s := NewStream(cfg, "0000", "Name", "Group", []string{"http://url"})
 
 	expected := Stream{
-		Enabled:        cfg.MakeNewEnabled,
-		Type:           string(cfg.NewType),
-		ID:             "0000",
-		Name:           "Name",
-		Inputs:         []string{"http://url"},
 		DisabledInputs: make([]string, 0),
+		Enabled:        cfg.MakeNewEnabled,
+		HTTPKeepActive: fmt.Sprint(cfg.NewHTTPKeepActive),
+		ID:             "0000",
+		Inputs:         []string{"http://url"},
+		Name:           "Name",
+		Type:           string(cfg.NewType),
 		MarkAdded:      true,
 	}
 	assert.Exactly(t, expected, s, "should create this stream")

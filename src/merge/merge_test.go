@@ -1,6 +1,7 @@
 package merge
 
 import (
+	"fmt"
 	"m3u_merge_astra/astra"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/m3u"
@@ -367,12 +368,13 @@ func TestAddNewStreams(t *testing.T) {
 	assert.Exactly(t, sl1[1], sl2[1], "should not change existing streams")
 
 	expected := astra.Stream{
-		Enabled:        r.cfg.Streams.MakeNewEnabled,
-		Type:           string(r.cfg.Streams.NewType),
-		ID:             sl2[2].ID,
-		Name:           "Other name B",
-		Inputs:         []string{"http://some/url/2"},
 		DisabledInputs: make([]string, 0),
+		Enabled:        r.cfg.Streams.MakeNewEnabled,
+		HTTPKeepActive: fmt.Sprint(r.cfg.Streams.NewHTTPKeepActive),
+		ID:             sl2[2].ID,
+		Inputs:         []string{"http://some/url/2"},
+		Name:           "Other name B",
+		Type:           string(r.cfg.Streams.NewType),
 		MarkAdded:      true,
 	}
 	assert.Exactly(t, expected, sl2[2], "should add new stream")

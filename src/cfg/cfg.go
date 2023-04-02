@@ -141,6 +141,9 @@ type Streams struct {
 	// MPTS - Multi-Program Transport Stream. Preparing multiplexes to DVB modulators.
 	NewType StreamType `koanf:"new_type"`
 
+	// NewHTTPKeepActive represents delay before stop stream if no active connections for new streams.
+	NewHTTPKeepActive int `koanf:"new_http_keep_active"`
+
 	// DisabledPrefix represents disabled stream name prefix
 	DisabledPrefix string `koanf:"disabled_prefix"`
 
@@ -367,6 +370,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		/* 3 */ "general.name_aliases",
 		/* 4 */ "general.name_alias_list",
 		/* 5 */ "streams.remove_duplicated_inputs_by_rx_list",
+		/* 6 */ "streams.new_http_keep_active",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	internalFields := []string{
@@ -513,6 +517,21 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.RemoveDuplicatedInputsByRxList = defVal
 	}
+	// v1.3.0 to v1.4.0
+	knownField = knownFields[6]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.NewHTTPKeepActive
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Delay before stop stream if no active connections for new streams."},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: fmt.Sprint(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.new_type", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.NewHTTPKeepActive = defVal
+	}
 
 	// Validate amount of capture groups
 	for _, rx := range root.Streams.RemoveDuplicatedInputsByRxList {
@@ -584,6 +603,7 @@ func NewDefCfg() Root {
 			AddNewWithKnownInputs:          false,
 			MakeNewEnabled:                 false,
 			NewType:                        SPTS,
+			NewHTTPKeepActive:              0,
 			DisabledPrefix:                 "_DISABLED: ",
 			RemoveWithoutInputs:            false,
 			DisableWithoutInputs:           true,
