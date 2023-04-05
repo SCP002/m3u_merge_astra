@@ -370,7 +370,7 @@ func TestAddNewStreams(t *testing.T) {
 	expected := astra.Stream{
 		DisabledInputs: make([]string, 0),
 		Enabled:        r.cfg.Streams.MakeNewEnabled,
-		HTTPKeepActive: fmt.Sprint(r.cfg.Streams.NewHTTPKeepActive),
+		HTTPKeepActive: fmt.Sprint(r.cfg.Streams.NewKeepActive),
 		ID:             sl2[2].ID,
 		Inputs:         []string{"http://some/url/2"},
 		Name:           "Other name B",

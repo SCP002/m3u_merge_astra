@@ -98,7 +98,7 @@ streams:
   new_type: 'mpts'
 
   # Delay before stop stream if no active connections for new streams.
-  new_http_keep_active: 0
+  new_keep_active: 0
 
   # Disabled stream name prefix.
   # Safe to set to ''.

@@ -156,7 +156,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     `spts` - Single-Program Transport Stream. Streaming channels to the end users over IP network.  
     `mpts` - Multi-Program Transport Stream. Preparing multiplexes to DVB modulators.
 
-  * `new_http_keep_active`  
+  * `new_keep_active`  
     Delay before stop stream if no active connections for new streams.
 
   * `disabled_prefix`  

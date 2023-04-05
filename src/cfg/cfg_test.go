@@ -193,7 +193,7 @@ func newTestConfig() Root {
 			AddNewWithKnownInputs:   false,
 			MakeNewEnabled:          true,
 			NewType:                 MPTS,
-			NewHTTPKeepActive:       0, // New field in v1.4.0
+			NewKeepActive:           0, // New field in v1.4.0
 			DisabledPrefix:          "_'DISABLED': ",
 			RemoveWithoutInputs:     true,
 			DisableWithoutInputs:    false,

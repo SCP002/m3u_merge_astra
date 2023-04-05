@@ -25,7 +25,7 @@ func TestNewStream(t *testing.T) {
 	expected := Stream{
 		DisabledInputs: make([]string, 0),
 		Enabled:        cfg.MakeNewEnabled,
-		HTTPKeepActive: fmt.Sprint(cfg.NewHTTPKeepActive),
+		HTTPKeepActive: fmt.Sprint(cfg.NewKeepActive),
 		ID:             "0000",
 		Inputs:         []string{"http://url"},
 		Name:           "Name",

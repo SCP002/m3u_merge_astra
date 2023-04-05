@@ -46,7 +46,7 @@ func NewStream(cfg cfg.Streams, id, name, group string, inputs []string) Stream 
 		DisabledInputs: []string{},
 		Enabled:        cfg.MakeNewEnabled,
 		Groups:         groups,
-		HTTPKeepActive: fmt.Sprint(cfg.NewHTTPKeepActive),
+		HTTPKeepActive: fmt.Sprint(cfg.NewKeepActive),
 		ID:             id,
 		Inputs:         inputs,
 		Name:           name,
