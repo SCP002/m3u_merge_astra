@@ -48,3 +48,6 @@ streams:
   name_to_input_hash_map:
   group_to_input_hash_map:
   input_to_input_hash_map:
+  name_to_keep_active_map:
+  group_to_keep_active_map:
+  input_to_keep_active_map:

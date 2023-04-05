@@ -240,6 +240,9 @@ func newTestConfig() Root {
 				{By: *regexp.MustCompile(`:8080`), Hash: "ua=VLC/3.0.9 LibVLC/3.0.9"},
 				{By: *regexp.MustCompile(`^rts?p:\/\/`), Hash: "no_reload"},
 			},
+			NameToKeepActiveMap:  []KeepActiveAddRule(nil), // New field in v1.4.0
+			GroupToKeepActiveMap: []KeepActiveAddRule(nil), // New field in v1.4.0
+			InputToKeepActiveMap: []KeepActiveAddRule(nil), // New field in v1.4.0
 		},
 	}
 }

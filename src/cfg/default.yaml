@@ -262,3 +262,24 @@ streams:
     #   hash: 'ua=VLC/3.0.9 LibVLC/3.0.9'
     # - by: '^rts?p:\/\/'
     #   hash: 'no_reload'
+
+  # Mapping of stream name regular expression to 'keep active' setting of stream which should be added.
+  name_to_keep_active_map:
+    # - by: '[- _]HD$'
+    #   keep_active: 10
+    # - by: '[- _]FM$'
+    #   keep_active: 0
+
+  # Mapping of stream group regular expression to 'keep active' setting of stream which should be added.
+  group_to_keep_active_map:
+    # - by: '(?i)All: HD Channels$'
+    #   keep_active: 10
+    # - by: '(?i).*RADIO$'
+    #   keep_active: 0
+
+  # Mapping of stream input regular expression to 'keep active' setting of stream which should be added.
+  input_to_keep_active_map:
+    # - by: ':8080'
+    #   keep_active: 10
+    # - by: '^rts?p:\/\/'
+    #   keep_active: 0

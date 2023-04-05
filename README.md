@@ -286,6 +286,21 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     > Why does it exist?  
     > To be able to add specific hashes per stream input, for example set User-Agent (#ua=...) to specific URL's.
 
+  * `name_to_keep_active_map`  
+    Mapping of stream name regular expression to `keep active` setting of stream which should be added.
+    > Why does it exist?  
+    > To be able to add `keep active` setting per stream name, for example 5 to frequently requested streams or 0 to disable it.
+
+  * `group_to_keep_active_map`  
+    Mapping of stream group regular expression to `keep active` setting of stream which should be added.
+    > Why does it exist?  
+    > To be able to add `keep active` setting per stream group, for example 5 to frequently requested streams or 0 to disable it.
+
+  * `input_to_keep_active_map`  
+    Mapping of stream input regular expression to `keep active` setting of stream which should be added.
+    > Why does it exist?  
+    > To be able to add `keep active` setting per stream input, for example 5 to frequently requested streams or 0 to disable it.
+
 ## Build from source code [Go / Golang]
 
 1. Install [Golang](https://golang.org/) 1.18 or newer.

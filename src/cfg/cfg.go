@@ -254,6 +254,18 @@ type Streams struct {
 	// InputToInputHashMap represents mapping of stream input regular expression to stream input hash which should
 	// be added.
 	InputToInputHashMap []HashAddRule `koanf:"input_to_input_hash_map"`
+
+	// NameToKeepActiveMap represents mapping of stream name regular expression to 'keep active' setting of stream
+	// which should be added.
+	NameToKeepActiveMap []KeepActiveAddRule `koanf:"name_to_keep_active_map"`
+
+	// GroupToKeepActiveMap represents mapping of stream group regular expression to 'keep active' setting of stream
+	// which should be added.
+	GroupToKeepActiveMap []KeepActiveAddRule `koanf:"group_to_keep_active_map"`
+
+	// InputToKeepActiveMap represents mapping of stream input regular expression to 'keep active' setting of stream
+	// which should be added.
+	InputToKeepActiveMap []KeepActiveAddRule `koanf:"input_to_keep_active_map"`
 }
 
 // UpdateRecord represents astra stream input update rule
@@ -266,6 +278,12 @@ type UpdateRecord struct {
 type HashAddRule struct {
 	By   regexp.Regexp `koanf:"by"`
 	Hash string        `koanf:"hash"`
+}
+
+// KeepActiveAddRule represents astra stream 'keep active' adding rule
+type KeepActiveAddRule struct {
+	By         regexp.Regexp `koanf:"by"`
+	KeepActive int           `koanf:"keep_active"`
 }
 
 // StreamType represents astra stream type
@@ -371,6 +389,9 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		/* 4 */ "general.name_alias_list",
 		/* 5 */ "streams.remove_duplicated_inputs_by_rx_list",
 		/* 6 */ "streams.new_keep_active",
+		/* 7 */ "streams.name_to_keep_active_map",
+		/* 8 */ "streams.group_to_keep_active_map",
+		/* 9 */ "streams.input_to_keep_active_map",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	internalFields := []string{
@@ -532,6 +553,93 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.NewKeepActive = defVal
 	}
+	// v1.3.0 to v1.4.0
+	knownField = knownFields[7]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.NameToKeepActiveMap
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Mapping of stream name regular expression to 'keep active' setting of stream which should be added.",
+			},
+			Data: yamlUtil.Sequence{
+				Key: parse.LastPathItem(knownField, "."),
+				Sets: [][]yamlUtil.Pair{
+					{
+						{Key: "by", Value: "'[- _]HD$'", Commented: true},
+						{Key: "keep_active", Value: "10", Commented: true},
+					},
+					{
+						{Key: "by", Value: "'[- _]FM$'", Commented: true},
+						{Key: "keep_active", Value: "0", Commented: true},
+					},
+				},
+			},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.input_to_input_hash_map", true, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.NameToKeepActiveMap = defVal
+	}
+	// v1.3.0 to v1.4.0
+	knownField = knownFields[8]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.GroupToKeepActiveMap
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Mapping of stream group regular expression to 'keep active' setting of stream which should be added.",
+			},
+			Data: yamlUtil.Sequence{
+				Key: parse.LastPathItem(knownField, "."),
+				Sets: [][]yamlUtil.Pair{
+					{
+						{Key: "by", Value: "'(?i)All: HD Channels$'", Commented: true},
+						{Key: "keep_active", Value: "10", Commented: true},
+					},
+					{
+						{Key: "by", Value: "'(?i).*RADIO$'", Commented: true},
+						{Key: "keep_active", Value: "0", Commented: true},
+					},
+				},
+			},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.name_to_keep_active_map", true, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.GroupToKeepActiveMap = defVal
+	}
+	// v1.3.0 to v1.4.0
+	knownField = knownFields[9]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.InputToKeepActiveMap
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Mapping of stream input regular expression to 'keep active' setting of stream which should be added.",
+			},
+			Data: yamlUtil.Sequence{
+				Key: parse.LastPathItem(knownField, "."),
+				Sets: [][]yamlUtil.Pair{
+					{
+						{Key: "by", Value: "':8080'", Commented: true},
+						{Key: "keep_active", Value: "10", Commented: true},
+					},
+					{
+						{Key: "by", Value: `'^rts?p:\/\/'`, Commented: true},
+						{Key: "keep_active", Value: "0", Commented: true},
+					},
+				},
+			},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.group_to_keep_active_map", true, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.InputToKeepActiveMap = defVal
+	}
 
 	// Validate amount of capture groups
 	for _, rx := range root.Streams.RemoveDuplicatedInputsByRxList {
@@ -629,6 +737,9 @@ func NewDefCfg() Root {
 			NameToInputHashMap:             []HashAddRule(nil),
 			GroupToInputHashMap:            []HashAddRule(nil),
 			InputToInputHashMap:            []HashAddRule(nil),
+			NameToKeepActiveMap:            []KeepActiveAddRule(nil),
+			GroupToKeepActiveMap:           []KeepActiveAddRule(nil),
+			InputToKeepActiveMap:           []KeepActiveAddRule(nil),
 		},
 	}
 }
