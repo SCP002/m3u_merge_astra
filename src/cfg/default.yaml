@@ -278,6 +278,8 @@ streams:
     #   keep_active: 0
 
   # Mapping of stream input regular expression to 'keep active' setting of stream which should be added.
+  # 
+  # Setting will be added if at least one input matches the 'by' expression.
   input_to_keep_active_map:
     # - by: ':8080'
     #   keep_active: 10

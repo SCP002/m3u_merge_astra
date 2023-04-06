@@ -265,6 +265,8 @@ type Streams struct {
 
 	// InputToKeepActiveMap represents mapping of stream input regular expression to 'keep active' setting of stream
 	// which should be added.
+	//
+	// Setting will be added if at least one input matches the <By> expression.
 	InputToKeepActiveMap []KeepActiveAddRule `koanf:"input_to_keep_active_map"`
 }
 
@@ -620,6 +622,8 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 			StartNewline: true,
 			HeadComment: []string{
 				"Mapping of stream input regular expression to 'keep active' setting of stream which should be added.",
+				"",
+				"Setting will be added if at least one input matches the 'by' expression.",
 			},
 			Data: yamlUtil.Sequence{
 				Key: parse.LastPathItem(knownField, "."),

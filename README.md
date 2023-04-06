@@ -297,7 +297,8 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     > To be able to add `keep active` setting per stream group, for example 5 to frequently requested streams or 0 to disable it.
 
   * `input_to_keep_active_map`  
-    Mapping of stream input regular expression to `keep active` setting of stream which should be added.
+    Mapping of stream input regular expression to `keep active` setting of stream which should be added.  
+    Setting will be added if at least one input matches the `by` expression.
     > Why does it exist?  
     > To be able to add `keep active` setting per stream input, for example 5 to frequently requested streams or 0 to disable it.
 
