@@ -1,6 +1,7 @@
 package merge
 
 import (
+	"fmt"
 	"m3u_merge_astra/astra"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/m3u"
@@ -48,13 +49,13 @@ func TestRenameStreams(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
-		sl1 := []astra.Stream{{Name: "Known name", Groups: map[string]string{"Cat": "Grp"}}}
+		sl1 := []astra.Stream{{ID: "0", Name: "Known name", Groups: map[string]string{"Cat": "Grp"}}}
 
 		cl1 := []m3u.Channel{{Name: "Known_Name"}}
 
 		_ = r.RenameStreams(sl1, cl1)
 	})
-	assert.Contains(t, out, `old name "Known name", new name "Known_Name", group "Cat: Grp"`)
+	assert.Contains(t, out, `ID: "0", old name "Known name", new name "Known_Name", group "Cat: Grp"`)
 }
 
 func TestUpdateInputs(t *testing.T) {
@@ -154,13 +155,13 @@ func TestUpdateInputs(t *testing.T) {
 			{From: *regexp.MustCompile("known/input/1"), To: *regexp.MustCompile("known/input/1")},
 		}
 
-		sl1 := []astra.Stream{{Enabled: true, Name: "Known name", Inputs: []string{"http://known/input/1"}}}
+		sl1 := []astra.Stream{{ID: "0", Enabled: true, Name: "Known name", Inputs: []string{"http://known/input/1"}}}
 
 		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://new/known/input/1"}}
 
 		_ = r.UpdateInputs(sl1, cl1)
 	})
-	msg := `name "Known name", old URL "http://known/input/1", new URL "http://new/known/input/1", note ""`
+	msg := `ID "0", name "Known name", old URL "http://known/input/1", new URL "http://new/known/input/1", note ""`
 	assert.Contains(t, out, msg)
 }
 
@@ -215,14 +216,19 @@ func TestRemoveInputsByUpdateMap(t *testing.T) {
 		r.cfg.Streams.InputUpdateMap = []cfg.UpdateRecord{{From: *regexp.MustCompile("known/input/1")}}
 
 		sl1 := []astra.Stream{
-			{Name: "Known name", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{"http://known/input/1"}},
+			{
+				ID:     "0",
+				Name:   "Known name",
+				Groups: map[string]string{"Cat": "Grp"},
+				Inputs: []string{"http://known/input/1"},
+			},
 		}
 
 		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://other/url"}}
 
 		_ = r.RemoveInputsByUpdateMap(sl1, cl1)
 	})
-	assert.Contains(t, out, `name "Known name", group "Cat: Grp", input "http://known/input/1"`)
+	assert.Contains(t, out, `ID "0", name "Known name", group "Cat: Grp", input "http://known/input/1"`)
 }
 
 func TestAddNewInputs(t *testing.T) {
@@ -328,14 +334,14 @@ func TestAddNewInputs(t *testing.T) {
 		r := newDefRepo()
 
 		sl1 := []astra.Stream{
-			{Enabled: true, Name: "Known name", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{}},
+			{ID: "0", Enabled: true, Name: "Known name", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{}},
 		}
 
 		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://url/1"}}
 
 		_ = r.AddNewInputs(sl1, cl1)
 	})
-	assert.Contains(t, out, `name "Known name", group "Cat: Grp", URL "http://url/1", note ""`)
+	assert.Contains(t, out, `ID "0", name "Known name", group "Cat: Grp", URL "http://url/1", note ""`)
 }
 
 func TestAddNewStreams(t *testing.T) {
@@ -436,9 +442,9 @@ func TestAddNewStreams(t *testing.T) {
 
 		cl1 := []m3u.Channel{{Name: "Name 1", Group: "Grp", URL: "http://url/1"}}
 
-		_ = r.AddNewStreams(sl1, cl1)
+		sl2 = r.AddNewStreams(sl1, cl1)
 	})
-	assert.Contains(t, out, `name "Name 1", group "All: Grp", input "http://url/1"`)
+	assert.Contains(t, out, fmt.Sprintf(`ID "%v", name "Name 1", group "All: Grp", input "http://url/1"`, sl2[0].ID))
 }
 
 func TestGenerateUID(t *testing.T) {
