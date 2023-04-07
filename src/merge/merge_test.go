@@ -55,7 +55,7 @@ func TestRenameStreams(t *testing.T) {
 
 		_ = r.RenameStreams(sl1, cl1)
 	})
-	assert.Contains(t, out, `ID: "0", old name "Known name", new name "Known_Name", group "Cat: Grp"`)
+	assert.Contains(t, out, `ID "0", old name "Known name", new name "Known_Name", group "Cat: Grp"`)
 }
 
 func TestUpdateInputs(t *testing.T) {
