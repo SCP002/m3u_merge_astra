@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -46,7 +47,7 @@ func NewStream(cfg cfg.Streams, id, name, group string, inputs []string) Stream 
 		DisabledInputs: []string{},
 		Enabled:        cfg.MakeNewEnabled,
 		Groups:         groups,
-		HTTPKeepActive: fmt.Sprint(cfg.NewKeepActive),
+		HTTPKeepActive: strconv.Itoa(cfg.NewKeepActive),
 		ID:             id,
 		Inputs:         inputs,
 		Name:           name,
@@ -517,6 +518,53 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 			}
 			out[sIdx].Inputs[inpIdx] = inp
 		}
+	}
+
+	return
+}
+
+// SetKeepActive returns shallow copy of <streams> with HTTPKeepActive set on every stream as defined in config with
+// *ToKeepActiveMap.
+func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
+	for _, s := range streams {
+		// By inputs
+		for _, rule := range r.cfg.Streams.InputToKeepActiveMap {
+			if slice.RxMatchAny(rule.By, s.Inputs...) {
+				keepActiveStr := strconv.Itoa(rule.KeepActive)
+				if s.HTTPKeepActive != keepActiveStr {
+					r.log.InfoCFi("Setting keep active on stream", "name", s.Name, "group", s.FirstGroup(),
+						"keep active", keepActiveStr)
+					s.HTTPKeepActive = keepActiveStr
+				}
+				goto Append
+			}
+		}
+		// By name
+		for _, rule := range r.cfg.Streams.NameToKeepActiveMap {
+			if rule.By.MatchString(s.Name) {
+				keepActiveStr := strconv.Itoa(rule.KeepActive)
+				if s.HTTPKeepActive != keepActiveStr {
+					r.log.InfoCFi("Setting keep active on stream", "name", s.Name, "group", s.FirstGroup(),
+						"keep active", keepActiveStr)
+					s.HTTPKeepActive = keepActiveStr
+				}
+				goto Append
+			}
+		}
+		// By group
+		for _, rule := range r.cfg.Streams.GroupToKeepActiveMap {
+			if rule.By.MatchString(s.FirstGroup()) {
+				keepActiveStr := strconv.Itoa(rule.KeepActive)
+				if s.HTTPKeepActive != keepActiveStr {
+					r.log.InfoCFi("Setting keep active on stream", "name", s.Name, "group", s.FirstGroup(),
+						"keep active", keepActiveStr)
+					s.HTTPKeepActive = keepActiveStr
+				}
+				goto Append
+			}
+		}
+		Append:
+		out = append(out, s)
 	}
 
 	return

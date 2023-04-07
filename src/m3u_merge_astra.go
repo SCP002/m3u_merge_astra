@@ -123,6 +123,10 @@ func main() {
 		cfg.Streams.InputToInputHashMap) {
 		astraCfg.Streams = astraRepo.AddHashes(astraCfg.Streams)
 	}
+	if !slice.IsAllEmpty(cfg.Streams.NameToKeepActiveMap, cfg.Streams.GroupToKeepActiveMap,
+		cfg.Streams.InputToKeepActiveMap) {
+		astraCfg.Streams = astraRepo.SetKeepActive(astraCfg.Streams)
+	}
 	if cfg.Streams.RemoveWithoutInputs {
 		astraCfg.Streams = astraRepo.RemoveWithoutInputs(astraCfg.Streams)
 	} else if cfg.Streams.DisableWithoutInputs {

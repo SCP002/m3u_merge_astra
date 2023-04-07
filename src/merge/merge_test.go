@@ -1,12 +1,12 @@
 package merge
 
 import (
-	"fmt"
 	"m3u_merge_astra/astra"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/m3u"
 	"m3u_merge_astra/util/copier"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -370,7 +370,7 @@ func TestAddNewStreams(t *testing.T) {
 	expected := astra.Stream{
 		DisabledInputs: make([]string, 0),
 		Enabled:        r.cfg.Streams.MakeNewEnabled,
-		HTTPKeepActive: fmt.Sprint(r.cfg.Streams.NewKeepActive),
+		HTTPKeepActive: strconv.Itoa(r.cfg.Streams.NewKeepActive),
 		ID:             sl2[2].ID,
 		Inputs:         []string{"http://some/url/2"},
 		Name:           "Other name B",

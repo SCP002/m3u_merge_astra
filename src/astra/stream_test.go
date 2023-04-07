@@ -8,6 +8,7 @@ import (
 	"m3u_merge_astra/util/network"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -25,7 +26,7 @@ func TestNewStream(t *testing.T) {
 	expected := Stream{
 		DisabledInputs: make([]string, 0),
 		Enabled:        cfg.MakeNewEnabled,
-		HTTPKeepActive: fmt.Sprint(cfg.NewKeepActive),
+		HTTPKeepActive: strconv.Itoa(cfg.NewKeepActive),
 		ID:             "0000",
 		Inputs:         []string{"http://url"},
 		Name:           "Name",
@@ -1095,6 +1096,157 @@ func TestAddHashes(t *testing.T) {
 		_ = r.AddHashes(sl1)
 	})
 	assert.Contains(t, out, `name "Name 1", group "Cat: Grp", hash "a", result "http://input/1#a"`)
+}
+
+func TestAddKeepActive(t *testing.T) {
+	r := newDefRepo()
+	r.cfg.Streams.NameToKeepActiveMap = []cfg.KeepActiveAddRule{
+		{By: *regexp.MustCompile(`Known name 1`), KeepActive: 0},
+		{By: *regexp.MustCompile(`Known name 2`), KeepActive: 1},
+	}
+	r.cfg.Streams.GroupToKeepActiveMap = []cfg.KeepActiveAddRule{
+		{By: *regexp.MustCompile(`Known group 1`), KeepActive: 2},
+		{By: *regexp.MustCompile(`Known group 2`), KeepActive: 3},
+	}
+	r.cfg.Streams.InputToKeepActiveMap = []cfg.KeepActiveAddRule{
+		{By: *regexp.MustCompile(`http://known/input/1`), KeepActive: 4},
+		{By: *regexp.MustCompile(`http://known/input/2`), KeepActive: 5},
+	}
+
+	sl1 := []Stream{
+		{ // Index 0. Known input 1
+			Name:   "Other name",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://known/input/1", "http://other/input/1"},
+		},
+		{ // Index 1. Known name 1
+			Name:   "Known name 1",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://other/input/1", "http://other/input/2"},
+		},
+		{ // Index 2. Known group 2
+			Name:   "Other name",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+			Inputs: []string{"http://other/input/1", "http://other/input/2"},
+		},
+		{ // Index 3. Known inputs 2 and 1
+			Name:   "Other name",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://known/input/2", "http://known/input/1"},
+		},
+		{ // Index 4. Known name 2 and group 1
+			Name:   "Known name 2",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+			Inputs: []string{"http://other/input/1"},
+		},
+		{ // Index 5. Known group 1
+			Name:   "Other name",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+			Inputs: []string{"http://other/input/1", "http://other/input/2"},
+		},
+		{ // Index 6. No matches
+			Name:   "Other name",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+			Inputs: []string{"http://other/input/2", "http://other/input/1"},
+		},
+		{ // Index 7. Matches by every parameter
+			Name:   "Known name 1",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+			Inputs: []string{"http://other/input/1", "http://known/input/2"},
+		},
+		{ // Index 8. Matches by group 1 and input 1
+			Name:   "Other name",
+			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+			Inputs: []string{"http://known/input/1", "http://other/input/1"},
+		},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := r.SetKeepActive(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	expected := Stream{ // Index 0. Known input 1
+		Name:           "Other name",
+		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		HTTPKeepActive: "4",
+		Inputs:         []string{"http://known/input/1", "http://other/input/1"},
+	}
+	assert.Exactly(t, expected, sl2[0], "should set HTTPKeepActive")
+
+	expected = Stream{ // Index 1. Known name 1
+		Name:           "Known name 1",
+		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		HTTPKeepActive: "0",
+		Inputs:         []string{"http://other/input/1", "http://other/input/2"},
+	}
+	assert.Exactly(t, expected, sl2[1], "should set HTTPKeepActive to 0")
+
+	expected = Stream{ // Index 2. Known group 2
+		Name:           "Other name",
+		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+		HTTPKeepActive: "3",
+		Inputs:         []string{"http://other/input/1", "http://other/input/2"},
+	}
+	assert.Exactly(t, expected, sl2[2], "should set HTTPKeepActive")
+
+	expected = Stream{ // Index 3. Known inputs 2 and 1
+		Name:           "Other name",
+		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
+		HTTPKeepActive: "4",
+		Inputs:         []string{"http://known/input/2", "http://known/input/1"},
+	}
+	assert.Exactly(t, expected, sl2[3], "should set HTTPKeepActive by first found rule by inputs")
+
+	expected = Stream{ // Index 4. Known name 2 and group 1
+		Name:           "Known name 2",
+		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+		HTTPKeepActive: "1",
+		Inputs:         []string{"http://other/input/1"},
+	}
+	assert.Exactly(t, expected, sl2[4], "should set HTTPKeepActive by name")
+
+	expected = Stream{ // Index 5. Known group 1
+		Name:           "Other name",
+		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+		HTTPKeepActive: "2",
+		Inputs:         []string{"http://other/input/1", "http://other/input/2"},
+	}
+	assert.Exactly(t, expected, sl2[5], "should set HTTPKeepActive")
+
+	// Index 6. No matches
+	assert.Exactly(t, sl1[6], sl2[6], "should not modify stream with no matches")
+
+	expected = Stream{ // Index 7. Matches by every parameter
+		Name:           "Known name 1",
+		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
+		HTTPKeepActive: "5",
+		Inputs:         []string{"http://other/input/1", "http://known/input/2"},
+	}
+	assert.Exactly(t, expected, sl2[7], "should set HTTPKeepActive by first found rule by inputs")
+
+	expected = Stream{ // Index 8. Matches by group 1 and input 1
+		Name:           "Other name",
+		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
+		HTTPKeepActive: "4",
+		Inputs:         []string{"http://known/input/1", "http://other/input/1"},
+	}
+	assert.Exactly(t, expected, sl2[8], "should set HTTPKeepActive by first found rule by inputs")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.NameToKeepActiveMap = []cfg.KeepActiveAddRule{
+			{By: *regexp.MustCompile(`Name 1`), KeepActive: 1},
+		}
+
+		sl1 := []Stream{{Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}}}
+
+		_ = r.SetKeepActive(sl1)
+	})
+	assert.Contains(t, out, `name "Name 1", group "Cat: Grp", keep active "1"`)
 }
 
 func TestRemoveWithoutInputs(t *testing.T) {

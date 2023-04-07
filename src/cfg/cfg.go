@@ -256,17 +256,23 @@ type Streams struct {
 	InputToInputHashMap []HashAddRule `koanf:"input_to_input_hash_map"`
 
 	// NameToKeepActiveMap represents mapping of stream name regular expression to 'keep active' setting of stream
-	// which should be added.
+	// which should be set.
+	//
+	// Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
 	NameToKeepActiveMap []KeepActiveAddRule `koanf:"name_to_keep_active_map"`
 
 	// GroupToKeepActiveMap represents mapping of stream group regular expression to 'keep active' setting of stream
-	// which should be added.
+	// which should be set.
+	//
+	// Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
 	GroupToKeepActiveMap []KeepActiveAddRule `koanf:"group_to_keep_active_map"`
 
 	// InputToKeepActiveMap represents mapping of stream input regular expression to 'keep active' setting of stream
-	// which should be added.
+	// which should be set.
 	//
-	// Setting will be added if at least one input matches the <By> expression.
+	// Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
+	//
+	// Setting will be set if at least one input matches the <By> expression.
 	InputToKeepActiveMap []KeepActiveAddRule `koanf:"input_to_keep_active_map"`
 }
 
@@ -548,7 +554,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment:  []string{"Delay before stop stream if no active connections for new streams."},
-			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: fmt.Sprint(defVal)},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.Itoa(defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.new_type", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -563,7 +569,9 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment: []string{
-				"Mapping of stream name regular expression to 'keep active' setting of stream which should be added.",
+				"Mapping of stream name regular expression to 'keep active' setting of stream which should be set.",
+				"",
+				"Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.",
 			},
 			Data: yamlUtil.Sequence{
 				Key: parse.LastPathItem(knownField, "."),
@@ -592,7 +600,9 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment: []string{
-				"Mapping of stream group regular expression to 'keep active' setting of stream which should be added.",
+				"Mapping of stream group regular expression to 'keep active' setting of stream which should be set.",
+				"",
+				"Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.",
 			},
 			Data: yamlUtil.Sequence{
 				Key: parse.LastPathItem(knownField, "."),
@@ -621,9 +631,11 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment: []string{
-				"Mapping of stream input regular expression to 'keep active' setting of stream which should be added.",
+				"Mapping of stream input regular expression to 'keep active' setting of stream which should be set.",
 				"",
-				"Setting will be added if at least one input matches the 'by' expression.",
+				"Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.",
+				"",
+				"Setting will be set if at least one input matches the 'by' expression.",
 			},
 			Data: yamlUtil.Sequence{
 				Key: parse.LastPathItem(knownField, "."),

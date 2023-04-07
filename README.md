@@ -287,18 +287,21 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     > To be able to add specific hashes per stream input, for example set User-Agent (#ua=...) to specific URL's.
 
   * `name_to_keep_active_map`  
-    Mapping of stream name regular expression to `keep active` setting of stream which should be added.
+    Mapping of stream name regular expression to `keep active` setting of stream which should be set.  
+    Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
     > Why does it exist?  
     > To be able to add `keep active` setting per stream name, for example 5 to frequently requested streams or 0 to disable it.
 
   * `group_to_keep_active_map`  
-    Mapping of stream group regular expression to `keep active` setting of stream which should be added.
+    Mapping of stream group regular expression to `keep active` setting of stream which should be set.  
+    Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
     > Why does it exist?  
     > To be able to add `keep active` setting per stream group, for example 5 to frequently requested streams or 0 to disable it.
 
   * `input_to_keep_active_map`  
-    Mapping of stream input regular expression to `keep active` setting of stream which should be added.  
-    Setting will be added if at least one input matches the `by` expression.
+    Mapping of stream input regular expression to `keep active` setting of stream which should be set.  
+    Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.  
+    Setting will be set if at least one input matches the `by` expression.
     > Why does it exist?  
     > To be able to add `keep active` setting per stream input, for example 5 to frequently requested streams or 0 to disable it.
 

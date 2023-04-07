@@ -263,23 +263,29 @@ streams:
     # - by: '^rts?p:\/\/'
     #   hash: 'no_reload'
 
-  # Mapping of stream name regular expression to 'keep active' setting of stream which should be added.
+  # Mapping of stream name regular expression to 'keep active' setting of stream which should be set.
+  # 
+  # Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
   name_to_keep_active_map:
     # - by: '[- _]HD$'
     #   keep_active: 10
     # - by: '[- _]FM$'
     #   keep_active: 0
 
-  # Mapping of stream group regular expression to 'keep active' setting of stream which should be added.
+  # Mapping of stream group regular expression to 'keep active' setting of stream which should be set.
+  # 
+  # Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
   group_to_keep_active_map:
     # - by: '(?i)All: HD Channels$'
     #   keep_active: 10
     # - by: '(?i).*RADIO$'
     #   keep_active: 0
 
-  # Mapping of stream input regular expression to 'keep active' setting of stream which should be added.
+  # Mapping of stream input regular expression to 'keep active' setting of stream which should be set.
   # 
-  # Setting will be added if at least one input matches the 'by' expression.
+  # Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
+  # 
+  # Setting will be set if at least one input matches the 'by' expression.
   input_to_keep_active_map:
     # - by: ':8080'
     #   keep_active: 10
