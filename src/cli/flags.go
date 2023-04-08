@@ -9,7 +9,7 @@ import (
 // Flags represents command line flags
 type Flags struct {
 	Version        bool         `short:"v" long:"version"        description:"Print the program version"`
-	LogLevel       logrus.Level `short:"l" long:"logLevel"       description:"Logging level. Can be from 0 (least verbose) to 6 (most verbose). Default is 4"`
+	LogLevel       logrus.Level `short:"l" long:"logLevel"       description:"Logging level. Can be from 0 (least verbose) to 6 (most verbose)"`
 	ProgramCfgPath string       `short:"c" long:"programCfgPath" description:"Program config file path to read from or initialize a default"`
 	M3UPath        string       `short:"m" long:"m3uPath"        description:"M3U file path to get channels from. Can be a local file or URL"`
 	AstraCfgInput  string       `short:"i" long:"astraCfgInput"  description:"Input astra config. Can be 'clipboard', 'stdio' or file path"`
