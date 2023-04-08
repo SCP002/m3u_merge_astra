@@ -33,11 +33,12 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	for _, s := range streams {
 		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
 			if !s.HasInput(r.log, ch.URL, true) {
-				s = s.UpdateInput(r, ch.URL, func(oldURL string) {
+				var updated bool
+				s, updated = s.UpdateInput(r, ch.URL, func(oldURL string) {
 					r.log.InfoCFi("Updating input of stream", "ID", s.ID, "name", s.Name, "old URL", oldURL,
 						"new URL", ch.URL, "note", s.InputsUpdateNote(r.cfg.Streams))
 				})
-				if r.cfg.Streams.EnableOnInputUpdate {
+				if r.cfg.Streams.EnableOnInputUpdate && updated {
 					r.log.DebugCFi("enable_on_input_update is on, enabling the stream", "ID", s.ID, "name", s.Name)
 					s = s.Enable()
 				}

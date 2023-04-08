@@ -122,6 +122,8 @@ func TestUpdateInputs(t *testing.T) {
 	r.cfg.Streams.EnableOnInputUpdate = false
 	sl1 = []astra.Stream{
 		{Enabled: false, Name: "Known name", Inputs: []string{"http://known/input/1"}},
+		{Enabled: false, Name: "Known name", Inputs: []string{"http://other/input/1"}},
+		{Enabled: false, Name: "Other name", Inputs: []string{"http://known/input/1"}},
 	}
 	sl1Original = copier.TestDeep(t, sl1)
 	cl1 = []m3u.Channel{
@@ -131,6 +133,8 @@ func TestUpdateInputs(t *testing.T) {
 	sl2 = r.UpdateInputs(sl1, cl1)
 
 	assert.False(t, sl2[0].Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
+	assert.False(t, sl2[1].Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
+	assert.False(t, sl2[2].Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
 
 	r.cfg.Streams.EnableOnInputUpdate = true
 
@@ -138,15 +142,9 @@ func TestUpdateInputs(t *testing.T) {
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source streams")
 
-	assert.True(t, sl2[0].Enabled, "stream should become enabled as EnableOnInputUpdate = true")
-
-	sl1 = []astra.Stream{
-		{Enabled: false, Name: "Other name", Inputs: []string{"http://known/input/1"}},
-	}
-
-	sl2 = r.UpdateInputs(sl1, cl1)
-
-	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
+	assert.True(t, sl2[0].Enabled, "stream should become enabled as EnableOnInputUpdate = true and it was updated")
+	assert.False(t, sl2[1].Enabled, "stream should stay disabled as it's input is not in cfg.Streams.InputUpdateMap")
+	assert.False(t, sl2[2].Enabled, "stream should stay disabled as it's name is not in channel list")
 
 	// Test log output
 	out := capturer.CaptureStderr(func() {

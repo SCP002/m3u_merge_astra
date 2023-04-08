@@ -80,7 +80,7 @@ func TestUpdateStreamInput(t *testing.T) {
 
 	oldInputs := []string{}
 	r.cfg.Streams.KeepInputHash = false
-	s2 := s1.UpdateInput(r, "http://update/to/1", func(oldInput string) {
+	s2, updated := s1.UpdateInput(r, "http://update/to/1", func(oldInput string) {
 		oldInputs = append(oldInputs, oldInput)
 	})
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
@@ -90,22 +90,25 @@ func TestUpdateStreamInput(t *testing.T) {
 		"http://irrelevant/from#a", "http://update/to/1", "http://update/url/1#b", "http://update/url/1#c",
 	}
 	assert.Exactly(t, expected, s2.Inputs, "should have these inputs")
+	assert.True(t, updated, "should return true as it was updated")
 
-	s2 = s1.UpdateInput(r, "http://update/url/1#b", func(oldInput string) {
+	s2, updated = s1.UpdateInput(r, "http://update/url/1#b", func(oldInput string) {
 		oldInputs = append(oldInputs, oldInput)
 	})
 	expected = []string{
 		"http://irrelevant/from#a", "http://update/from/1#c", "http://update/url/1#b", "http://update/url/1#b",
 	}
 	assert.Exactly(t, expected, s2.Inputs, "relevant input should be updated discarding old hash")
+	assert.True(t, updated, "should return true as it was updated")
 
-	s2 = s1.UpdateInput(r, "http://irrelevant/to", func(oldInput string) {
+	s2, updated = s1.UpdateInput(r, "http://irrelevant/to", func(oldInput string) {
 		oldInputs = append(oldInputs, oldInput)
 	})
 	assert.Exactly(t, s1, s2, "inputs should not be updated with irrelevant URL")
+	assert.False(t, updated, "should return false as it was not updated")
 
 	r.cfg.Streams.KeepInputHash = true
-	s2 = s1.UpdateInput(r, "http://update/url/2", func(oldInput string) {
+	s2, updated = s1.UpdateInput(r, "http://update/url/2", func(oldInput string) {
 		oldInputs = append(oldInputs, oldInput)
 	})
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
@@ -115,19 +118,22 @@ func TestUpdateStreamInput(t *testing.T) {
 		"http://irrelevant/from#a", "http://update/from/1#c", "http://update/url/2#b", "http://update/url/1#c",
 	}
 	assert.Exactly(t, expected, s2.Inputs, "relevant input should be updated keeping old hash")
+	assert.True(t, updated, "should return true as it was updated")
 
-	s2 = s1.UpdateInput(r, "http://update/url/2#c", func(oldInput string) {
+	s2, updated = s1.UpdateInput(r, "http://update/url/2#c", func(oldInput string) {
 		oldInputs = append(oldInputs, oldInput)
 	})
 	expected = []string{
 		"http://irrelevant/from#a", "http://update/from/1#c", "http://update/url/2#c&b", "http://update/url/1#c",
 	}
 	assert.Exactly(t, expected, s2.Inputs, "relevant input should be updated, merging hashes")
+	assert.True(t, updated, "should return true as it was updated")
 
-	s2 = s1.UpdateInput(r, "http://irrelevant/to", func(oldInput string) {
+	s2, updated = s1.UpdateInput(r, "http://irrelevant/to", func(oldInput string) {
 		t.Fail()
 	})
 	assert.Exactly(t, s1, s2, "inputs should not be updated with irrelevant URL")
+	assert.False(t, updated, "should return false as it was not updated")
 
 	assert.Exactly(t, []string{
 		"http://update/from/1#c",

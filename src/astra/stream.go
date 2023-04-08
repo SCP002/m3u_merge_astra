@@ -75,10 +75,12 @@ func (s Stream) FirstGroup() string {
 
 // UpdateInput updates first encountered input if both it and <newURL> match the InputUpdateMap from config in <r>.
 //
+// Returns true as the second return value if stream was updated.
+//
 // Runs <callback> with old URL for every updated input.
 //
 // If KeepInputHash is enabled in config, it also adds old input URL hash to <newURL>.
-func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string)) Stream {
+func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string)) (Stream, bool) {
 	s = copier.MustDeep(s)
 	cfg := r.Cfg().Streams
 
@@ -102,11 +104,11 @@ func (s Stream) UpdateInput(r deps.Global, newURL string, callback func(string))
 				// Update first encountered matching input.
 				callback(oldURL)
 				s.Inputs[inpIdx] = newURL
-				return s
+				return s, true
 			}
 		}
 	}
-	return s
+	return s, false
 }
 
 // HasInput returns true if stream inputs contain <tURLStr> parameter.
@@ -339,7 +341,7 @@ func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	out = copier.MustDeep(streams)
 	for currIdx, currStream := range out {
-		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx+1, func(nextStream Stream, nextIdx int) {
+		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
 				r.log.InfoCFi("Uniting inputs of streams", "from ID", nextStream.ID, "from name", nextStream.Name,
 					"input", nextInput, "to ID", currStream.ID, "to name", currStream.Name,
