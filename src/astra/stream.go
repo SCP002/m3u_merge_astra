@@ -139,12 +139,9 @@ func (s Stream) KnownInputs(config cfg.Streams) []string {
 	})
 }
 
-// InputsUpdateNote returns note is stream is disabled or if it will be enabled on inputs update
+// InputsUpdateNote returns note if stream is disabled and enabling on inputs update is off
 func (s Stream) InputsUpdateNote(cfg cfg.Streams) string {
-	if !s.Enabled {
-		return lo.Ternary(cfg.EnableOnInputUpdate, "Enabling the stream", "Stream is disabled")
-	}
-	return ""
+	return lo.Ternary(!s.Enabled && !cfg.EnableOnInputUpdate, "Stream is disabled", "")
 }
 
 // Enable enables the stream
@@ -349,8 +346,8 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 				if !currStream.HasInput(r.log, nextInput, true) {
 					currStream = currStream.AddInput(nextInput)
 					if r.cfg.Streams.EnableOnInputUpdate && !currStream.Enabled {
-						r.log.DebugCFi("enable_on_input_update is on, enabling the stream", "ID", currStream.ID,
-							"name", currStream.Name)
+						r.log.InfoCFi("Enabling the stream (uniting inputs of streams, enable_on_input_update is on)",
+							"ID", currStream.ID, "name", currStream.Name)
 						currStream = currStream.Enable()
 					}
 					out[currIdx] = currStream

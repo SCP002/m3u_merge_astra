@@ -39,7 +39,8 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 						"new URL", ch.URL, "note", s.InputsUpdateNote(r.cfg.Streams))
 				})
 				if r.cfg.Streams.EnableOnInputUpdate && updated && !s.Enabled {
-					r.log.DebugCFi("enable_on_input_update is on, enabling the stream", "ID", s.ID, "name", s.Name)
+					r.log.InfoCFi("Enabling the stream (updating inputs of streams, enable_on_input_update is on)",
+						"ID", s.ID, "name", s.Name)
 					s = s.Enable()
 				}
 			}
@@ -82,7 +83,8 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 					"URL", ch.URL, "note", s.InputsUpdateNote(r.cfg.Streams))
 				s = s.AddInput(ch.URL)
 				if r.cfg.Streams.EnableOnInputUpdate && !s.Enabled {
-					r.log.DebugCFi("enable_on_input_update is on, enabling the stream", "ID", s.ID, "name", s.Name)
+					r.log.InfoCFi("Enabling the stream (adding new inputs to streams, enable_on_input_update is on)",
+						"ID", s.ID, "name", s.Name)
 					s = s.Enable()
 				}
 			}

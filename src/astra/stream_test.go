@@ -207,9 +207,9 @@ func TestInputsUpdateNote(t *testing.T) {
 
 	cfg.EnableOnInputUpdate = true
 	s = Stream{Enabled: false}
-	assert.Exactly(t, "Enabling the stream", s.InputsUpdateNote(cfg), "should return this note")
+	assert.Exactly(t, "", s.InputsUpdateNote(cfg), "should not return a note as EnableOnInputUpdate = true")
 	s = Stream{Enabled: true}
-	assert.Exactly(t, "", s.InputsUpdateNote(cfg), "should not return a note if enabled")
+	assert.Exactly(t, "", s.InputsUpdateNote(cfg), "should not return a note as EnableOnInputUpdate = true")
 }
 
 func TestEnableStream(t *testing.T) {
