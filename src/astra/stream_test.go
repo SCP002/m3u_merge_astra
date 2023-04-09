@@ -737,15 +737,31 @@ func TestUniteInputs(t *testing.T) {
 	// Test log output
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
+		r.cfg.Streams.EnableOnInputUpdate = false
 
 		sl1 := []Stream{
-			{ID: "0", Name: "Name 1", Inputs: []string{"http://input/a"}},
-			{ID: "1", Name: "Name_1", Inputs: []string{"http://input/b"}},
+			{ID: "0", Enabled: false, Name: "Name 1", Inputs: []string{"http://input/a"}},
+			{ID: "1", Enabled: false, Name: "Name_1", Inputs: []string{"http://input/b"}},
 		}
 
 		_ = r.UniteInputs(sl1)
 	})
-	assert.Contains(t, out, `from ID "1", from name "Name_1", input "http://input/b", to ID "0", to name "Name 1"`)
+	assert.Contains(t, out, `from ID "1", from name "Name_1", input "http://input/b", to ID "0", to name "Name 1", `+
+		`note "Stream is disabled"`)
+
+	out = capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.EnableOnInputUpdate = true
+
+		sl1 := []Stream{
+			{Enabled: false, ID: "0", Name: "Name 1", Inputs: []string{"http://input/a"}},
+			{Enabled: false, ID: "1", Name: "Name_1", Inputs: []string{"http://input/b"}},
+		}
+
+		_ = r.UniteInputs(sl1)
+	})
+	assert.Contains(t, out, `Enabling the stream (uniting inputs of streams, enable_on_input_update is on): `+
+		`ID "0", name "Name 1"`)
 }
 
 func TestSortInputs(t *testing.T) {

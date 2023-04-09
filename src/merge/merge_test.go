@@ -149,18 +149,35 @@ func TestUpdateInputs(t *testing.T) {
 	// Test log output
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
+		r.cfg.Streams.EnableOnInputUpdate = false
 		r.cfg.Streams.InputUpdateMap = []cfg.UpdateRecord{
 			{From: *regexp.MustCompile("known/input/1"), To: *regexp.MustCompile("known/input/1")},
 		}
 
-		sl1 := []astra.Stream{{ID: "0", Enabled: true, Name: "Known name", Inputs: []string{"http://known/input/1"}}}
+		sl1 := []astra.Stream{{ID: "0", Enabled: false, Name: "Known name", Inputs: []string{"http://known/input/1"}}}
 
 		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://new/known/input/1"}}
 
 		_ = r.UpdateInputs(sl1, cl1)
 	})
-	msg := `ID "0", name "Known name", old URL "http://known/input/1", new URL "http://new/known/input/1", note ""`
-	assert.Contains(t, out, msg)
+	assert.Contains(t, out, `ID "0", name "Known name", old URL "http://known/input/1", `+
+		`new URL "http://new/known/input/1", note "Stream is disabled"`)
+
+	out = capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.EnableOnInputUpdate = true
+		r.cfg.Streams.InputUpdateMap = []cfg.UpdateRecord{
+			{From: *regexp.MustCompile("known/input/1"), To: *regexp.MustCompile("known/input/1")},
+		}
+
+		sl1 := []astra.Stream{{ID: "0", Enabled: false, Name: "Known name", Inputs: []string{"http://known/input/1"}}}
+
+		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://new/known/input/1"}}
+
+		_ = r.UpdateInputs(sl1, cl1)
+	})
+	assert.Contains(t, out, `Enabling the stream (updating inputs of streams, enable_on_input_update is on): `+
+		`ID "0", name "Known name"`)
 }
 
 func TestRemoveInputsByUpdateMap(t *testing.T) {
@@ -330,16 +347,33 @@ func TestAddNewInputs(t *testing.T) {
 	// Test log output
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
+		r.cfg.Streams.EnableOnInputUpdate = false
 
 		sl1 := []astra.Stream{
-			{ID: "0", Enabled: true, Name: "Known name", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{}},
+			{ID: "0", Enabled: false, Name: "Known name", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{}},
 		}
 
 		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://url/1"}}
 
 		_ = r.AddNewInputs(sl1, cl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Known name", group "Cat: Grp", URL "http://url/1", note ""`)
+	assert.Contains(t, out, `ID "0", name "Known name", group "Cat: Grp", URL "http://url/1", note `+
+		`"Stream is disabled"`)
+
+	out = capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.EnableOnInputUpdate = true
+
+		sl1 := []astra.Stream{
+			{ID: "0", Enabled: false, Name: "Known name", Groups: map[string]string{"Cat": "Grp"}, Inputs: []string{}},
+		}
+
+		cl1 := []m3u.Channel{{Name: "Known_Name", URL: "http://url/1"}}
+
+		_ = r.AddNewInputs(sl1, cl1)
+	})
+	assert.Contains(t, out, `Enabling the stream (adding new inputs to streams, enable_on_input_update is on): `+
+		`ID "0", name "Known name"`)
 }
 
 func TestAddNewStreams(t *testing.T) {
