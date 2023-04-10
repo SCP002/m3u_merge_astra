@@ -75,6 +75,8 @@ func (s Stream) FirstGroup() string {
 
 // UpdateInput updates first encountered input if both it and <newURL> match the InputUpdateMap from config in <r>.
 //
+// Returns deep copy of stream.
+//
 // Returns true as the second return value if stream was updated.
 //
 // Runs <callback> with old URL for every updated input.
