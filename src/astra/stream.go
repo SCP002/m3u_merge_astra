@@ -396,6 +396,8 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 //
 // Currently supports only HTTP(S).
 func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out []Stream) {
+	r.log.Info("Removing dead inputs from streams")
+
 	// canCheck returns true if <inp> can be checked
 	canCheck := func(inp string) bool {
 		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
