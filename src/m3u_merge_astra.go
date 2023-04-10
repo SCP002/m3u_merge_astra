@@ -25,7 +25,7 @@ func main() {
 	// Parse command line arguments
 	flags, err := cli.Parse()
 	if flags.Version {
-		fmt.Println("v1.4.0")
+		fmt.Println("v1.4.1")
 		os.Exit(0)
 	}
 	if cli.IsErrOfType(err, goFlags.ErrHelp) {
