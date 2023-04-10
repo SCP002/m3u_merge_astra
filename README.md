@@ -72,6 +72,9 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
   Press Ctrl + V to paste modified config back to astra.  
   Click `Save`.
 
+* To see the progress of removing dead inputs from streams when `streams.remove_dead_inputs` is enabled,
+  run program with `--logLevel 5` or higher.
+
 ## Program config settings
 
 * `general`  
