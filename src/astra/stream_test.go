@@ -508,7 +508,8 @@ func TestRemoveNamePrefixes(t *testing.T) {
 
 		_ = r.RemoveNamePrefixes(sl1)
 	})
-	assert.Contains(t, out, `ID "0", old name "_ADDED: Name 1", new name "Name 1", group "Cat: Grp"`)
+	assert.Contains(t, out, `Temporarily removing name prefix from stream: ID "0", old name "_ADDED: Name 1", `+
+		`new name "Name 1", group "Cat: Grp"`)
 }
 
 func TestSort(t *testing.T) {
@@ -566,7 +567,8 @@ func TestAllRemoveBlockedInputs(t *testing.T) {
 
 		_ = r.RemoveBlockedInputs(sl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Name 1", group "Cat: Grp", input "http://input/1"`)
+	assert.Contains(t, out, `Removing blocked input from stream: ID "0", name "Name 1", group "Cat: Grp", `+
+		`input "http://input/1"`)
 }
 
 func TestRemoveDuplicatedInputs(t *testing.T) {
@@ -610,7 +612,8 @@ func TestRemoveDuplicatedInputs(t *testing.T) {
 
 		_ = r.RemoveDuplicatedInputs(sl1)
 	})
-	assert.Contains(t, out, `ID "1", name "Name 2", group "Cat: Grp", input "http://input/1"`)
+	assert.Contains(t, out, `Removing duplicated input from stream: ID "1", name "Name 2", group "Cat: Grp", `+
+		`input "http://input/1"`)
 }
 
 func TestAllRemoveDuplicatedInputsByRx(t *testing.T) {
@@ -665,7 +668,8 @@ func TestAllRemoveDuplicatedInputsByRx(t *testing.T) {
 
 		_ = r.RemoveDuplicatedInputsByRx(sl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Name 1", group "Cat: Grp", input "http://input/1"`)
+	assert.Contains(t, out, `Removing duplicated input per stream by regular expressions: ID "0", name "Name 1", `+
+		`group "Cat: Grp", input "http://input/1"`)
 }
 
 func TestUniteInputs(t *testing.T) {
@@ -746,8 +750,8 @@ func TestUniteInputs(t *testing.T) {
 
 		_ = r.UniteInputs(sl1)
 	})
-	assert.Contains(t, out, `from ID "1", from name "Name_1", input "http://input/b", to ID "0", to name "Name 1", `+
-		`note "Stream is disabled"`)
+	assert.Contains(t, out, `Uniting inputs of streams: from ID "1", from name "Name_1", input "http://input/b", `+
+		`to ID "0", to name "Name 1", note "Stream is disabled"`)
 
 	out = capturer.CaptureStderr(func() {
 		r := newDefRepo()
@@ -976,13 +980,14 @@ func TestRemoveDeadInputs(t *testing.T) {
 		client := network.NewHttpClient(time.Second * 3)
 		_ = r.RemoveDeadInputs(client, sl1)
 	})
-	msg := `stream ID "0", stream name "Name 1", stream index "0", input "https://127.0.0.1:5656/dead/timeout/1", ` +
-		`progress "0 / 1 (0%)"`
+	msg := `Start checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
+		`input "https://127.0.0.1:5656/dead/timeout/1", progress "0 / 1 (0%)"`
 	assert.Contains(t, out, msg)
-	msg = `ID "0", name "Name 1", group "Cat: Grp", input "https://127.0.0.1:5656/dead/timeout/1", reason "Timeout"`
+	msg = `Removing dead input from stream: ID "0", name "Name 1", group "Cat: Grp", ` +
+		`input "https://127.0.0.1:5656/dead/timeout/1", reason "Timeout"`
 	assert.Contains(t, out, msg)
-	msg = `stream ID "0", stream name "Name 1", stream index "0", input "https://127.0.0.1:5656/dead/timeout/1", ` +
-		`progress "1 / 1 (100%)"`
+	msg = `End checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
+		`input "https://127.0.0.1:5656/dead/timeout/1", progress "1 / 1 (100%)"`
 	assert.Contains(t, out, msg)
 }
 
@@ -1129,7 +1134,8 @@ func TestAddHashes(t *testing.T) {
 
 		_ = r.AddHashes(sl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Name 1", group "Cat: Grp", hash "a", result "http://input/1#a"`)
+	assert.Contains(t, out, `Adding hash to input of stream: ID "0", name "Name 1", group "Cat: Grp", hash "a", `+
+		`result "http://input/1#a"`)
 }
 
 func TestSetKeepActive(t *testing.T) {
@@ -1280,7 +1286,7 @@ func TestSetKeepActive(t *testing.T) {
 
 		_ = r.SetKeepActive(sl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Name 1", group "Cat: Grp", keep active "1"`)
+	assert.Contains(t, out, `Setting keep active on stream: ID "0", name "Name 1", group "Cat: Grp", keep active "1"`)
 }
 
 func TestRemoveWithoutInputs(t *testing.T) {
@@ -1314,7 +1320,7 @@ func TestRemoveWithoutInputs(t *testing.T) {
 
 		_ = r.RemoveWithoutInputs(sl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Name 1", group "Cat: Grp"`)
+	assert.Contains(t, out, `Removing stream without inputs: ID "0", name "Name 1", group "Cat: Grp"`)
 }
 
 func TestDisableWithoutInputs(t *testing.T) {
@@ -1365,7 +1371,7 @@ func TestDisableWithoutInputs(t *testing.T) {
 
 		_ = r.DisableWithoutInputs(sl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Name 1", group "Cat: Grp"`)
+	assert.Contains(t, out, `Disabling stream without inputs: ID "0", name "Name 1", group "Cat: Grp"`)
 }
 
 func TestAddNamePrefixes(t *testing.T) {
@@ -1417,8 +1423,8 @@ func TestAddNamePrefixes(t *testing.T) {
 
 		_ = r.AddNamePrefixes(sl1)
 	})
-	msg := fmt.Sprintf(`ID "0", old name "Name_1", new name "%vName_1", group "Cat: Grp"`, r.cfg.Streams.AddedPrefix)
-	assert.Contains(t, out, msg)
+	assert.Contains(t, out, fmt.Sprintf(`Adding name prefix to stream: ID "0", old name "Name_1", `+
+		`new name "%vName_1", group "Cat: Grp"`, r.cfg.Streams.AddedPrefix))
 }
 
 func TestGetInputsAmount(t *testing.T) {

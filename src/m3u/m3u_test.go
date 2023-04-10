@@ -131,7 +131,8 @@ func TestReplaceGroups(t *testing.T) {
 
 		_ = r.ReplaceGroups(cl1)
 	})
-	assert.Contains(t, out, `name "Name 1", old group "From Group 1", new group "To Group 1"`)
+	assert.Contains(t, out, `Replacing group of M3U channel: name "Name 1", old group "From Group 1", `+
+		`new group "To Group 1"`)
 }
 
 func TestRemoveBlocked(t *testing.T) {
@@ -202,7 +203,7 @@ func TestRemoveBlocked(t *testing.T) {
 
 		_ = r.RemoveBlocked(cl1)
 	})
-	assert.Contains(t, out, `name "Name 1", group "Group 1", URL "http://url/1"`)
+	assert.Contains(t, out, `Removing blocked channel: name "Name 1", group "Group 1", URL "http://url/1"`)
 }
 
 func TestHasUrl(t *testing.T) {

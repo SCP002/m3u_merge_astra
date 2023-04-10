@@ -55,7 +55,7 @@ func TestRenameStreams(t *testing.T) {
 
 		_ = r.RenameStreams(sl1, cl1)
 	})
-	assert.Contains(t, out, `ID "0", old name "Known name", new name "Known_Name", group "Cat: Grp"`)
+	assert.Contains(t, out, `Renaming stream: ID "0", old name "Known name", new name "Known_Name", group "Cat: Grp"`)
 }
 
 func TestUpdateInputs(t *testing.T) {
@@ -160,7 +160,7 @@ func TestUpdateInputs(t *testing.T) {
 
 		_ = r.UpdateInputs(sl1, cl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Known name", old URL "http://known/input/1", `+
+	assert.Contains(t, out, `Updating input of stream: ID "0", name "Known name", old URL "http://known/input/1", `+
 		`new URL "http://new/known/input/1", note "Stream is disabled"`)
 
 	out = capturer.CaptureStderr(func() {
@@ -243,7 +243,8 @@ func TestRemoveInputsByUpdateMap(t *testing.T) {
 
 		_ = r.RemoveInputsByUpdateMap(sl1, cl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Known name", group "Cat: Grp", input "http://known/input/1"`)
+	assert.Contains(t, out, `Removing absent input of stream according the update map: ID "0", name "Known name", `+
+		`group "Cat: Grp", input "http://known/input/1"`)
 }
 
 func TestAddNewInputs(t *testing.T) {
@@ -357,8 +358,8 @@ func TestAddNewInputs(t *testing.T) {
 
 		_ = r.AddNewInputs(sl1, cl1)
 	})
-	assert.Contains(t, out, `ID "0", name "Known name", group "Cat: Grp", URL "http://url/1", note `+
-		`"Stream is disabled"`)
+	assert.Contains(t, out, `Adding new input to stream: ID "0", name "Known name", group "Cat: Grp", `+
+		`URL "http://url/1", note "Stream is disabled"`)
 
 	out = capturer.CaptureStderr(func() {
 		r := newDefRepo()
@@ -476,7 +477,8 @@ func TestAddNewStreams(t *testing.T) {
 
 		sl2 = r.AddNewStreams(sl1, cl1)
 	})
-	assert.Contains(t, out, fmt.Sprintf(`ID "%v", name "Name 1", group "All: Grp", input "http://url/1"`, sl2[0].ID))
+	assert.Contains(t, out, fmt.Sprintf(`Adding new stream: ID "%v", name "Name 1", group "All: Grp", `+
+		`input "http://url/1"`, sl2[0].ID))
 }
 
 func TestGenerateUID(t *testing.T) {
