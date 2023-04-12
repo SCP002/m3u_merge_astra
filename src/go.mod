@@ -8,6 +8,7 @@ require (
 	github.com/alitto/pond v1.8.3
 	github.com/cockroachdb/errors v1.9.1
 	github.com/fatih/color v1.15.0
+	github.com/gorilla/websocket v1.4.1
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jinzhu/copier v0.3.5
 	github.com/knadh/koanf v1.5.0
