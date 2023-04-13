@@ -29,6 +29,15 @@ func TestCheck(t *testing.T) {
 	assert.True(t, result.HasVideo, "should have video stream")
 	assert.NoError(t, err)
 
+	// Regular file
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	result, err = Check(ctx, analyzerAddr, "https://speed.hetzner.de/1GB.bin")
+	assert.True(t, result.Bitrate == 0, "should have average bitrate equal to 0")
+	assert.False(t, result.HasAudio, "should not have audio stream")
+	assert.False(t, result.HasVideo, "should not have video stream")
+	assert.NoError(t, err)
+
 	// Bad url to check
 	ctx, cancel = context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
