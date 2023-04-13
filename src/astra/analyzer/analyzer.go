@@ -8,6 +8,7 @@ import (
 	json "github.com/SCP002/jsonexraw"
 	"github.com/cockroachdb/errors"
 	"github.com/gorilla/websocket"
+	"github.com/samber/lo"
 )
 
 // request represets request to analyzer
@@ -20,9 +21,10 @@ type request struct {
 //
 // Pointers are to distinguish between undefined and zero value.
 type response struct {
-	OnAir *bool   `json:"on_air"`
-	Cmd   *string `json:"cmd"`
-	Total *total  `json:"total"`
+	OnAir   *bool    `json:"on_air"`
+	Cmd     *string  `json:"cmd"`
+	Total   *total   `json:"total"`
+	Streams []stream `json:"streams"`
 }
 
 // total represents aggregated information about stream since previous response
@@ -37,12 +39,22 @@ type total struct {
 	PESErrors    int  `json:"pes_errors"`
 }
 
+// stream respresents elementary stream (audio or video)
+type stream struct {
+	Descriptors []any  `json:"descriptors"`
+	TypeID      int    `json:"type_id"`
+	Pid         int    `json:"pid"`
+	TypeName    string `json:"type_name"`
+}
+
 // Result represents check result containing averages of info such as bitrate and various errors
 type Result struct {
 	Bitrate   int // Kbit/s
 	CCErrors  int
 	PESErrors int
 	Scrambled bool
+	HasAudio  bool
+	HasVideo  bool
 }
 
 // Check returns check result of <urlToCheck> using astra analyzer at <analyzerAddr> in format of 'host:port' with
@@ -91,7 +103,7 @@ func Check(ctx context.Context, analyzerAddr, urlToCheck string) (Result, error)
 	}
 
 	// Collect, calculate and return the result when context deadline exceeded
-	responsesCount := 0
+	totalResponsesCount := 0
 	result := Result{}
 	for {
 		select {
@@ -100,15 +112,26 @@ func Check(ctx context.Context, analyzerAddr, urlToCheck string) (Result, error)
 			return Result{}, err
 		case resp := <-readRespCh:
 			// Collect results
-			if resp.Total == nil {
-				break
+			if resp.Total != nil {
+				totalResponsesCount++
+				result.Scrambled = resp.Total.Scrambled
+				// Build sums to calculate averages later
+				result.Bitrate += resp.Total.Bitrate
+				result.CCErrors += resp.Total.CCErrors
+				result.PESErrors += resp.Total.PESErrors
 			}
-			responsesCount++
-			result.Scrambled = resp.Total.Scrambled
-			// Build sums to calculate averages later
-			result.Bitrate += resp.Total.Bitrate
-			result.CCErrors += resp.Total.CCErrors
-			result.PESErrors += resp.Total.PESErrors
+			if resp.Streams != nil {
+				if !result.HasAudio {
+					result.HasAudio = lo.ContainsBy(resp.Streams, func(s stream) bool {
+						return s.TypeName == "AUDIO"
+					})
+				}
+				if !result.HasVideo {
+					result.HasVideo = lo.ContainsBy(resp.Streams, func(s stream) bool {
+						return s.TypeName == "VIDEO"
+					})
+				}
+			}
 		case <-ctx.Done():
 			// Deadline exceeded
 			// Close the connection by sending a close message
@@ -123,12 +146,11 @@ func Check(ctx context.Context, analyzerAddr, urlToCheck string) (Result, error)
 			case <-time.After(time.Second):
 			}
 			// Calculate averages and return the result
-			if responsesCount == 0 {
-				return result, nil
+			if totalResponsesCount != 0 {
+				result.Bitrate = result.Bitrate / totalResponsesCount
+				result.CCErrors = result.CCErrors / totalResponsesCount
+				result.PESErrors = result.PESErrors / totalResponsesCount
 			}
-			result.Bitrate = result.Bitrate / responsesCount
-			result.CCErrors = result.CCErrors / responsesCount
-			result.PESErrors = result.PESErrors / responsesCount
 			return result, nil
 		}
 	}
