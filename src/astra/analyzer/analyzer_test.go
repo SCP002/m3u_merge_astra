@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Requires a running astra analyzer
 func TestCheck(t *testing.T) {
 	analyzerAddr := "127.0.0.1:8001"
 	handshakeTimeout := time.Second * 3

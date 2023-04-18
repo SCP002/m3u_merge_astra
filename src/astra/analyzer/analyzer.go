@@ -51,6 +51,7 @@ type stream struct {
 type Result struct {
 	Bitrate   int // Kbit/s
 	CCErrors  int
+	PCRErrors int
 	PESErrors int
 	Scrambled bool
 	HasAudio  bool
@@ -122,6 +123,7 @@ func Check(ctx context.Context, handshakeTimeout time.Duration, analyzerAddr, ur
 				// Build sums to calculate averages later
 				result.Bitrate += resp.Total.Bitrate
 				result.CCErrors += resp.Total.CCErrors
+				result.PCRErrors += resp.Total.PCRErrors
 				result.PESErrors += resp.Total.PESErrors
 			}
 			if resp.Streams != nil {
@@ -153,6 +155,7 @@ func Check(ctx context.Context, handshakeTimeout time.Duration, analyzerAddr, ur
 			if totalResponsesCount != 0 {
 				result.Bitrate = result.Bitrate / totalResponsesCount
 				result.CCErrors = result.CCErrors / totalResponsesCount
+				result.PCRErrors = result.PCRErrors / totalResponsesCount
 				result.PESErrors = result.PESErrors / totalResponsesCount
 			}
 			return result, nil
