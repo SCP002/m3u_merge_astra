@@ -219,8 +219,17 @@ func newTestConfig() Root {
 				*regexp.MustCompile(`https?:\/\/dont-check\.com\/play`),
 				*regexp.MustCompile(`192\.168\.88\.`),
 			},
-			InputMaxConns:    10,
-			InputRespTimeout: time.Minute,
+			InputMaxConns:                     10,
+			InputRespTimeout:                  time.Minute,
+			UseAnalyzer:                       false,            // New field in v1.5.0
+			AnalyzerAddr:                      "127.0.0.1:8001", // New field in v1.5.0
+			AnalyzerWatchTime:                 time.Second * 10, // New field in v1.5.0
+			AnalyzerBitrateThreshold:          1,                // New field in v1.5.0
+			AnalyzerVideoOnlyBitrateThreshold: 1,                // New field in v1.5.0
+			AnalyzerAudioOnlyBitrateThreshold: 1,                // New field in v1.5.0
+			AnalyzerCCErrorsThreshold:         -1,               // New field in v1.5.0
+			AnalyzerPCRErrorsThreshold:        -1,               // New field in v1.5.0
+			AnalyzerPESErrorsThreshold:        -1,               // New field in v1.5.0
 			InputUpdateMap: []UpdateRecord{
 				{From: *regexp.MustCompile(`127\.0\.0\.1`), To: *regexp.MustCompile(`127\.0\.0\.1`)},
 				{From: *regexp.MustCompile(`some_url\.com`), To: *regexp.MustCompile(`some_url\.com`)},

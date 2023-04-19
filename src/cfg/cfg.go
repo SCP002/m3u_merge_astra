@@ -219,6 +219,53 @@ type Streams struct {
 	// InputRespTimeout represents astra stream input response timeout
 	InputRespTimeout time.Duration `koanf:"input_resp_timeout"`
 
+	// UseAnalyzer specifies if astra analyzer should be used to check for dead inputs.
+	//
+	// Supports HTTP(S), UDP, RTP, RTSP.
+	UseAnalyzer bool `koanf:"use_analyzer"`
+
+	// AnalyzerAddr represents astra analyzer address in format of 'host:port'
+	AnalyzerAddr string `koanf:"analyzer_addr"`
+
+	// AnalyzerWatchTime represents amount of time astra analyzer should spend collecting results
+	AnalyzerWatchTime time.Duration `koanf:"analyzer_watch_time"`
+
+	// AnalyzerWatchTime represents average bitrate threshold in kbit/s for stream inputs.
+	//
+	// If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+	AnalyzerBitrateThreshold int `koanf:"analyzer_bitrate_threshold"`
+
+	// AnalyzerVideoOnlyBitrateThreshold represents average bitrate threshold in kbit/s for stream inputs without audio.
+	//
+	// If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+	AnalyzerVideoOnlyBitrateThreshold int `koanf:"analyzer_video_only_bitrate_threshold"`
+
+	// AnalyzerAudioOnlyBitrateThreshold represents average bitrate threshold in kbit/s for stream inputs without video.
+	//
+	// If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+	AnalyzerAudioOnlyBitrateThreshold int `koanf:"analyzer_audio_only_bitrate_threshold"`
+
+	// AnalyzerCCErrorsThreshold represents average amount of CC errors for stream inputs.
+	//
+	// If astra analyzer will return amount of CC errors higher than specified threshold, input will be cosidered dead.
+	//
+	// Set to negative value to disable this check.
+	AnalyzerCCErrorsThreshold int `koanf:"analyzer_cc_errors_threshold"`
+
+	// AnalyzerPCRErrorsThreshold represents average amount of PCR errors for stream inputs.
+	//
+	// If astra analyzer will return amount of PCR errors higher than specified threshold, input will be cosidered dead.
+	//
+	// Set to negative value to disable this check.
+	AnalyzerPCRErrorsThreshold int `koanf:"analyzer_pcr_errors_threshold"`
+
+	// AnalyzerPESErrorsThreshold represents average amount of PES errors for stream inputs.
+	//
+	// If astra analyzer will return amount of PES errors higher than specified threshold, input will be cosidered dead.
+	//
+	// Set to negative value to disable this check.
+	AnalyzerPESErrorsThreshold int `koanf:"analyzer_pes_errors_threshold"`
+
 	// InputUpdateMap represens list of regular expression pairs.
 	//
 	// If any <From> expression match URL of astra stream's input, it will be replaced with URL from according M3U
@@ -390,16 +437,25 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 
 	// Check if config is damaged (there are more missing fields than was added since v1.0.0)
 	knownFields := []string{
-		/* 0 */ "streams.add_groups_to_new",
-		/* 1 */ "streams.groups_category_for_new",
-		/* 2 */ "streams.enable_on_input_update",
-		/* 3 */ "general.name_aliases",
-		/* 4 */ "general.name_alias_list",
-		/* 5 */ "streams.remove_duplicated_inputs_by_rx_list",
-		/* 6 */ "streams.new_keep_active",
-		/* 7 */ "streams.name_to_keep_active_map",
-		/* 8 */ "streams.group_to_keep_active_map",
-		/* 9 */ "streams.input_to_keep_active_map",
+		/*  0 */ "streams.add_groups_to_new",
+		/*  1 */ "streams.groups_category_for_new",
+		/*  2 */ "streams.enable_on_input_update",
+		/*  3 */ "general.name_aliases",
+		/*  4 */ "general.name_alias_list",
+		/*  5 */ "streams.remove_duplicated_inputs_by_rx_list",
+		/*  6 */ "streams.new_keep_active",
+		/*  7 */ "streams.name_to_keep_active_map",
+		/*  8 */ "streams.group_to_keep_active_map",
+		/*  9 */ "streams.input_to_keep_active_map",
+		/* 10 */ "streams.use_analyzer",
+		/* 11 */ "streams.analyzer_addr",
+		/* 12 */ "streams.analyzer_watch_time",
+		/* 13 */ "streams.analyzer_bitrate_threshold",
+		/* 14 */ "streams.analyzer_video_only_bitrate_threshold",
+		/* 15 */ "streams.analyzer_audio_only_bitrate_threshold",
+		/* 16 */ "streams.analyzer_cc_errors_threshold",
+		/* 17 */ "streams.analyzer_pcr_errors_threshold",
+		/* 18 */ "streams.analyzer_pes_errors_threshold",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	internalFields := []string{
@@ -656,6 +712,180 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.InputToKeepActiveMap = defVal
 	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[10]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.UseAnalyzer
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{
+				"Use astra analyzer to check for dead inputs?",
+				"",
+				"Supports HTTP(S), UDP, RTP, RTSP.",
+			},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.input_resp_timeout", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.UseAnalyzer = defVal
+	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[11]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerAddr
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Astra analyzer address in format of 'host:port'."},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: fmt.Sprintf("'%v'", defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.use_analyzer", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerAddr = defVal
+	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[12]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerWatchTime
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Amount of time astra analyzer should spend collecting results."},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: fmt.Sprintf("'%v'", defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_addr", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerWatchTime = defVal
+	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[13]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerBitrateThreshold
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Average bitrate threshold in kbit/s for stream inputs.",
+				"",
+				"If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.",
+			},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.Itoa(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_watch_time", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerBitrateThreshold = defVal
+	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[14]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerVideoOnlyBitrateThreshold
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Average bitrate threshold in kbit/s for stream inputs without audio.",
+				"",
+				"If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.",
+			},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.Itoa(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_bitrate_threshold", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerVideoOnlyBitrateThreshold = defVal
+	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[15]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerAudioOnlyBitrateThreshold
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Average bitrate threshold in kbit/s for stream inputs without video.",
+				"",
+				"If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.",
+			},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.Itoa(defVal)},
+		}
+		cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_video_only_bitrate_threshold", false, node)
+		if err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerAudioOnlyBitrateThreshold = defVal
+	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[16]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerCCErrorsThreshold
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Average amount of CC errors for stream inputs.",
+				"",
+				"If astra analyzer will return amount of CC errors higher than specified threshold, " +
+					"input will be cosidered dead.",
+				"",
+				"Set to negative value to disable this check.",
+			},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.Itoa(defVal)},
+		}
+		cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_audio_only_bitrate_threshold", false, node)
+		if err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerCCErrorsThreshold = defVal
+	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[17]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerPCRErrorsThreshold
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Average amount of PCR errors for stream inputs.",
+				"",
+				"If astra analyzer will return amount of PCR errors higher than specified threshold, " +
+					"input will be cosidered dead.",
+				"",
+				"Set to negative value to disable this check.",
+			},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.Itoa(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_cc_errors_threshold", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerPCRErrorsThreshold = defVal
+	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[18]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerPESErrorsThreshold
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Average amount of PES errors for stream inputs.",
+				"",
+				"If astra analyzer will return amount of PES errors higher than specified threshold, " +
+					"input will be cosidered dead.",
+				"",
+				"Set to negative value to disable this check.",
+			},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.Itoa(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_pcr_errors_threshold", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerPESErrorsThreshold = defVal
+	}
 
 	// Validate amount of capture groups
 	for _, rx := range root.Streams.RemoveDuplicatedInputsByRxList {
@@ -720,42 +950,51 @@ func NewDefCfg() Root {
 			ChannGroupMap:       map[string]string(nil),
 		},
 		Streams: Streams{
-			AddedPrefix:                    "_ADDED: ",
-			AddNew:                         true,
-			AddGroupsToNew:                 false,
-			GroupsCategoryForNew:           "All",
-			AddNewWithKnownInputs:          false,
-			MakeNewEnabled:                 false,
-			NewType:                        SPTS,
-			NewKeepActive:                  0,
-			DisabledPrefix:                 "_DISABLED: ",
-			RemoveWithoutInputs:            false,
-			DisableWithoutInputs:           true,
-			EnableOnInputUpdate:            false,
-			Rename:                         false,
-			AddNewInputs:                   true,
-			UniteInputs:                    true,
-			HashCheckOnAddNewInputs:        false,
-			SortInputs:                     true,
-			InputWeightToTypeMap:           map[int]regexp.Regexp(nil),
-			UnknownInputWeight:             50,
-			InputBlacklist:                 []regexp.Regexp(nil),
-			RemoveDuplicatedInputs:         true,
-			RemoveDuplicatedInputsByRxList: []regexp.Regexp(nil),
-			RemoveDeadInputs:               false,
-			DeadInputsCheckBlacklist:       []regexp.Regexp(nil),
-			InputMaxConns:                  1,
-			InputRespTimeout:               time.Second * 10,
-			InputUpdateMap:                 []UpdateRecord(nil),
-			UpdateInputs:                   false,
-			KeepInputHash:                  true,
-			RemoveInputsByUpdateMap:        false,
-			NameToInputHashMap:             []HashAddRule(nil),
-			GroupToInputHashMap:            []HashAddRule(nil),
-			InputToInputHashMap:            []HashAddRule(nil),
-			NameToKeepActiveMap:            []KeepActiveAddRule(nil),
-			GroupToKeepActiveMap:           []KeepActiveAddRule(nil),
-			InputToKeepActiveMap:           []KeepActiveAddRule(nil),
+			AddedPrefix:                       "_ADDED: ",
+			AddNew:                            true,
+			AddGroupsToNew:                    false,
+			GroupsCategoryForNew:              "All",
+			AddNewWithKnownInputs:             false,
+			MakeNewEnabled:                    false,
+			NewType:                           SPTS,
+			NewKeepActive:                     0,
+			DisabledPrefix:                    "_DISABLED: ",
+			RemoveWithoutInputs:               false,
+			DisableWithoutInputs:              true,
+			EnableOnInputUpdate:               false,
+			Rename:                            false,
+			AddNewInputs:                      true,
+			UniteInputs:                       true,
+			HashCheckOnAddNewInputs:           false,
+			SortInputs:                        true,
+			InputWeightToTypeMap:              map[int]regexp.Regexp(nil),
+			UnknownInputWeight:                50,
+			InputBlacklist:                    []regexp.Regexp(nil),
+			RemoveDuplicatedInputs:            true,
+			RemoveDuplicatedInputsByRxList:    []regexp.Regexp(nil),
+			RemoveDeadInputs:                  false,
+			DeadInputsCheckBlacklist:          []regexp.Regexp(nil),
+			InputMaxConns:                     1,
+			InputRespTimeout:                  time.Second * 10,
+			UseAnalyzer:                       false,
+			AnalyzerAddr:                      "127.0.0.1:8001",
+			AnalyzerWatchTime:                 time.Second * 10,
+			AnalyzerBitrateThreshold:          1,
+			AnalyzerVideoOnlyBitrateThreshold: 1,
+			AnalyzerAudioOnlyBitrateThreshold: 1,
+			AnalyzerCCErrorsThreshold:         -1,
+			AnalyzerPCRErrorsThreshold:        -1,
+			AnalyzerPESErrorsThreshold:        -1,
+			InputUpdateMap:                    []UpdateRecord(nil),
+			UpdateInputs:                      false,
+			KeepInputHash:                     true,
+			RemoveInputsByUpdateMap:           false,
+			NameToInputHashMap:                []HashAddRule(nil),
+			GroupToInputHashMap:               []HashAddRule(nil),
+			InputToInputHashMap:               []HashAddRule(nil),
+			NameToKeepActiveMap:               []KeepActiveAddRule(nil),
+			GroupToKeepActiveMap:              []KeepActiveAddRule(nil),
+			InputToKeepActiveMap:              []KeepActiveAddRule(nil),
 		},
 	}
 }

@@ -43,6 +43,15 @@ streams:
   dead_inputs_check_blacklist:
   input_max_conns: 0
   input_resp_timeout: '0s'
+  use_analyzer: false
+  analyzer_addr: ''
+  analyzer_watch_time: '0s'
+  analyzer_bitrate_threshold: 0
+  analyzer_video_only_bitrate_threshold: 0
+  analyzer_audio_only_bitrate_threshold: 0
+  analyzer_cc_errors_threshold: 0
+  analyzer_pcr_errors_threshold: 0
+  analyzer_pes_errors_threshold: 0
   input_update_map:
   update_inputs: false
   keep_input_hash: false

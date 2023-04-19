@@ -245,6 +245,46 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
   * `input_resp_timeout`  
     Astra stream input response timeout.
 
+  * `use_analyzer`  
+    Use astra analyzer to check for dead inputs?  
+    Supports HTTP(S), UDP, RTP, RTSP.
+    > Why does it exist?  
+    > To remove or disable dead inputs by advanced criteria such as bitrate or errors, check more protocols and
+    > use analyzer as a proxy if needed.
+
+  * `analyzer_addr`  
+    Astra analyzer address in format of 'host:port'.
+
+  * `analyzer_watch_time`  
+    Amount of time astra analyzer should spend collecting results.
+
+  * `analyzer_bitrate_threshold`  
+    Average bitrate threshold in kbit/s for stream inputs.  
+    If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+
+  * `analyzer_video_only_bitrate_threshold`  
+    Average bitrate threshold in kbit/s for stream inputs without audio.  
+    If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+
+  * `analyzer_audio_only_bitrate_threshold`  
+    Average bitrate threshold in kbit/s for stream inputs without video.  
+    If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+
+  * `analyzer_cc_errors_threshold`  
+    Average amount of CC errors for stream inputs.  
+    If astra analyzer will return amount of CC errors higher than specified threshold, input will be cosidered dead.  
+    Set to negative value to disable this check.
+
+  * `analyzer_pcr_errors_threshold`  
+    Average amount of PCR errors for stream inputs.  
+    If astra analyzer will return amount of PCR errors higher than specified threshold, input will be cosidered dead.  
+    Set to negative value to disable this check.
+
+  * `analyzer_pes_errors_threshold`  
+    Average amount of PES errors for stream inputs.  
+    If astra analyzer will return amount of PES errors higher than specified threshold, input will be cosidered dead.  
+    Set to negative value to disable this check.
+
   * `input_update_map`  
     List of regular expression pairs.  
     If any `from` expression match URL of astra stream's input, it will be replaced with URL from according M3U
