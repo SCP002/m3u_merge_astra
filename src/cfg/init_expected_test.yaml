@@ -158,7 +158,7 @@ streams:
     # - '^.*:\/\/.*?\/([^#?]*)' # By path
 
   # Remove inputs of astra streams which do not respond?
-  # Currently supports only HTTP(S).
+  # Supports HTTP(S), enable 'use_analyzer' option for more.
   remove_dead_inputs: false
 
   # List of regular expressions.

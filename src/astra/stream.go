@@ -387,14 +387,20 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveDeadInputs returns deep copy of <streams> without inputs which do not respond in time or respond with status
-// code >= 400.
+// RemoveDeadInputs returns deep copy of <streams> without dead inputs.
 //
-// Not checking Content-Type header as server can return text/html but stream still will be playable.
+// If cfg.Streams.UseAnalyzer is false:
 //
-// Not checking response body as some streams can periodically respond with no content but still be playable.
+// It removes inputs which do not respond in time or respond with status code >= 400.
 //
-// Currently supports only HTTP(S).
+// Supports HTTP(S).
+//
+// If cfg.Streams.UseAnalyzer is true:
+//
+// It removes inputs with bitrate lower than specified in config or with amount of errors higher than specified in
+// config.
+//
+// Supports HTTP(S), UDP, RTP, RTSP.
 func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out []Stream) {
 	r.log.Info("Removing dead inputs from streams")
 
@@ -416,6 +422,8 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 			defer resp.Body.Close()
 		}
 		reason := ""
+		// Not checking Content-Type header as server can return text/html but stream still will be playable.
+		// Not checking response body as some streams can periodically respond with no content but still be playable.
 		if err != nil {
 			errType := network.GetErrType(err)
 			reason = lo.Ternary(errType == network.Unknown, err.Error(), string(errType))

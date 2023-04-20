@@ -203,7 +203,7 @@ type Streams struct {
 
 	// RemoveDeadInputs specifies if inputs of astra streams which do not respond should be removed.
 	//
-	// Currently supports only HTTP(S).
+	// Supports HTTP(S), enable 'use_analyzer' option for more.
 	RemoveDeadInputs bool `koanf:"remove_dead_inputs"`
 
 	// DeadInputsCheckBlacklist represens the list of regular expressions.

@@ -232,7 +232,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 
   * `remove_dead_inputs`  
     Remove inputs of astra streams which do not respond?  
-    Currently supports only HTTP(S).
+    Supports HTTP(S), enable `use_analyzer` option for more.
 
   * `dead_inputs_check_blacklist`  
     List of regular expressions.  
