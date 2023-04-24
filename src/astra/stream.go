@@ -409,7 +409,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
 			return false
 		}
-		if strings.HasPrefix(inp, "http://") || strings.HasPrefix(inp, "https://") {
+		if slice.HasAnyPrefix(inp, "http://", "https://") {
 			return true
 		}
 		return false
