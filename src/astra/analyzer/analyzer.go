@@ -65,10 +65,10 @@ type Result struct {
 //
 // Does Not return error if <urlToCheck> is dead or invalid, rely on bitrate == 0.
 func Check(ctx context.Context, handshakeTimeout time.Duration, analyzerAddr, urlToCheck string) (Result, error) {
-	url := url.URL{Scheme: "ws", Host: analyzerAddr, Path: "/api/"}
+	analyzerUrl := url.URL{Scheme: "ws", Host: analyzerAddr, Path: "/api/"}
 	dialer := websocket.DefaultDialer
 	dialer.HandshakeTimeout = handshakeTimeout
-	conn, _, err := dialer.Dial(url.String(), nil)
+	conn, _, err := dialer.Dial(analyzerUrl.String(), nil)
 	if err != nil {
 		return Result{}, errors.Wrap(err, "Dial")
 	}

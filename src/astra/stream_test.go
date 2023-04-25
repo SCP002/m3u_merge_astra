@@ -838,6 +838,7 @@ func TestSortInputs(t *testing.T) {
 func TestRemoveDeadInputs(t *testing.T) {
 	r := newDefRepo()
 	r.cfg.Streams.InputMaxConns = 100
+	r.cfg.Streams.UseAnalyzer = false
 
 	// Create request handlers
 	handleAlive := func(w http.ResponseWriter, req *http.Request) {
@@ -969,6 +970,7 @@ func TestRemoveDeadInputs(t *testing.T) {
 	// Test log output
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
+		r.cfg.Streams.UseAnalyzer = false
 
 		sl1 := []Stream{{
 			ID:     "0",
@@ -988,6 +990,113 @@ func TestRemoveDeadInputs(t *testing.T) {
 	assert.Contains(t, out, msg)
 	msg = `End checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
 		`input "https://127.0.0.1:5656/dead/timeout/1", progress "1 / 1 (100%)"`
+	assert.Contains(t, out, msg)
+}
+
+func TestAnalyzerRemoveDeadInputs(t *testing.T) {
+	r := newDefRepo()
+	r.cfg.Streams.InputMaxConns = 100
+	r.cfg.Streams.UseAnalyzer = true
+	r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold = 100
+	r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold = 200
+	r.cfg.Streams.AnalyzerBitrateThreshold = 300
+	r.cfg.Streams.AnalyzerCCErrorsThreshold = 10
+	r.cfg.Streams.AnalyzerPCRErrorsThreshold = 20
+	r.cfg.Streams.AnalyzerPESErrorsThreshold = 30
+
+	r.cfg.Streams.DeadInputsCheckBlacklist = []regexp.Regexp{
+		*regexp.MustCompile(`ignore/1`),
+	}
+	sl1 := []Stream{
+		{
+			Name:   "Name 1",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"http://dead/audio/50", "http://alive/audio/100", "http://dead/cc/15",
+				"http://alive/cc/10"},
+		},
+		{
+			Name:   "Name 2",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"https://dead/video/150", "udp://alive/video/210", "https://dead/pcr/25",
+				"https://alive/pcr/20"},
+		},
+		{
+			Name:   "Name 3",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"rtp://dead/full/250", "rtsp://alive/full/400", "udp://dead/pes/25", "rtp://alive/pes/30"},
+		},
+		{
+			Name:   "Name 4",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"dvb://0000#pnr=0000&cam=0000", "xxx://unknown/1", "http://ignore/1"},
+		},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	client := network.NewFakeHttpClient(time.Second * 3)
+	sl2 := r.RemoveDeadInputs(client, sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	expected := []string{"http://alive/audio/100", "http://alive/cc/10"}
+	assert.Exactly(t, expected, sl2[0].Inputs, "should have these inputs")
+
+	expected = []string{"udp://alive/video/210", "https://alive/pcr/20"}
+	assert.Exactly(t, expected, sl2[1].Inputs, "should have these inputs")
+
+	expected = []string{"rtsp://alive/full/400", "rtp://alive/pes/30"}
+	assert.Exactly(t, expected, sl2[2].Inputs, "should have these inputs")
+
+	assert.Exactly(t, sl1[3].Inputs, sl2[3].Inputs, "should not remove inputs with unsupported protocols or ignored")
+
+	// Test negative errors threshold
+	r.cfg.Streams.AnalyzerCCErrorsThreshold = -1
+	r.cfg.Streams.AnalyzerPCRErrorsThreshold = -1
+	r.cfg.Streams.AnalyzerPESErrorsThreshold = -1
+
+	sl1 = []Stream{
+		{
+			Name:   "Name 1",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"http://alive/cc/0", "http://alive/pcr/1", "http://alive/pes/10"},
+		},
+	}
+	sl1Original = copier.TestDeep(t, sl1)
+
+	sl2 = r.RemoveDeadInputs(client, sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	assert.Exactly(t, sl1[0].Inputs, sl2[0].Inputs, "should not remove inputs with errors if thresholds are negative")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.UseAnalyzer = true
+		r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold = 100
+
+		sl1 := []Stream{{
+			ID:     "0",
+			Name:   "Name 1",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"https://dead/audio/50"}},
+		}
+
+		client := network.NewFakeHttpClient(time.Second * 3)
+		_ = r.RemoveDeadInputs(client, sl1)
+	})
+	msg := `Start checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
+		`input "https://dead/audio/50", progress "0 / 1 (0%)"`
+	assert.Contains(t, out, msg)
+	msg = `Removing dead input from stream: ID "0", name "Name 1", group "Cat: Grp", ` +
+		`input "https://dead/audio/50", reason "Bitrate 50 < 100"`
+	assert.Contains(t, out, msg)
+	msg = `End checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
+		`input "https://dead/audio/50", progress "1 / 1 (100%)"`
 	assert.Contains(t, out, msg)
 }
 

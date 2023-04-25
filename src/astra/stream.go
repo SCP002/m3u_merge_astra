@@ -1,6 +1,7 @@
 package astra
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"sort"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"m3u_merge_astra/astra/analyzer"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/deps"
 	"m3u_merge_astra/util/copier"
@@ -412,25 +414,65 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 		if slice.HasAnyPrefix(inp, "http://", "https://") {
 			return true
 		}
+		if r.cfg.Streams.UseAnalyzer && slice.HasAnyPrefix(inp, "udp://", "rtp://", "rtsp://") {
+			return true
+		}
 		return false
 	}
 
-	// getReason returns reason why <inp> should be removed
-	getReason := func(inp string) string {
-		resp, err := httpClient.Get(inp)
-		if err == nil {
-			defer resp.Body.Close()
+	// getRemovalReason returns reason why <inp> should be removed
+	getRemovalReason := func(inp string) string {
+		if r.cfg.Streams.UseAnalyzer {
+			ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Streams.AnalyzerWatchTime)
+			defer cancel()
+			result, err := analyzer.Check(ctx, r.cfg.Streams.InputRespTimeout, r.cfg.Streams.AnalyzerAddr, inp)
+			if err != nil {
+				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
+				return ""
+			}
+			// Check bitrate
+			hasVideoOnly := result.HasVideo && !result.HasAudio
+			hasAudioOnly := !result.HasVideo && result.HasAudio
+			bitrate := result.Bitrate
+			if hasVideoOnly {
+				if bitrate < r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold {
+					return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold)
+				}
+			} else if hasAudioOnly {
+				if bitrate < r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold {
+					return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold)
+				}
+			} else if bitrate < r.cfg.Streams.AnalyzerBitrateThreshold {
+				return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerBitrateThreshold)
+			}
+			// Check errors
+			ccErrorsThreshold := r.cfg.Streams.AnalyzerCCErrorsThreshold
+			pcrErrorsThreshold := r.cfg.Streams.AnalyzerPCRErrorsThreshold
+			pesErrorsThreshold := r.cfg.Streams.AnalyzerPESErrorsThreshold
+			if ccErrorsThreshold >= 0 && result.CCErrors > ccErrorsThreshold {
+				return fmt.Sprintf("CC errors %v > %v", result.CCErrors, ccErrorsThreshold)
+			}
+			if pcrErrorsThreshold >= 0 && result.PCRErrors > pcrErrorsThreshold {
+				return fmt.Sprintf("PCR errors %v > %v", result.PCRErrors, pcrErrorsThreshold)
+			}
+			if pesErrorsThreshold >= 0 && result.PESErrors > pesErrorsThreshold {
+				return fmt.Sprintf("PES errors %v > %v", result.PESErrors, pesErrorsThreshold)
+			}
+		} else {
+			resp, err := httpClient.Get(inp)
+			if err == nil {
+				defer resp.Body.Close()
+			}
+			// Not checking Content-Type header as server can return text/html but stream still will be playable
+			// Not checking response body as some streams can periodically respond with no content but still be playable
+			if err != nil {
+				errType := network.GetErrType(err)
+				return lo.Ternary(errType == network.Unknown, err.Error(), string(errType))
+			} else if resp.StatusCode >= 400 {
+				return fmt.Sprintf("Responded with: %v", resp.Status)
+			}
 		}
-		reason := ""
-		// Not checking Content-Type header as server can return text/html but stream still will be playable.
-		// Not checking response body as some streams can periodically respond with no content but still be playable.
-		if err != nil {
-			errType := network.GetErrType(err)
-			reason = lo.Ternary(errType == network.Unknown, err.Error(), string(errType))
-		} else if resp.StatusCode >= 400 {
-			reason = fmt.Sprintf("Responded with: %v", resp.Status)
-		}
-		return reason
+		return ""
 	}
 
 	pool := pond.New(r.cfg.Streams.InputMaxConns, 0, pond.MinWorkers(0))
@@ -455,10 +497,10 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
 					"input", inp, "progress", getProgress())
 				if canCheck(inp) {
-					reason := getReason(inp)
-					if reason != "" {
+					removalReason := getRemovalReason(inp)
+					if removalReason != "" {
 						r.log.InfoCFi("Removing dead input from stream", "ID", s.ID, "name", s.Name,
-							"group", s.FirstGroup(), "input", inp, "reason", reason)
+							"group", s.FirstGroup(), "input", inp, "reason", removalReason)
 						mut.Lock()
 						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
 						mut.Unlock()
