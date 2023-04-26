@@ -393,17 +393,17 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 //
 // If cfg.Streams.UseAnalyzer is false:
 //
-// It removes inputs which do not respond in time or respond with status code >= 400.
+// It removes inputs which do not respond in time or respond with status code >= 400 using <httpClient>.
 //
 // Supports HTTP(S).
 //
 // If cfg.Streams.UseAnalyzer is true:
 //
 // It removes inputs with bitrate lower than specified in config or with amount of errors higher than specified in
-// config.
+// config using <analyzer>.
 //
 // Supports HTTP(S), UDP, RTP, RTSP.
-func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out []Stream) {
+func (r repo) RemoveDeadInputs(httpClient *http.Client, analyzer analyzer.Analyzer, streams []Stream) (out []Stream) {
 	r.log.Info("Removing dead inputs from streams")
 
 	// canCheck returns true if <inp> can be checked
@@ -425,7 +425,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out [
 		if r.cfg.Streams.UseAnalyzer {
 			ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Streams.AnalyzerWatchTime)
 			defer cancel()
-			result, err := analyzer.Check(ctx, r.cfg.Streams.InputRespTimeout, r.cfg.Streams.AnalyzerAddr, inp)
+			result, err := analyzer.Check(ctx, inp)
 			if err != nil {
 				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
 				return ""

@@ -58,17 +58,38 @@ type Result struct {
 	HasVideo  bool
 }
 
-// Check returns check result of <urlToCheck> using astra analyzer at <analyzerAddr> in format of 'host:port' with
-// <handshakeTimeout> and context <ctx>.
+// Analyzer represents astra analyzer client interface
+type Analyzer interface {
+	Check(ctx context.Context, urlToCheck string) (Result, error)
+}
+
+// analyzer represents astra analyzer client
+type analyzer struct {
+	url    string
+	dialer *websocket.Dialer
+}
+
+// New returns new configured astra analyzer client which connects to <address> in format of 'host:port' with
+// <handshakeTimeout>.
+func New(address string, handshakeTimeout time.Duration) *analyzer {
+	url := url.URL{Scheme: "ws", Host: address, Path: "/api/"}
+
+	dialer := websocket.DefaultDialer
+	dialer.HandshakeTimeout = handshakeTimeout
+
+	return &analyzer{
+		url:    url.String(),
+		dialer: dialer,
+	}
+}
+
+// Check returns check result of <urlToCheck> using astra analyzer with context <ctx>.
 //
 // Returns when <ctx> is done.
 //
 // Does Not return error if <urlToCheck> is dead or invalid, rely on bitrate == 0.
-func Check(ctx context.Context, handshakeTimeout time.Duration, analyzerAddr, urlToCheck string) (Result, error) {
-	analyzerUrl := url.URL{Scheme: "ws", Host: analyzerAddr, Path: "/api/"}
-	dialer := websocket.DefaultDialer
-	dialer.HandshakeTimeout = handshakeTimeout
-	conn, _, err := dialer.Dial(analyzerUrl.String(), nil)
+func (a analyzer) Check(ctx context.Context, urlToCheck string) (Result, error) {
+	conn, _, err := a.dialer.Dial(a.url, nil)
 	if err != nil {
 		return Result{}, errors.Wrap(err, "Dial")
 	}
@@ -161,4 +182,26 @@ func Check(ctx context.Context, handshakeTimeout time.Duration, analyzerAddr, ur
 			return result, nil
 		}
 	}
+}
+
+// fakeAnalyzer represents fake astra analyzer client
+type fakeAnalyzer struct {
+	urlResultMap map[string]Result
+}
+
+// NewFake returns new fake astra analyzer client
+func NewFake() *fakeAnalyzer {
+	return &fakeAnalyzer{
+		urlResultMap: map[string]Result{},
+	}
+}
+
+// AddResult adds new <result> to return when checking <url>
+func (a fakeAnalyzer) AddResult(url string, result Result) {
+	a.urlResultMap[url] = result
+}
+
+// Check returns fake result for <urlToCheck> and nil error
+func (a fakeAnalyzer) Check(ctx context.Context, urlToCheck string) (Result, error) {
+	return a.urlResultMap[urlToCheck], nil
 }

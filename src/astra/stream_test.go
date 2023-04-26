@@ -2,6 +2,7 @@ package astra
 
 import (
 	"fmt"
+	"m3u_merge_astra/astra/analyzer"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/logger"
@@ -898,8 +899,9 @@ func TestRemoveDeadInputs(t *testing.T) {
 	}
 	sl1Original := copier.TestDeep(t, sl1)
 
-	client := network.NewHttpClient(time.Second * 3)
-	sl2 := r.RemoveDeadInputs(client, sl1)
+	httpClient := network.NewHttpClient(time.Second * 3)
+	analyzerClient := analyzer.NewFake()
+	sl2 := r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
 
@@ -940,10 +942,10 @@ func TestRemoveDeadInputs(t *testing.T) {
 	}
 	sl1Original = copier.TestDeep(t, sl1)
 
-	client = network.NewFakeHttpClient(time.Second * 3)
+	httpClient = network.NewFakeHttpClient(time.Second * 3)
 
 	for i := 0; i < 10000; i++ {
-		sl2 = r.RemoveDeadInputs(client, sl1)
+		sl2 = r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
 		if ok := assert.NotSame(t, &sl1, &sl2, "should return copy of streams"); !ok {
 			t.FailNow()
 		}
@@ -979,8 +981,9 @@ func TestRemoveDeadInputs(t *testing.T) {
 			Inputs: []string{"https://127.0.0.1:5656/dead/timeout/1"}},
 		}
 
-		client := network.NewHttpClient(time.Second * 3)
-		_ = r.RemoveDeadInputs(client, sl1)
+		httpClient := network.NewHttpClient(time.Second * 3)
+		analyzerClient := analyzer.NewFake()
+		_ = r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
 	})
 	msg := `Start checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
 		`input "https://127.0.0.1:5656/dead/timeout/1", progress "0 / 1 (0%)"`
@@ -1023,7 +1026,7 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 		{
 			Name:   "Name 3",
 			Groups: map[string]string{"Cat": "Grp"},
-			Inputs: []string{"rtp://dead/full/250", "rtsp://alive/full/400", "udp://dead/pes/25", "rtp://alive/pes/30"},
+			Inputs: []string{"rtp://dead/full/250", "rtsp://alive/full/400", "udp://dead/pes/35", "rtp://alive/pes/30"},
 		},
 		{
 			Name:   "Name 4",
@@ -1033,8 +1036,22 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 	}
 	sl1Original := copier.TestDeep(t, sl1)
 
-	client := network.NewFakeHttpClient(time.Second * 3)
-	sl2 := r.RemoveDeadInputs(client, sl1)
+	httpClient := network.NewFakeHttpClient(time.Second * 3)
+	analyzerClient := analyzer.NewFake()
+	analyzerClient.AddResult("http://dead/audio/50", analyzer.Result{HasAudio: true, Bitrate: 50})
+	analyzerClient.AddResult("http://alive/audio/100", analyzer.Result{HasAudio: true, Bitrate: 100})
+	analyzerClient.AddResult("http://dead/cc/15", analyzer.Result{CCErrors: 15, Bitrate: 1000})
+	analyzerClient.AddResult("http://alive/cc/10", analyzer.Result{CCErrors: 10, Bitrate: 1000})
+	analyzerClient.AddResult("https://dead/video/150", analyzer.Result{HasVideo: true, Bitrate: 150})
+	analyzerClient.AddResult("udp://alive/video/210", analyzer.Result{HasVideo: true, Bitrate: 210})
+	analyzerClient.AddResult("https://dead/pcr/25", analyzer.Result{PCRErrors: 25, Bitrate: 1000})
+	analyzerClient.AddResult("https://alive/pcr/20", analyzer.Result{PCRErrors: 20, Bitrate: 1000})
+	analyzerClient.AddResult("rtp://dead/full/250", analyzer.Result{HasAudio: true, HasVideo: true, Bitrate: 250})
+	analyzerClient.AddResult("rtsp://alive/full/400", analyzer.Result{HasAudio: true, HasVideo: true, Bitrate: 400})
+	analyzerClient.AddResult("udp://dead/pes/35", analyzer.Result{PESErrors: 35, Bitrate: 1000})
+	analyzerClient.AddResult("rtp://alive/pes/30", analyzer.Result{PESErrors: 30, Bitrate: 1000})
+
+	sl2 := r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
 
@@ -1065,7 +1082,11 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 	}
 	sl1Original = copier.TestDeep(t, sl1)
 
-	sl2 = r.RemoveDeadInputs(client, sl1)
+	analyzerClient.AddResult("http://alive/cc/0", analyzer.Result{CCErrors: 0, Bitrate: 1000})
+	analyzerClient.AddResult("http://alive/pcr/1", analyzer.Result{PCRErrors: 1, Bitrate: 1000})
+	analyzerClient.AddResult("http://alive/pes/10", analyzer.Result{PESErrors: 10, Bitrate: 1000})
+
+	sl2 = r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
 	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
 
@@ -1086,8 +1107,11 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 			Inputs: []string{"https://dead/audio/50"}},
 		}
 
-		client := network.NewFakeHttpClient(time.Second * 3)
-		_ = r.RemoveDeadInputs(client, sl1)
+		httpClient := network.NewFakeHttpClient(time.Second * 3)
+		analyzerClient := analyzer.NewFake()
+		analyzerClient.AddResult("https://dead/audio/50", analyzer.Result{HasAudio: true, Bitrate: 50})
+
+		_ = r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
 	})
 	msg := `Start checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
 		`input "https://dead/audio/50", progress "0 / 1 (0%)"`
