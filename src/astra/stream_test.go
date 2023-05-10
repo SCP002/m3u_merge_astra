@@ -7,6 +7,7 @@ import (
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
+	"m3u_merge_astra/util/slice"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -986,13 +987,13 @@ func TestRemoveDeadInputs(t *testing.T) {
 		_ = r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
 	})
 	msg := `Start checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
-		`input "https://127.0.0.1:5656/dead/timeout/1", progress "0 / 1 (0%)"`
+		`input "https://127.0.0.1:5656/dead/timeout/1"`
 	assert.Contains(t, out, msg)
 	msg = `Removing dead input from stream: ID "0", name "Name 1", group "Cat: Grp", ` +
 		`input "https://127.0.0.1:5656/dead/timeout/1", reason "Timeout"`
 	assert.Contains(t, out, msg)
 	msg = `End checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
-		`input "https://127.0.0.1:5656/dead/timeout/1", progress "1 / 1 (100%)"`
+		`input "https://127.0.0.1:5656/dead/timeout/1"`
 	assert.Contains(t, out, msg)
 }
 
@@ -1114,14 +1115,58 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 		_ = r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
 	})
 	msg := `Start checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
-		`input "https://dead/audio/50", progress "0 / 1 (0%)"`
+		`input "https://dead/audio/50"`
 	assert.Contains(t, out, msg)
 	msg = `Removing dead input from stream: ID "0", name "Name 1", group "Cat: Grp", ` +
 		`input "https://dead/audio/50", reason "Bitrate 50 < 100"`
 	assert.Contains(t, out, msg)
 	msg = `End checking input: stream ID "0", stream name "Name 1", stream index "0", ` +
-		`input "https://dead/audio/50", progress "1 / 1 (100%)"`
+		`input "https://dead/audio/50"`
 	assert.Contains(t, out, msg)
+}
+
+func TestProgressRemoveDeadInputs(t *testing.T) {
+	log := logger.New(logrus.DebugLevel)
+
+	handleSleep2Sec := func(w http.ResponseWriter, req *http.Request) {
+		log.Debugf("Got request to %v", req.URL)
+		time.Sleep(time.Second * 2)
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/sleep/2sec", handleSleep2Sec)
+
+	// Run http & https servers as subset of current test to be able to fail it from another goroutines (servers) if any
+	// server returns error
+	var httpSrv, httpsSrv *http.Server
+	t.Run("http_server", func(t *testing.T) {
+		httpSrv, httpsSrv = network.NewHttpServer(mux, 3434, 5656, func(err error) {
+			if !errors.Is(err, http.ErrServerClosed) {
+				// Not using logging from testing.T or else message will not be displayed
+				log.Errorf("Test server stopped with non-standard error: %v", err)
+				t.FailNow()
+			}
+		})
+	})
+	defer httpSrv.Close()
+	defer httpsSrv.Close()
+
+	// Test log output
+	// Unexpectedly freezing on Windows 10 after ~20 seconds of the test runnning.
+	// Use test_progress_remove_dead_inputs.sh
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.InputMaxConns = 1
+		r.cfg.Streams.UseAnalyzer = false
+
+		sl1 := []Stream{{Inputs: slice.Filled("http://127.0.0.1:3434/sleep/2sec", 20)}}
+
+		httpClient := network.NewFakeHttpClient(time.Second * 3)
+		analyzerClient := analyzer.NewFake()
+
+		_ = r.RemoveDeadInputs(httpClient, analyzerClient, sl1)
+	})
+	assert.Contains(t, out, `Removing dead inputs from streams: progress "14 / 20 (70%)"`)
 }
 
 func TestAddHashes(t *testing.T) {

@@ -72,8 +72,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
   Press Ctrl + V to paste modified config back to astra.  
   Click `Save`.
 
-* To see the progress of removing dead inputs from streams when `streams.remove_dead_inputs` is enabled,
-  run program with `--logLevel 5` or higher.
+* When `streams.remove_dead_inputs` is enabled, progress of removing dead inputs from streams is printed every 30 seconds.
 
 ## Program config settings
 
@@ -200,8 +199,8 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     Add new inputs to astra streams even if M3U channel and stream input only differ by hash (everything after #)?
     > Why does it exist?  
     > To prevent adding already exising URL's to inputs astra astreams.  
-    > For example if it set to 'true', M3U channel URL 'http://channel' will be added to stream with input 'http://channel#no_sync',
-    > otherwise it won't.
+    > For example if it set to 'true', M3U channel URL '<http://channel>' will be added to stream with input
+    > '<http://channel#no_sync>', otherwise it won't.
 
   * `sort_inputs`  
     Sort inputs of astra streams?

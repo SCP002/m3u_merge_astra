@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"m3u_merge_astra/astra/analyzer"
 	"m3u_merge_astra/cfg"
@@ -20,6 +21,7 @@ import (
 	urlUtil "m3u_merge_astra/util/url"
 
 	"github.com/alitto/pond"
+	"github.com/go-co-op/gocron"
 	"github.com/samber/lo"
 )
 
@@ -489,13 +491,22 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 		return progress
 	}
 
+	progressScheduler := gocron.NewScheduler(time.UTC)
+	_, err := progressScheduler.Every(30).Seconds().Do(func() {
+		r.log.InfoCFi("Removing dead inputs from streams", "progress", getProgress())
+	})
+	if err != nil {
+		r.log.Errorf("Failed to print progress of removing dead inputs: %v", err)
+	}
+	progressScheduler.StartAsync()
+
 	out = copier.MustDeep(streams)
 	for sIdx, s := range out {
 		for _, inp := range s.Inputs {
 			s, sIdx, inp := s, sIdx, inp
 			pool.Submit(func() {
 				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
-					"input", inp, "progress", getProgress())
+					"input", inp)
 				if canCheck(inp) {
 					removalReason := getRemovalReason(inp)
 					if removalReason != "" {
@@ -511,12 +522,13 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 				inputsDone++
 				mut.Unlock()
 				r.log.DebugCFi("End checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
-					"input", inp, "progress", getProgress())
+					"input", inp)
 			})
 		}
 	}
 
 	pool.StopAndWait()
+	progressScheduler.Stop()
 
 	return
 }
