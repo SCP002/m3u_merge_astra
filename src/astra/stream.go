@@ -510,7 +510,7 @@ func (r repo) RemoveDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 				if canCheck(inp) {
 					removalReason := getRemovalReason(inp)
 					if removalReason != "" {
-						r.log.InfoCFi("Removing dead input from stream", "ID", s.ID, "name", s.Name,
+						r.log.WarnCFi("Removing dead input from stream", "ID", s.ID, "name", s.Name,
 							"group", s.FirstGroup(), "input", inp, "reason", removalReason)
 						mut.Lock()
 						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
