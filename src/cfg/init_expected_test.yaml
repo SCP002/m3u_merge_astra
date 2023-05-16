@@ -157,9 +157,14 @@ streams:
     # - '^.*:\/\/([^#?/]*)' # By host
     # - '^.*:\/\/.*?\/([^#?]*)' # By path
 
-  # Remove inputs of astra streams which do not respond?
+  # Remove inputs of astra streams which do not respond or give invalid response?
   # Supports HTTP(S), enable 'use_analyzer' option for more.
+  # It has priority over 'disable_dead_inputs'.
   remove_dead_inputs: false
+
+  # Disable inputs of astra streams which do not respond or give invalid response?
+  # Supports HTTP(S), enable 'use_analyzer' option for more.
+  disable_dead_inputs: false
 
   # List of regular expressions.
   # If any expression match URL of a stream's input, this input will not be checked for availability.

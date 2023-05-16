@@ -230,7 +230,12 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     > To be able to remove dulticated inputs per stream by specific conditions, for example by host name.
 
   * `remove_dead_inputs`  
-    Remove inputs of astra streams which do not respond?  
+    Remove inputs of astra streams which do not respond or give invalid response?  
+    Supports HTTP(S), enable `use_analyzer` option for more.  
+    It has priority over `disable_dead_inputs`.
+
+  * `disable_dead_inputs`  
+    Disable inputs of astra streams which do not respond or give invalid response?  
     Supports HTTP(S), enable `use_analyzer` option for more.
 
   * `dead_inputs_check_blacklist`  

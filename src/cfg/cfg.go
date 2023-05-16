@@ -201,10 +201,19 @@ type Streams struct {
 	// This setting is not controlled by 'remove_duplicated_inputs'.
 	RemoveDuplicatedInputsByRxList []regexp.Regexp `koanf:"remove_duplicated_inputs_by_rx_list"`
 
-	// RemoveDeadInputs specifies if inputs of astra streams which do not respond should be removed.
+	// RemoveDeadInputs specifies if inputs of astra streams which do not respond or give invalid response should be
+	// removed.
 	//
 	// Supports HTTP(S), enable 'use_analyzer' option for more.
+	//
+	// It has priority over DisableDeadInputs.
 	RemoveDeadInputs bool `koanf:"remove_dead_inputs"`
+
+	// DisableDeadInputs specifies if inputs of astra streams which do not respond or give invalid response should be
+	// disabled.
+	//
+	// Supports HTTP(S), enable 'use_analyzer' option for more.
+	DisableDeadInputs bool `koanf:"disable_dead_inputs"`
 
 	// DeadInputsCheckBlacklist represens the list of regular expressions.
 	//
@@ -456,6 +465,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		/* 16 */ "streams.analyzer_cc_errors_threshold",
 		/* 17 */ "streams.analyzer_pcr_errors_threshold",
 		/* 18 */ "streams.analyzer_pes_errors_threshold",
+		/* 19 */ "streams.disable_dead_inputs",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	internalFields := []string{
@@ -719,12 +729,12 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
-			HeadComment:  []string{
+			HeadComment: []string{
 				"Use astra analyzer to check for dead inputs?",
 				"",
 				"Supports HTTP(S), UDP, RTP, RTSP.",
 			},
-			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.input_resp_timeout", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -886,6 +896,24 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerPESErrorsThreshold = defVal
 	}
+	// v1.4.0 to v1.5.0
+	knownField = knownFields[19]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.DisableDeadInputs
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Disable inputs of astra streams which do not respond or give invalid response?",
+				"Supports HTTP(S), enable 'use_analyzer' option for more.",
+			},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.remove_dead_inputs", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.DisableDeadInputs = defVal
+	}
 
 	// Validate amount of capture groups
 	for _, rx := range root.Streams.RemoveDuplicatedInputsByRxList {
@@ -973,6 +1001,7 @@ func NewDefCfg() Root {
 			RemoveDuplicatedInputs:            true,
 			RemoveDuplicatedInputsByRxList:    []regexp.Regexp(nil),
 			RemoveDeadInputs:                  false,
+			DisableDeadInputs:                 false,
 			DeadInputsCheckBlacklist:          []regexp.Regexp(nil),
 			InputMaxConns:                     1,
 			InputRespTimeout:                  time.Second * 10,
