@@ -1169,6 +1169,77 @@ func TestProgressRemoveDeadInputs(t *testing.T) {
 	assert.Contains(t, out, `Removing dead inputs from streams: progress "14 / 20 (70%)"`)
 }
 
+func TestDisableDeadInputs(t *testing.T) {
+	r := newDefRepo()
+	r.cfg.Streams.InputMaxConns = 1
+	r.cfg.Streams.UseAnalyzer = false
+
+	// Create request handlers
+	handleAlive := func(w http.ResponseWriter, req *http.Request) {
+		r.log.Debugf("Got request to %v", req.URL)
+		w.WriteHeader(200)
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/alive/", handleAlive)
+
+	// Run http & https servers as subset of current test to be able to fail it from another goroutines (servers) if any
+	// server returns error
+	var httpSrv, httpsSrv *http.Server
+	t.Run("http_server", func(t *testing.T) {
+		httpSrv, httpsSrv = network.NewHttpServer(mux, 3434, 5656, func(err error) {
+			if !errors.Is(err, http.ErrServerClosed) {
+				// Not using logging from testing.T or else message will not be displayed
+				r.log.Errorf("Test server stopped with non-standard error: %v", err)
+				t.FailNow()
+			}
+		})
+	})
+	defer httpSrv.Close()
+	defer httpsSrv.Close()
+
+	// Check results
+	r.cfg.Streams.DeadInputsCheckBlacklist = []regexp.Regexp{
+		*regexp.MustCompile(`ignore/1`),
+	}
+	sl1 := []Stream{
+		{
+			Name:   "Name 1",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{
+				"http://dead/no_such_host/1",
+				"http://dead/no_such_host/2",
+				"http://127.0.0.1:3434/alive/1",
+			},
+			DisabledInputs: []string{"http://dead/existing/1"},
+		},
+		{
+			Name:   "Name 2",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"http://127.0.0.1:3434/alive/2", "http://dead/no_such_host/3", "http://ignore/1"},
+		},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	httpClient := network.NewHttpClient(time.Second * 3)
+	analyzerClient := analyzer.NewFake()
+	sl2 := r.DisableDeadInputs(httpClient, analyzerClient, sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	expected := []string{"http://127.0.0.1:3434/alive/1"}
+	assert.Exactly(t, expected, sl2[0].Inputs, "should have these inputs")
+	expected = []string{"http://dead/existing/1", "http://dead/no_such_host/1", "http://dead/no_such_host/2"}
+	assert.Exactly(t, expected, sl2[0].DisabledInputs, "should have these disabled inputs")
+
+	expected = []string{"http://127.0.0.1:3434/alive/2", "http://ignore/1"}
+	assert.Exactly(t, expected, sl2[1].Inputs, "should have these inputs")
+	expected = []string{"http://dead/no_such_host/3"}
+	assert.Exactly(t, expected, sl2[1].DisabledInputs, "should have these disabled inputs")
+}
+
 func TestAddHashes(t *testing.T) {
 	r := newDefRepo()
 	r.cfg.Streams.NameToInputHashMap = []cfg.HashAddRule{

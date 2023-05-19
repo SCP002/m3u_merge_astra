@@ -393,144 +393,16 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 
 // RemoveDeadInputs returns deep copy of <streams> without dead inputs.
 //
-// If cfg.Streams.UseAnalyzer is false:
-//
-// It removes inputs which do not respond in time or respond with status code >= 400 using <httpClient>.
-//
-// Supports HTTP(S).
-//
-// If cfg.Streams.UseAnalyzer is true:
-//
-// It removes inputs with bitrate lower than specified in config or with amount of errors higher than specified in
-// config using <analyzer>.
-//
-// Supports HTTP(S), UDP, RTP, RTSP.
+// For detailed description, see removeDeadInputs method.
 func (r repo) RemoveDeadInputs(httpClient *http.Client, analyzer analyzer.Analyzer, streams []Stream) (out []Stream) {
-	r.log.Info("Removing dead inputs from streams")
+	return r.removeDeadInputs(httpClient, analyzer, streams, false)
+}
 
-	// canCheck returns true if <inp> can be checked
-	canCheck := func(inp string) bool {
-		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
-			return false
-		}
-		if slice.HasAnyPrefix(inp, "http://", "https://") {
-			return true
-		}
-		if r.cfg.Streams.UseAnalyzer && slice.HasAnyPrefix(inp, "udp://", "rtp://", "rtsp://") {
-			return true
-		}
-		return false
-	}
-
-	// getRemovalReason returns reason why <inp> should be removed
-	getRemovalReason := func(inp string) string {
-		if r.cfg.Streams.UseAnalyzer {
-			ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Streams.AnalyzerWatchTime)
-			defer cancel()
-			result, err := analyzer.Check(ctx, inp)
-			if err != nil {
-				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
-				return ""
-			}
-			// Check bitrate
-			hasVideoOnly := result.HasVideo && !result.HasAudio
-			hasAudioOnly := !result.HasVideo && result.HasAudio
-			bitrate := result.Bitrate
-			if hasVideoOnly {
-				if bitrate < r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold {
-					return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold)
-				}
-			} else if hasAudioOnly {
-				if bitrate < r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold {
-					return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold)
-				}
-			} else if bitrate < r.cfg.Streams.AnalyzerBitrateThreshold {
-				return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerBitrateThreshold)
-			}
-			// Check errors
-			ccErrorsThreshold := r.cfg.Streams.AnalyzerCCErrorsThreshold
-			pcrErrorsThreshold := r.cfg.Streams.AnalyzerPCRErrorsThreshold
-			pesErrorsThreshold := r.cfg.Streams.AnalyzerPESErrorsThreshold
-			if ccErrorsThreshold >= 0 && result.CCErrors > ccErrorsThreshold {
-				return fmt.Sprintf("CC errors %v > %v", result.CCErrors, ccErrorsThreshold)
-			}
-			if pcrErrorsThreshold >= 0 && result.PCRErrors > pcrErrorsThreshold {
-				return fmt.Sprintf("PCR errors %v > %v", result.PCRErrors, pcrErrorsThreshold)
-			}
-			if pesErrorsThreshold >= 0 && result.PESErrors > pesErrorsThreshold {
-				return fmt.Sprintf("PES errors %v > %v", result.PESErrors, pesErrorsThreshold)
-			}
-		} else {
-			resp, err := httpClient.Get(inp)
-			if err == nil {
-				defer resp.Body.Close()
-			}
-			// Not checking Content-Type header as server can return text/html but stream still will be playable
-			// Not checking response body as some streams can periodically respond with no content but still be playable
-			if err != nil {
-				errType := network.GetErrType(err)
-				return lo.Ternary(errType == network.Unknown, err.Error(), string(errType))
-			} else if resp.StatusCode >= 400 {
-				return fmt.Sprintf("Responded with: %v", resp.Status)
-			}
-		}
-		return ""
-	}
-
-	pool := pond.New(r.cfg.Streams.InputMaxConns, 0, pond.MinWorkers(0))
-	var mut sync.Mutex
-	inputsAmount := getInputsAmount(streams)
-	inputsDone := 0
-
-	// getProgress returns formatted progress of inputs processed
-	getProgress := func() string {
-		mut.Lock()
-		percent := (inputsDone * 100) / inputsAmount
-		progress := fmt.Sprintf("%v / %v (%v%%)", inputsDone, inputsAmount, percent)
-		mut.Unlock()
-		return progress
-	}
-
-	progressScheduler := gocron.NewScheduler(time.UTC)
-	_, err := progressScheduler.Every(30).Seconds().Do(func() {
-		r.log.InfoCFi("Removing dead inputs from streams", "progress", getProgress())
-	})
-	if err != nil {
-		r.log.Errorf("Failed to print progress of removing dead inputs: %v", err)
-	}
-	progressScheduler.StartAsync()
-
-	out = copier.MustDeep(streams)
-	for sIdx, s := range out {
-		for _, inp := range s.Inputs {
-			s, sIdx, inp := s, sIdx, inp
-			pool.Submit(func() {
-				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
-					"input", inp)
-				if canCheck(inp) {
-					removalReason := getRemovalReason(inp)
-					if removalReason != "" {
-						r.log.WarnCFi("Removing dead input from stream", "ID", s.ID, "name", s.Name,
-							"group", s.FirstGroup(), "input", inp, "reason", removalReason)
-						mut.Lock()
-						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
-						mut.Unlock()
-					}
-				}
-
-				mut.Lock()
-				inputsDone++
-				mut.Unlock()
-				r.log.DebugCFi("End checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
-					"input", inp)
-			})
-		}
-	}
-
-	pool.StopAndWait()
-	progressScheduler.Stop()
-
-	return
+// DisableDeadInputs returns deep copy of <streams> with dead inputs disabled.
+//
+// For detailed description, see removeDeadInputs method.
+func (r repo) DisableDeadInputs(httpClient *http.Client, analyzer analyzer.Analyzer, streams []Stream) (out []Stream) {
+	return r.removeDeadInputs(httpClient, analyzer, streams, true)
 }
 
 // AddHashes returns deep copy of <streams> with hashes added to every input as defined in config with *ToInputHashMap
@@ -678,6 +550,155 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 		}
 		out = append(out, s)
 	}
+
+	return
+}
+
+// removeDeadInputs returns deep copy of <streams> without dead inputs.
+//
+// If <disable> is true, disable dead inputs instead of deleting them.
+//
+// If cfg.Streams.UseAnalyzer is false:
+//
+// It removes inputs which do not respond in time or respond with status code >= 400 using <httpClient>.
+//
+// Supports HTTP(S).
+//
+// If cfg.Streams.UseAnalyzer is true:
+//
+// It removes inputs with bitrate lower than specified in config or with amount of errors higher than specified in
+// config using <analyzer>.
+//
+// Supports HTTP(S), UDP, RTP, RTSP.
+func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyzer, streams []Stream,
+	disable bool) (out []Stream) {
+	r.log.Info("Removing dead inputs from streams")
+
+	// canCheck returns true if <inp> can be checked
+	canCheck := func(inp string) bool {
+		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
+			return false
+		}
+		if slice.HasAnyPrefix(inp, "http://", "https://") {
+			return true
+		}
+		if r.cfg.Streams.UseAnalyzer && slice.HasAnyPrefix(inp, "udp://", "rtp://", "rtsp://") {
+			return true
+		}
+		return false
+	}
+
+	// getRemovalReason returns reason why <inp> should be removed
+	getRemovalReason := func(inp string) string {
+		if r.cfg.Streams.UseAnalyzer {
+			ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Streams.AnalyzerWatchTime)
+			defer cancel()
+			result, err := analyzer.Check(ctx, inp)
+			if err != nil {
+				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
+				return ""
+			}
+			// Check bitrate
+			hasVideoOnly := result.HasVideo && !result.HasAudio
+			hasAudioOnly := !result.HasVideo && result.HasAudio
+			bitrate := result.Bitrate
+			if hasVideoOnly {
+				if bitrate < r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold {
+					return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold)
+				}
+			} else if hasAudioOnly {
+				if bitrate < r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold {
+					return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold)
+				}
+			} else if bitrate < r.cfg.Streams.AnalyzerBitrateThreshold {
+				return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerBitrateThreshold)
+			}
+			// Check errors
+			ccErrorsThreshold := r.cfg.Streams.AnalyzerCCErrorsThreshold
+			pcrErrorsThreshold := r.cfg.Streams.AnalyzerPCRErrorsThreshold
+			pesErrorsThreshold := r.cfg.Streams.AnalyzerPESErrorsThreshold
+			if ccErrorsThreshold >= 0 && result.CCErrors > ccErrorsThreshold {
+				return fmt.Sprintf("CC errors %v > %v", result.CCErrors, ccErrorsThreshold)
+			}
+			if pcrErrorsThreshold >= 0 && result.PCRErrors > pcrErrorsThreshold {
+				return fmt.Sprintf("PCR errors %v > %v", result.PCRErrors, pcrErrorsThreshold)
+			}
+			if pesErrorsThreshold >= 0 && result.PESErrors > pesErrorsThreshold {
+				return fmt.Sprintf("PES errors %v > %v", result.PESErrors, pesErrorsThreshold)
+			}
+		} else {
+			resp, err := httpClient.Get(inp)
+			if err == nil {
+				defer resp.Body.Close()
+			}
+			// Not checking Content-Type header as server can return text/html but stream still will be playable
+			// Not checking response body as some streams can periodically respond with no content but still be playable
+			if err != nil {
+				errType := network.GetErrType(err)
+				return lo.Ternary(errType == network.Unknown, err.Error(), string(errType))
+			} else if resp.StatusCode >= 400 {
+				return fmt.Sprintf("Responded with: %v", resp.Status)
+			}
+		}
+		return ""
+	}
+
+	pool := pond.New(r.cfg.Streams.InputMaxConns, 0, pond.MinWorkers(0))
+	var mut sync.Mutex
+	inputsAmount := getInputsAmount(streams)
+	inputsDone := 0
+
+	// getProgress returns formatted progress of inputs processed
+	getProgress := func() string {
+		mut.Lock()
+		percent := (inputsDone * 100) / inputsAmount
+		progress := fmt.Sprintf("%v / %v (%v%%)", inputsDone, inputsAmount, percent)
+		mut.Unlock()
+		return progress
+	}
+
+	progressScheduler := gocron.NewScheduler(time.UTC)
+	_, err := progressScheduler.Every(30).Seconds().Do(func() {
+		r.log.InfoCFi("Removing dead inputs from streams", "progress", getProgress())
+	})
+	if err != nil {
+		r.log.Errorf("Failed to print progress of removing dead inputs: %v", err)
+	}
+	progressScheduler.StartAsync()
+
+	out = copier.MustDeep(streams)
+	for sIdx, s := range out {
+		for _, inp := range s.Inputs {
+			s, sIdx, inp := s, sIdx, inp
+			pool.Submit(func() {
+				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
+					"input", inp)
+				if canCheck(inp) {
+					removalReason := getRemovalReason(inp)
+					if removalReason != "" {
+						msg := lo.Ternary(disable, "Disabling dead input of stream", "Removing dead input from stream")
+						r.log.WarnCFi(msg, "ID", s.ID, "name", s.Name, "group", s.FirstGroup(), "input", inp,
+							"reason", removalReason)
+						mut.Lock()
+						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
+						mut.Unlock()
+						if disable {
+							out[sIdx].DisabledInputs = append(out[sIdx].DisabledInputs, inp)
+						}
+					}
+				}
+
+				mut.Lock()
+				inputsDone++
+				mut.Unlock()
+				r.log.DebugCFi("End checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
+					"input", inp)
+			})
+		}
+	}
+
+	pool.StopAndWait()
+	progressScheduler.Stop()
 
 	return
 }
