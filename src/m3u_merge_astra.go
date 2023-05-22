@@ -43,7 +43,7 @@ func main() {
 
 	// Register SIGINT and SIGTERM event handler
 	sigint.Listen(func() {
-		log.Info("SIGINT or SIGTERM signal recieved, shutting down")
+		log.Info("SIGINT or SIGTERM signal received, shutting down")
 		os.Exit(0)
 	})
 
