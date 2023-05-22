@@ -56,7 +56,8 @@ func TestAddNewGroups(t *testing.T) {
 
 		_ = r.AddNewGroups(cl1, sl1)
 	})
-	assert.Contains(t, out, `Adding new group: category "Cat", group "Grp`)
+	assert.Contains(t, out, `Adding new category and group from streams to categories field: `+
+		`category "Cat", group "Grp`)
 }
 
 func TestWriteReadCfg(t *testing.T) {

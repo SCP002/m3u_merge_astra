@@ -243,7 +243,7 @@ func TestRemoveInputsByUpdateMap(t *testing.T) {
 
 		_ = r.RemoveInputsByUpdateMap(sl1, cl1)
 	})
-	assert.Contains(t, out, `Removing absent input of stream according the update map: ID "0", name "Known name", `+
+	assert.Contains(t, out, `Removing absent input from stream according the update map: ID "0", name "Known name", `+
 		`group "Cat: Grp", input "http://known/input/1"`)
 }
 
