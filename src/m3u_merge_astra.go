@@ -14,6 +14,7 @@ import (
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
 
+	"github.com/adampresley/sigint"
 	goFlags "github.com/jessevdk/go-flags"
 	"github.com/sirupsen/logrus"
 	"github.com/utahta/go-openuri"
@@ -39,6 +40,12 @@ func main() {
 
 	// Set log level
 	log.SetLevel(flags.LogLevel)
+
+	// Register SIGINT and SIGTERM event handler
+	sigint.Listen(func() {
+		log.Info("SIGINT or SIGTERM signal recieved, shutting down")
+		os.Exit(0)
+	})
 
 	// Read program config
 	cfg, isNewCfg, err := cfg.Init(log, flags.ProgramCfgPath)

@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/SCP002/clipboard v0.1.5
 	github.com/SCP002/jsonexraw v0.1.0
+	github.com/adampresley/sigint v0.0.0-20150906022118-7e8d2ad16a94
 	github.com/alitto/pond v1.8.3
 	github.com/cockroachdb/errors v1.9.1
 	github.com/fatih/color v1.15.0
