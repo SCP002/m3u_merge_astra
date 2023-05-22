@@ -92,6 +92,8 @@ func (r repo) Sort(channels []Channel) (out []Channel) {
 
 // ReplaceGroups returns shallow copy of <channels> with groups taken from map in config
 func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
+	r.log.Info("Replacing groups of M3U channels")
+
 	for _, ch := range channels {
 		out = append(out, ch.replaceGroup(r.cfg.M3U, func(newGroup string) {
 			r.log.InfoCFi("Replacing group of M3U channel", "name", ch.Name, "old group", ch.Group,
@@ -104,6 +106,8 @@ func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 
 // RemoveBlocked returns shallow copy of <channels> without blocked ones
 func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
+	r.log.Info("Removing blocked channels")
+
 	// getAliases returns aliases for the <name> or slice of a single <name> if not found
 	getAliases := func(name string) []string {
 		aliases, found := lo.Find(r.cfg.General.NameAliasList, func(set []string) bool {
