@@ -12,6 +12,8 @@ import (
 // RenameStreams returns shallow copy of <streams> with names taken from <channels> if their standardized names are
 // equal.
 func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
+	r.log.Info("Renaming streams")
+
 	for _, s := range streams {
 		ch, _, chFound := find.Named(r.cfg.General, channels, s.Name)
 		if chFound && s.Name != ch.Name {
@@ -30,6 +32,8 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream on update.
 func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
+	r.log.Info("Updating inputs of streams")
+
 	for _, s := range streams {
 		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
 			if !s.HasInput(r.log, ch.URL, true) {
@@ -54,6 +58,8 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 // RemoveInputsByUpdateMap returns shallow copy of <streams> without inputs which match at least one
 // cfg.Streams.InputUpdateMap.From expression but none found in <channels>.
 func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
+	r.log.Info("Removing absent inputs from streams according the update map")
+
 	m3uRepo := m3u.NewRepo(r.log, r.cfg)
 
 	for _, s := range streams {
@@ -61,7 +67,7 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 		for _, knownInp := range s.KnownInputs(r.cfg.Streams) {
 			if !m3uRepo.HasURL(similarChannels, knownInp, false) {
 				s = s.RemoveInputsCb(knownInp, func() {
-					r.log.InfoCFi("Removing absent input of stream according the update map", "ID", s.ID,
+					r.log.InfoCFi("Removing absent input from stream according the update map", "ID", s.ID,
 						"name", s.Name, "group", s.FirstGroup(), "input", knownInp)
 				})
 			}
@@ -76,6 +82,8 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
+	r.log.Info("Adding new inputs to streams")
+
 	for _, s := range streams {
 		find.EverySimilar(r.cfg.General, channels, s.Name, 0, func(ch m3u.Channel, _ int) {
 			if !s.HasInput(r.log, ch.URL, r.cfg.Streams.HashCheckOnAddNewInputs) {
@@ -97,6 +105,8 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 
 // AddNewStreams returns <streams> with new streams generated from <channels> if no such found in <streams>
 func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []astra.Stream {
+	r.log.Info("Adding new streams")
+
 	astraRepo := astra.NewRepo(r.log, r.cfg)
 
 	for _, ch := range channels {

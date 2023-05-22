@@ -53,6 +53,13 @@ func ContainsAny(inp string, elms ...string) bool {
 	})
 }
 
+// HasAnyPrefix returns true if <inp> has any prefix from <prefixes>
+func HasAnyPrefix(inp string, prefixes ...string) bool {
+	return lo.SomeBy(prefixes, func(prefix string) bool {
+		return strings.HasPrefix(inp, prefix)
+	})
+}
+
 // IsAllEmpty reurns true if every slice in <inp> is empty
 func IsAllEmpty[T any](inp ...[]T) bool {
 	return len(lo.Flatten(inp)) == 0

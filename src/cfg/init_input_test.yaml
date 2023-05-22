@@ -122,8 +122,9 @@ streams:
   # Remove inputs of astra streams which already present in config?
   remove_duplicated_inputs: true
 
-  # Remove inputs of astra streams which do not respond?
-  # Currently supports only HTTP(S).
+  # Remove inputs of astra streams which do not respond or give invalid response?
+  # Supports HTTP(S), enable 'use_analyzer' option for more.
+  # It has priority over 'disable_dead_inputs'.
   remove_dead_inputs: false
 
   # List of regular expressions.

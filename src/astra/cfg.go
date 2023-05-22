@@ -35,6 +35,8 @@ type Group struct {
 
 // AddNewGroups returns deep copy of categories <cats> with new categories and groups from <streams>
 func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
+	r.log.Info("Adding new categories and groups from streams to categories field")
+
 	cats = copier.MustDeep(cats)
 
 	// Transform []Stream into []Category
@@ -46,14 +48,15 @@ func (r repo) AddNewGroups(cats []Category, streams []Stream) []Category {
 		})
 	})
 
-	// Update input categories with categories from []Streams
+	// Update input categories with categories from []Stream
 	for _, sCat := range sCats {
 		var idx int
 		cats, _, idx = find.IndexOrElse(cats, Category{Name: sCat.Name}, func(c Category) bool {
 			return c.Name == sCat.Name
 		})
 		cats[idx].Groups = slice.AppendNew(cats[idx].Groups, func(g Group) {
-			r.log.InfoCFi("Adding new group", "category", sCat.Name, "group", g.Name)
+			r.log.InfoCFi("Adding new category and group from streams to categories field",
+				"category", sCat.Name, "group", g.Name)
 		}, sCat.Groups...)
 	}
 

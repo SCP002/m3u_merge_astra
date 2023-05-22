@@ -1,13 +1,16 @@
 package astra
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
+	"m3u_merge_astra/astra/analyzer"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/deps"
 	"m3u_merge_astra/util/copier"
@@ -18,6 +21,7 @@ import (
 	urlUtil "m3u_merge_astra/util/url"
 
 	"github.com/alitto/pond"
+	"github.com/go-co-op/gocron"
 	"github.com/samber/lo"
 )
 
@@ -257,6 +261,8 @@ func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 // RemoveNamePrefixes returns shallow copy of <streams> without name prefixes on every stream and MarkAdded or
 // MarkDisabled fields set instead
 func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
+	r.log.Info("Temporarily removing name prefixes from streams")
+
 	for _, s := range streams {
 		oldName := s.Name
 		for i := 0; i < 2; i++ { // Run twice to remove in any order
@@ -290,6 +296,8 @@ func (r repo) Sort(streams []Stream) (out []Stream) {
 
 // RemoveBlockedInputs returns shallow copy of <streams> without blocked inputs
 func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
+	r.log.Info("Removing blocked inputs from streams")
+
 	for _, s := range streams {
 		out = append(out, s.removeBlockedInputs(r.cfg.Streams, func(input string) {
 			r.log.InfoCFi("Removing blocked input from stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
@@ -302,6 +310,8 @@ func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 
 // RemoveDuplicatedInputs returns shallow copy of <streams> with only unique inputs
 func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
+	r.log.Info("Removing duplicated inputs from streams")
+
 	// inputsMap is used to check if input is the first one encountered in the list. Value of the map is not used.
 	inputsMap := map[string]bool{}
 
@@ -324,6 +334,8 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 // RemoveDuplicatedInputsByRx returns shallow copy of <streams> with only unique inputs per stream by first capture
 // groups of regular expressions defined in config.
 func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
+	r.log.Info("Removing duplicated inputs per stream by regular expressions")
+
 	for _, s := range streams {
 		out = append(out, s.removeDuplicatedInputsByRx(r, func(input string) {
 			r.log.InfoCFi("Removing duplicated input per stream by regular expressions", "ID", s.ID, "name", s.Name,
@@ -338,6 +350,8 @@ func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) UniteInputs(streams []Stream) (out []Stream) {
+	r.log.Info("Uniting inputs of streams")
+
 	out = copier.MustDeep(streams)
 	for currIdx, currStream := range out {
 		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
@@ -387,92 +401,26 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveDeadInputs returns deep copy of <streams> without inputs which do not respond in time or respond with status
-// code >= 400.
+// RemoveDeadInputs returns deep copy of <streams> without dead inputs.
 //
-// Not checking Content-Type header as server can return text/html but stream still will be playable.
-//
-// Not checking response body as some streams can periodically respond with no content but still be playable.
-//
-// Currently supports only HTTP(S).
-func (r repo) RemoveDeadInputs(httpClient *http.Client, streams []Stream) (out []Stream) {
+// For detailed description, see removeDeadInputs method.
+func (r repo) RemoveDeadInputs(httpClient *http.Client, analyzer analyzer.Analyzer, streams []Stream) (out []Stream) {
 	r.log.Info("Removing dead inputs from streams")
+	return r.removeDeadInputs(httpClient, analyzer, streams, false)
+}
 
-	// canCheck returns true if <inp> can be checked
-	canCheck := func(inp string) bool {
-		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
-			return false
-		}
-		if strings.HasPrefix(inp, "http://") || strings.HasPrefix(inp, "https://") {
-			return true
-		}
-		return false
-	}
-
-	// getReason returns reason why <inp> should be removed
-	getReason := func(inp string) string {
-		resp, err := httpClient.Get(inp)
-		if err == nil {
-			defer resp.Body.Close()
-		}
-		reason := ""
-		if err != nil {
-			errType := network.GetErrType(err)
-			reason = lo.Ternary(errType == network.Unknown, err.Error(), string(errType))
-		} else if resp.StatusCode >= 400 {
-			reason = fmt.Sprintf("Responded with: %v", resp.Status)
-		}
-		return reason
-	}
-
-	pool := pond.New(r.cfg.Streams.InputMaxConns, 0, pond.MinWorkers(0))
-	var mut sync.Mutex
-	inputsAmount := getInputsAmount(streams)
-	inputsDone := 0
-
-	// getProgress returns formatted progress of inputs processed
-	getProgress := func() string {
-		mut.Lock()
-		percent := (inputsDone * 100) / inputsAmount
-		progress := fmt.Sprintf("%v / %v (%v%%)", inputsDone, inputsAmount, percent)
-		mut.Unlock()
-		return progress
-	}
-
-	out = copier.MustDeep(streams)
-	for sIdx, s := range out {
-		for _, inp := range s.Inputs {
-			s, sIdx, inp := s, sIdx, inp
-			pool.Submit(func() {
-				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
-					"input", inp, "progress", getProgress())
-				if canCheck(inp) {
-					reason := getReason(inp)
-					if reason != "" {
-						r.log.InfoCFi("Removing dead input from stream", "ID", s.ID, "name", s.Name,
-							"group", s.FirstGroup(), "input", inp, "reason", reason)
-						mut.Lock()
-						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
-						mut.Unlock()
-					}
-				}
-
-				mut.Lock()
-				inputsDone++
-				mut.Unlock()
-				r.log.DebugCFi("End checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
-					"input", inp, "progress", getProgress())
-			})
-		}
-	}
-
-	pool.StopAndWait()
-
-	return
+// DisableDeadInputs returns deep copy of <streams> with dead inputs disabled.
+//
+// For detailed description, see removeDeadInputs method.
+func (r repo) DisableDeadInputs(httpClient *http.Client, analyzer analyzer.Analyzer, streams []Stream) (out []Stream) {
+	r.log.Info("Disabling dead inputs of streams")
+	return r.removeDeadInputs(httpClient, analyzer, streams, true)
 }
 
 // AddHashes returns deep copy of <streams> with hashes added to every input as defined in config with *ToInputHashMap
 func (r repo) AddHashes(streams []Stream) (out []Stream) {
+	r.log.Info("Adding hashes to inputs of streams")
+
 	out = copier.MustDeep(streams)
 	var changed bool
 
@@ -530,6 +478,8 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 // SetKeepActive returns shallow copy of <streams> with HTTPKeepActive set on every stream as defined in config with
 // *ToKeepActiveMap.
 func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
+	r.log.Info("Setting keep active on streams")
+
 	for _, s := range streams {
 		// By inputs
 		for _, rule := range r.cfg.Streams.InputToKeepActiveMap {
@@ -576,6 +526,8 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 
 // RemoveWithoutInputs returns shallow copy of <streams> without streams which have no inputs
 func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
+	r.log.Info("Removing streams without inputs")
+
 	out = lo.Reject(streams, func(s Stream, _ int) bool {
 		if s.hasNoInputs() {
 			r.log.InfoCFi("Removing stream without inputs", "ID", s.ID, "name", s.Name, "group", s.FirstGroup())
@@ -588,6 +540,8 @@ func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 
 // DisableWithoutInputs returns shallow copy of <streams> with all streams disabled if they have no inputs
 func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
+	r.log.Info("Disabling streams without inputs")
+
 	for _, s := range streams {
 		if s.Enabled && s.hasNoInputs() {
 			r.log.InfoCFi("Disabling stream without inputs", "ID", s.ID, "name", s.Name, "group", s.FirstGroup())
@@ -602,6 +556,8 @@ func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
 // RemoveNamePrefixes returns shallow copy of <streams> with name prefixes on every stream if MarkAdded or MarkDisabled
 // is true.
 func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
+	r.log.Info("Adding name prefixes to streams")
+
 	for _, s := range streams {
 		oldName := s.Name
 		if s.MarkAdded {
@@ -616,6 +572,154 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 		}
 		out = append(out, s)
 	}
+
+	return
+}
+
+// removeDeadInputs returns deep copy of <streams> without dead inputs.
+//
+// If <disable> is true, disable dead inputs instead of deleting them.
+//
+// If cfg.Streams.UseAnalyzer is false:
+//
+// It removes inputs which do not respond in time or respond with status code >= 400 using <httpClient>.
+//
+// Supports HTTP(S).
+//
+// If cfg.Streams.UseAnalyzer is true:
+//
+// It removes inputs with bitrate lower than specified in config or with amount of errors higher than specified in
+// config using <analyzer>.
+//
+// Supports HTTP(S), UDP, RTP, RTSP.
+func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyzer, streams []Stream,
+	disable bool) (out []Stream) {
+	// canCheck returns true if <inp> can be checked
+	canCheck := func(inp string) bool {
+		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
+			return false
+		}
+		if slice.HasAnyPrefix(inp, "http://", "https://") {
+			return true
+		}
+		if r.cfg.Streams.UseAnalyzer && slice.HasAnyPrefix(inp, "udp://", "rtp://", "rtsp://") {
+			return true
+		}
+		return false
+	}
+
+	// getRemovalReason returns reason why <inp> should be removed
+	getRemovalReason := func(inp string) string {
+		if r.cfg.Streams.UseAnalyzer {
+			ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Streams.AnalyzerWatchTime)
+			defer cancel()
+			result, err := analyzer.Check(ctx, inp)
+			if err != nil {
+				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
+				return ""
+			}
+			// Check bitrate
+			hasVideoOnly := result.HasVideo && !result.HasAudio
+			hasAudioOnly := !result.HasVideo && result.HasAudio
+			bitrate := result.Bitrate
+			if hasVideoOnly {
+				if bitrate < r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold {
+					return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerVideoOnlyBitrateThreshold)
+				}
+			} else if hasAudioOnly {
+				if bitrate < r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold {
+					return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerAudioOnlyBitrateThreshold)
+				}
+			} else if bitrate < r.cfg.Streams.AnalyzerBitrateThreshold {
+				return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerBitrateThreshold)
+			}
+			// Check errors
+			ccErrorsThreshold := r.cfg.Streams.AnalyzerCCErrorsThreshold
+			pcrErrorsThreshold := r.cfg.Streams.AnalyzerPCRErrorsThreshold
+			pesErrorsThreshold := r.cfg.Streams.AnalyzerPESErrorsThreshold
+			if ccErrorsThreshold >= 0 && result.CCErrors > ccErrorsThreshold {
+				return fmt.Sprintf("CC errors %v > %v", result.CCErrors, ccErrorsThreshold)
+			}
+			if pcrErrorsThreshold >= 0 && result.PCRErrors > pcrErrorsThreshold {
+				return fmt.Sprintf("PCR errors %v > %v", result.PCRErrors, pcrErrorsThreshold)
+			}
+			if pesErrorsThreshold >= 0 && result.PESErrors > pesErrorsThreshold {
+				return fmt.Sprintf("PES errors %v > %v", result.PESErrors, pesErrorsThreshold)
+			}
+		} else {
+			resp, err := httpClient.Get(inp)
+			if err == nil {
+				defer resp.Body.Close()
+			}
+			// Not checking Content-Type header as server can return text/html but stream still will be playable
+			// Not checking response body as some streams can periodically respond with no content but still be playable
+			if err != nil {
+				errType := network.GetErrType(err)
+				return lo.Ternary(errType == network.Unknown, err.Error(), string(errType))
+			} else if resp.StatusCode >= 400 {
+				return fmt.Sprintf("Responded with: %v", resp.Status)
+			}
+		}
+		return ""
+	}
+
+	pool := pond.New(r.cfg.Streams.InputMaxConns, 0, pond.MinWorkers(0))
+	var mut sync.Mutex
+	inputsAmount := getInputsAmount(streams)
+	inputsDone := 0
+
+	// getProgress returns formatted progress of inputs processed
+	getProgress := func() string {
+		mut.Lock()
+		percent := (inputsDone * 100) / inputsAmount
+		progress := fmt.Sprintf("%v / %v (%v%%)", inputsDone, inputsAmount, percent)
+		mut.Unlock()
+		return progress
+	}
+
+	progressScheduler := gocron.NewScheduler(time.UTC)
+	_, err := progressScheduler.Every(30).Seconds().Do(func() {
+		msg := lo.Ternary(disable, "Disabling dead inputs of streams", "Removing dead inputs from streams")
+		r.log.InfoCFi(msg, "progress", getProgress())
+	})
+	if err != nil {
+		r.log.Errorf("Failed to print progress of removing dead inputs: %v", err)
+	}
+	progressScheduler.StartAsync()
+
+	out = copier.MustDeep(streams)
+	for sIdx, s := range out {
+		for _, inp := range s.Inputs {
+			s, sIdx, inp := s, sIdx, inp
+			pool.Submit(func() {
+				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
+					"input", inp)
+				if canCheck(inp) {
+					removalReason := getRemovalReason(inp)
+					if removalReason != "" {
+						msg := lo.Ternary(disable, "Disabling dead input of stream", "Removing dead input from stream")
+						r.log.WarnCFi(msg, "ID", s.ID, "name", s.Name, "group", s.FirstGroup(), "input", inp,
+							"reason", removalReason)
+						mut.Lock()
+						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
+						mut.Unlock()
+						if disable {
+							out[sIdx].DisabledInputs = append(out[sIdx].DisabledInputs, inp)
+						}
+					}
+				}
+
+				mut.Lock()
+				inputsDone++
+				mut.Unlock()
+				r.log.DebugCFi("End checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
+					"input", inp)
+			})
+		}
+	}
+
+	pool.StopAndWait()
+	progressScheduler.Stop()
 
 	return
 }

@@ -72,8 +72,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
   Press Ctrl + V to paste modified config back to astra.  
   Click `Save`.
 
-* To see the progress of removing dead inputs from streams when `streams.remove_dead_inputs` is enabled,
-  run program with `--logLevel 5` or higher.
+* When `streams.remove_dead_inputs` is enabled, progress of removing dead inputs from streams is printed every 30 seconds.
 
 ## Program config settings
 
@@ -200,8 +199,8 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     Add new inputs to astra streams even if M3U channel and stream input only differ by hash (everything after #)?
     > Why does it exist?  
     > To prevent adding already exising URL's to inputs astra astreams.  
-    > For example if it set to 'true', M3U channel URL 'http://channel' will be added to stream with input 'http://channel#no_sync',
-    > otherwise it won't.
+    > For example if it set to 'true', M3U channel URL '<http://channel>' will be added to stream with input
+    > '<http://channel#no_sync>', otherwise it won't.
 
   * `sort_inputs`  
     Sort inputs of astra streams?
@@ -231,8 +230,13 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     > To be able to remove dulticated inputs per stream by specific conditions, for example by host name.
 
   * `remove_dead_inputs`  
-    Remove inputs of astra streams which do not respond?  
-    Currently supports only HTTP(S).
+    Remove inputs of astra streams which do not respond or give invalid response?  
+    Supports HTTP(S), enable `use_analyzer` option for more.  
+    It has priority over `disable_dead_inputs`.
+
+  * `disable_dead_inputs`  
+    Disable inputs of astra streams which do not respond or give invalid response?  
+    Supports HTTP(S), enable `use_analyzer` option for more.
 
   * `dead_inputs_check_blacklist`  
     List of regular expressions.  
@@ -244,6 +248,46 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 
   * `input_resp_timeout`  
     Astra stream input response timeout.
+
+  * `use_analyzer`  
+    Use astra analyzer to check for dead inputs?  
+    Supports HTTP(S), UDP, RTP, RTSP.
+    > Why does it exist?  
+    > To remove or disable dead inputs by advanced criteria such as bitrate or errors, check more protocols and
+    > use analyzer as a proxy if needed.
+
+  * `analyzer_addr`  
+    Astra analyzer address in format of 'host:port'.
+
+  * `analyzer_watch_time`  
+    Amount of time astra analyzer should spend collecting results.
+
+  * `analyzer_bitrate_threshold`  
+    Average bitrate threshold in kbit/s for stream inputs.  
+    If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+
+  * `analyzer_video_only_bitrate_threshold`  
+    Average bitrate threshold in kbit/s for stream inputs without audio.  
+    If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+
+  * `analyzer_audio_only_bitrate_threshold`  
+    Average bitrate threshold in kbit/s for stream inputs without video.  
+    If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+
+  * `analyzer_cc_errors_threshold`  
+    Average amount of CC errors for stream inputs.  
+    If astra analyzer will return amount of CC errors higher than specified threshold, input will be cosidered dead.  
+    Set to negative value to disable this check.
+
+  * `analyzer_pcr_errors_threshold`  
+    Average amount of PCR errors for stream inputs.  
+    If astra analyzer will return amount of PCR errors higher than specified threshold, input will be cosidered dead.  
+    Set to negative value to disable this check.
+
+  * `analyzer_pes_errors_threshold`  
+    Average amount of PES errors for stream inputs.  
+    If astra analyzer will return amount of PES errors higher than specified threshold, input will be cosidered dead.  
+    Set to negative value to disable this check.
 
   * `input_update_map`  
     List of regular expression pairs.  

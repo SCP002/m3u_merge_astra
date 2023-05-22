@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"m3u_merge_astra/astra"
+	"m3u_merge_astra/astra/analyzer"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/cli"
 	"m3u_merge_astra/m3u"
@@ -117,7 +118,12 @@ func main() {
 	astraCfg.Categories = astraRepo.AddNewGroups(astraCfg.Categories, astraCfg.Streams)
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
-		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, astraCfg.Streams)
+		analyzer := analyzer.New(cfg.Streams.AnalyzerAddr, cfg.Streams.InputRespTimeout)
+		astraCfg.Streams = astraRepo.RemoveDeadInputs(httpClient, analyzer, astraCfg.Streams)
+	} else if cfg.Streams.DisableDeadInputs {
+		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
+		analyzer := analyzer.New(cfg.Streams.AnalyzerAddr, cfg.Streams.InputRespTimeout)
+		astraCfg.Streams = astraRepo.DisableDeadInputs(httpClient, analyzer, astraCfg.Streams)
 	}
 	if !slice.IsAllEmpty(cfg.Streams.NameToInputHashMap, cfg.Streams.GroupToInputHashMap,
 		cfg.Streams.InputToInputHashMap) {

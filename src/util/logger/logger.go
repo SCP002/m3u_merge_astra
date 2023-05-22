@@ -38,6 +38,11 @@ func (l Logger) InfoCFi(msg string, fields ...any) {
 	l.Logger.Infof("%v: %v", msg, buildFields(fields))
 }
 
+// WarnCFi prints warning level <msg> with formatted and colored <fields>
+func (l Logger) WarnCFi(msg string, fields ...any) {
+	l.Logger.Warnf("%v: %v", msg, buildFields(fields))
+}
+
 // Debug prints debug level <msg>.
 //
 // Output is prefixed with caller info.

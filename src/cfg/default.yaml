@@ -202,9 +202,14 @@ streams:
     # - '^.*:\/\/([^#?/]*)' # By host
     # - '^.*:\/\/.*?\/([^#?]*)' # By path
 
-  # Remove inputs of astra streams which do not respond?
-  # Currently supports only HTTP(S).
+  # Remove inputs of astra streams which do not respond or give invalid response?
+  # Supports HTTP(S), enable 'use_analyzer' option for more.
+  # It has priority over 'disable_dead_inputs'.
   remove_dead_inputs: false
+
+  # Disable inputs of astra streams which do not respond or give invalid response?
+  # Supports HTTP(S), enable 'use_analyzer' option for more.
+  disable_dead_inputs: false
 
   # List of regular expressions.
   # If any expression match URL of a stream's input, this input will not be checked for availability.
@@ -218,6 +223,53 @@ streams:
 
   # Astra stream input response timeout.
   input_resp_timeout: '10s'
+
+  # Use astra analyzer to check for dead inputs?
+  # 
+  # Supports HTTP(S), UDP, RTP, RTSP.
+  use_analyzer: false
+
+  # Astra analyzer address in format of 'host:port'.
+  analyzer_addr: '127.0.0.1:8001'
+
+  # Amount of time astra analyzer should spend collecting results.
+  analyzer_watch_time: '10s'
+
+  # Average bitrate threshold in kbit/s for stream inputs.
+  # 
+  # If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+  analyzer_bitrate_threshold: 1
+
+  # Average bitrate threshold in kbit/s for stream inputs without audio.
+  # 
+  # If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+  analyzer_video_only_bitrate_threshold: 1
+
+  # Average bitrate threshold in kbit/s for stream inputs without video.
+  # 
+  # If astra analyzer will return bitrate lower than specified threshold, input will be cosidered dead.
+  analyzer_audio_only_bitrate_threshold: 1
+
+  # Average amount of CC errors for stream inputs.
+  # 
+  # If astra analyzer will return amount of CC errors higher than specified threshold, input will be cosidered dead.
+  # 
+  # Set to negative value to disable this check.
+  analyzer_cc_errors_threshold: -1
+
+  # Average amount of PCR errors for stream inputs.
+  # 
+  # If astra analyzer will return amount of PCR errors higher than specified threshold, input will be cosidered dead.
+  # 
+  # Set to negative value to disable this check.
+  analyzer_pcr_errors_threshold: -1
+
+  # Average amount of PES errors for stream inputs.
+  # 
+  # If astra analyzer will return amount of PES errors higher than specified threshold, input will be cosidered dead.
+  # 
+  # Set to negative value to disable this check.
+  analyzer_pes_errors_threshold: -1
 
   # List of regular expression pairs.
   # If any 'from' expression match URL of astra stream's input, it will be replaced with URL from according M3U
