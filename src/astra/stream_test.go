@@ -1238,6 +1238,26 @@ func TestDisableDeadInputs(t *testing.T) {
 	assert.Exactly(t, expected, sl2[1].Inputs, "should have these inputs")
 	expected = []string{"http://dead/no_such_host/3"}
 	assert.Exactly(t, expected, sl2[1].DisabledInputs, "should have these disabled inputs")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+		r.cfg.Streams.UseAnalyzer = false
+
+		sl1 := []Stream{{
+			ID:     "0",
+			Name:   "Name 1",
+			Groups: map[string]string{"Cat": "Grp"},
+			Inputs: []string{"http://dead/no_such_host/1"}},
+		}
+
+		httpClient := network.NewHttpClient(time.Second * 3)
+		analyzerClient := analyzer.NewFake()
+		_ = r.DisableDeadInputs(httpClient, analyzerClient, sl1)
+	})
+	msg := `Disabling dead input of stream: ID "0", name "Name 1", group "Cat: Grp", ` +
+		`input "http://dead/no_such_host/1", reason "No such host"`
+	assert.Contains(t, out, msg)
 }
 
 func TestAddHashes(t *testing.T) {
