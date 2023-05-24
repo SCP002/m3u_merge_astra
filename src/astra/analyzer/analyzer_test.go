@@ -19,16 +19,16 @@ func TestNew(t *testing.T) {
 	assert.Exactly(t, expected, New("127.0.0.1", time.Second), "should initialize analyzer")
 }
 
-// Requires a running astra analyzer
+// Requires a running astra analyzer, use test_check.sh
 func TestCheck(t *testing.T) {
 	handshakeTimeout := time.Second * 3
-	watchTime := time.Second * 5
+	watchTime := time.Second * 20
 	analyzer := New("127.0.0.1:8001", handshakeTimeout)
 
 	// MPEG-TS
 	ctx, cancel := context.WithTimeout(context.Background(), watchTime)
 	defer cancel()
-	result, err := analyzer.Check(ctx, "https://tsduck.io/streams/brazil-isdb-tb/TS1globo.ts")
+	result, err := analyzer.Check(ctx, "https://filesamples.com/samples/video/ts/sample_1280x720_surfing_with_audio.ts")
 	assert.True(t, result.Bitrate > 0, "should have average bitrate more than 0")
 	assert.True(t, result.HasAudio, "should have audio stream")
 	assert.True(t, result.HasVideo, "should have video stream")
