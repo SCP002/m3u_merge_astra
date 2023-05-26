@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -74,12 +75,12 @@ type analyzer struct {
 func New(address string, handshakeTimeout time.Duration) *analyzer {
 	url := url.URL{Scheme: "ws", Host: address, Path: "/api/"}
 
-	dialer := websocket.DefaultDialer
-	dialer.HandshakeTimeout = handshakeTimeout
-
 	return &analyzer{
-		url:    url.String(),
-		dialer: dialer,
+		url: url.String(),
+		dialer: &websocket.Dialer{
+			Proxy:            http.ProxyFromEnvironment,
+			HandshakeTimeout: handshakeTimeout,
+		},
 	}
 }
 
