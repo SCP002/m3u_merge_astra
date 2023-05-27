@@ -250,7 +250,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     Astra stream input response timeout.
 
   * `use_analyzer`  
-    Use astra analyzer to check for dead inputs?  
+    Use astra analyzer (astra --analyze -p \<port\>) to check for dead inputs?  
     Supports HTTP(S), UDP, RTP, RTSP.
     > Why does it exist?  
     > To remove or disable dead inputs by advanced criteria such as bitrate or errors, check more protocols and

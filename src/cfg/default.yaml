@@ -224,7 +224,7 @@ streams:
   # Astra stream input response timeout.
   input_resp_timeout: '10s'
 
-  # Use astra analyzer to check for dead inputs?
+  # Use astra analyzer (astra --analyze -p <port>) to check for dead inputs?
   # 
   # Supports HTTP(S), UDP, RTP, RTSP.
   use_analyzer: false

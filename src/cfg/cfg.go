@@ -228,7 +228,7 @@ type Streams struct {
 	// InputRespTimeout represents astra stream input response timeout
 	InputRespTimeout time.Duration `koanf:"input_resp_timeout"`
 
-	// UseAnalyzer specifies if astra analyzer should be used to check for dead inputs.
+	// UseAnalyzer specifies if astra analyzer (astra --analyze -p <port>) should be used to check for dead inputs.
 	//
 	// Supports HTTP(S), UDP, RTP, RTSP.
 	UseAnalyzer bool `koanf:"use_analyzer"`
@@ -730,7 +730,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		node := yamlUtil.Node{
 			StartNewline: true,
 			HeadComment: []string{
-				"Use astra analyzer to check for dead inputs?",
+				"Use astra analyzer (astra --analyze -p <port>) to check for dead inputs?",
 				"",
 				"Supports HTTP(S), UDP, RTP, RTSP.",
 			},
