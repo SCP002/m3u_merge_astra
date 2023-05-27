@@ -1007,7 +1007,7 @@ func NewDefCfg() Root {
 			InputRespTimeout:                  time.Second * 10,
 			UseAnalyzer:                       false,
 			AnalyzerAddr:                      "127.0.0.1:8001",
-			AnalyzerWatchTime:                 time.Second * 10,
+			AnalyzerWatchTime:                 time.Second * 20,
 			AnalyzerBitrateThreshold:          1,
 			AnalyzerVideoOnlyBitrateThreshold: 1,
 			AnalyzerAudioOnlyBitrateThreshold: 1,

@@ -224,7 +224,7 @@ func newTestConfig() Root {
 			InputRespTimeout:                  time.Minute,
 			UseAnalyzer:                       false,            // New field in v1.5.0
 			AnalyzerAddr:                      "127.0.0.1:8001", // New field in v1.5.0
-			AnalyzerWatchTime:                 time.Second * 10, // New field in v1.5.0
+			AnalyzerWatchTime:                 time.Second * 20, // New field in v1.5.0
 			AnalyzerBitrateThreshold:          1,                // New field in v1.5.0
 			AnalyzerVideoOnlyBitrateThreshold: 1,                // New field in v1.5.0
 			AnalyzerAudioOnlyBitrateThreshold: 1,                // New field in v1.5.0

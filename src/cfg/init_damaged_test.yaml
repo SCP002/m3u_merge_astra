@@ -188,7 +188,7 @@ streams:
   analyzer_addr: '127.0.0.1:8001'
 
   # Amount of time astra analyzer should spend collecting results.
-  analyzer_watch_time: '10s'
+  analyzer_watch_time: '20s'
 
   # Average bitrate threshold in kbit/s for stream inputs.
   # 
