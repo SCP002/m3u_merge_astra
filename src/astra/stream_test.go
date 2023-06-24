@@ -490,7 +490,7 @@ func TestRemoveNamePrefixes(t *testing.T) {
 		/* 1 */ {Name: disabledPrefix + "Name 2", MarkAdded: false, MarkDisabled: true},
 		/* 2 */ {Name: disabledPrefix + "Name 3", MarkAdded: false, MarkDisabled: false},
 		/* 3 */ {Name: addedPrefix + "Name 4", MarkAdded: false, MarkDisabled: true},
-		/* 4 */ {Name: disabledPrefix + addedPrefix + "Name 5", MarkAdded: true, MarkDisabled: true},
+		/* 4 */ {Name: disabledPrefix + addedPrefix + addedPrefix + "Name 5", MarkAdded: true, MarkDisabled: true},
 		/* 5 */ {Name: addedPrefix + disabledPrefix + "Name 6", MarkAdded: false, MarkDisabled: false},
 		/* 6 */ {Name: "Na" + addedPrefix + disabledPrefix + "me 7", MarkAdded: false, MarkDisabled: false},
 	}

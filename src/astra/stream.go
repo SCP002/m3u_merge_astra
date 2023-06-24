@@ -266,7 +266,7 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 
 	for _, s := range streams {
 		oldName := s.Name
-		for i := 0; i < 2; i++ { // Run twice to remove in any order
+		for s.hasPrefix(r.cfg.Streams.AddedPrefix) || s.hasPrefix(r.cfg.Streams.DisabledPrefix) {
 			if s.hasPrefix(r.cfg.Streams.AddedPrefix) {
 				s = s.removePrefix(r.cfg.Streams.AddedPrefix)
 				s.MarkAdded = true
