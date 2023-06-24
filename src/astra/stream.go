@@ -150,9 +150,10 @@ func (s Stream) InputsUpdateNote(cfg cfg.Streams) string {
 	return lo.Ternary(!s.Enabled && !cfg.EnableOnInputUpdate, "Stream is disabled", "")
 }
 
-// Enable enables the stream
+// Enable enables the stream and sets MarkDisabled field to false
 func (s Stream) Enable() Stream {
 	s.Enabled = true
+	s.MarkDisabled = false
 	return s
 }
 
@@ -174,7 +175,7 @@ func (s Stream) removeInputs(tInp string) Stream {
 	return s.RemoveInputsCb(tInp, func() {})
 }
 
-// Disable disables stream and sets MarkDisabled field
+// Disable disables stream and sets MarkDisabled field to true
 func (s Stream) disable() Stream {
 	s.Enabled = false
 	s.MarkDisabled = true

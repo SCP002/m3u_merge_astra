@@ -215,24 +215,44 @@ func TestInputsUpdateNote(t *testing.T) {
 }
 
 func TestEnableStream(t *testing.T) {
-	s1 := Stream{Enabled: false}
+	s1 := Stream{Enabled: false, MarkDisabled: true}
 	s1Original := copier.TestDeep(t, s1)
 
 	s2 := s1.Enable()
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
-	expected := Stream{Enabled: true}
-	assert.Exactly(t, expected, s2, "should set Enabled field to true")
+	expected := Stream{Enabled: true, MarkDisabled: false}
+	assert.Exactly(t, expected, s2, "should set Enabled field to true and MarkDisabled field to false")
 
-	s1 = Stream{Enabled: true}
+	s1 = Stream{Enabled: false, MarkDisabled: false}
 	s1Original = copier.TestDeep(t, s1)
 
 	s2 = s1.Enable()
 	assert.NotSame(t, &s1, &s2, "should return copy of stream")
 	assert.Exactly(t, s1Original, s1, "should not modify the source")
 
-	assert.Exactly(t, s1, s2, "should not change enabled stream")
+	expected = Stream{Enabled: true, MarkDisabled: false}
+	assert.Exactly(t, expected, s2, "should set Enabled field to true")
+	
+	s1 = Stream{Enabled: true, MarkDisabled: true}
+	s1Original = copier.TestDeep(t, s1)
+
+	s2 = s1.Enable()
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected = Stream{Enabled: true, MarkDisabled: false}
+	assert.Exactly(t, expected, s2, "should set MarkDisabled field to false")
+
+	s1 = Stream{Enabled: true, MarkDisabled: false}
+	s1Original = copier.TestDeep(t, s1)
+
+	s2 = s1.Enable()
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	assert.Exactly(t, s1, s2, "should not change enabled stream with MarkDisabled field set to false")
 }
 
 func TestRemoveInputsCb(t *testing.T) {
@@ -713,15 +733,17 @@ func TestUniteInputs(t *testing.T) {
 	// Test Streams.EnableOnInputUpdate
 	r.cfg.Streams.EnableOnInputUpdate = false
 	sl1 = []Stream{
-		{Enabled: false, Name: "Name", Inputs: []string{"http://input/a"}},
-		{Enabled: false, Name: "Name", Inputs: []string{"http://input/b"}},
+		{Enabled: false, MarkDisabled: true, Name: "Name", Inputs: []string{"http://input/a"}},
+		{Enabled: false, MarkDisabled: true, Name: "Name", Inputs: []string{"http://input/b"}},
 	}
 	sl1Original = copier.TestDeep(t, sl1)
 
 	sl2 = r.UniteInputs(sl1)
 
 	assert.False(t, sl2[0].Enabled, "stream should stay disabled as EnableOnInputUpdate = false")
+	assert.True(t, sl2[0].MarkDisabled, "MarkDisabled should stay true as EnableOnInputUpdate = false")
 	assert.False(t, sl2[1].Enabled, "stream should stay disabled as it has no new inputs")
+	assert.True(t, sl2[1].MarkDisabled, "MarkDisabled should stay true as it has no new inputs")
 
 	r.cfg.Streams.EnableOnInputUpdate = true
 
@@ -730,10 +752,12 @@ func TestUniteInputs(t *testing.T) {
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
 
 	assert.True(t, sl2[0].Enabled, "stream should become enabled as EnableOnInputUpdate = true")
+	assert.False(t, sl2[0].MarkDisabled, "MarkDisabled should become false as EnableOnInputUpdate = true")
 	assert.False(t, sl2[1].Enabled, "stream should stay disabled as it has no new inputs")
+	assert.True(t, sl2[1].MarkDisabled, "MarkDisabled should stay true as it has no new inputs")
 
 	sl1 = []Stream{
-		{Enabled: false, Name: "Name", Inputs: []string{"http://input/a"}},
+		{Enabled: false, MarkDisabled: true, Name: "Name", Inputs: []string{"http://input/a"}},
 	}
 
 	sl2 = r.UniteInputs(sl1)
