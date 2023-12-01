@@ -38,7 +38,8 @@ func Parse() (Flags, error) {
 
 // IsErrOfType returns true if <err> is of type <t>
 func IsErrOfType(err error, t goFlags.ErrorType) bool {
-	if err, ok := errors.UnwrapAll(err).(*goFlags.Error); ok && err.Type == t {
+	goFlagsErr := &goFlags.Error{}
+	if ok := errors.As(err, &goFlagsErr); ok && goFlagsErr.Type == t {
 		return true
 	}
 	return false
