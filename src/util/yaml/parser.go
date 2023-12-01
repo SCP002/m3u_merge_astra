@@ -7,12 +7,12 @@ import (
 	"m3u_merge_astra/util/slice"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/samber/lo"
-	"golang.org/x/exp/slices"
 )
 
 // PathNotFoundError represents error thrown if specified path not found in given YAML
