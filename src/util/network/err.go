@@ -4,6 +4,8 @@ import (
 	"net"
 	"net/url"
 	"syscall"
+
+	"github.com/cockroachdb/errors"
 )
 
 // ErrType represents network error type
@@ -34,27 +36,25 @@ func GetErrType(err error) ErrType {
 	if err == nil {
 		return Nil
 	}
-	for {
-		if err, ok := err.(*net.DNSError); ok && err.Err == "no such host" {
-			return NoSuchHost
-		}
-		errMsg := "http: server gave HTTP response to HTTPS client"
-		if err, ok := err.(*url.Error); ok && err.Err.Error() == errMsg {
-			return HTTPSClientHTTPServer
-		}
-		if err, ok := err.(syscall.Errno); ok {
-			if err == 10061 || err == syscall.ECONNREFUSED {
-				return Refused
-			}
-		}
-		if err, ok := err.(net.Error); ok && err.Timeout() {
-			return Timeout
-		}
-		if unwrap, ok := err.(interface{ Unwrap() error }); ok {
-			err = unwrap.Unwrap()
-		}
-		if err == nil {
-			return Unknown
-		}
+
+	dnsErr := &net.DNSError{}
+	if ok := errors.As(err, &dnsErr); ok && dnsErr.Err == "no such host" {
+		return NoSuchHost
 	}
+
+	urlErr := &url.Error{}
+	if ok := errors.As(err, &urlErr); ok && urlErr.Err.Error() == "http: server gave HTTP response to HTTPS client" {
+		return HTTPSClientHTTPServer
+	}
+
+	if errors.Is(err, syscall.ECONNREFUSED) || errors.Is(err, syscall.Errno(10061)) {
+		return Refused
+	}
+
+	netErr := err.(net.Error)
+	if ok := errors.As(err, &netErr); ok && netErr.Timeout() {
+		return Timeout
+	}
+
+	return Unknown
 }
