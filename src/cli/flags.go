@@ -13,7 +13,7 @@ type Flags struct {
 	ProgramCfgPath string       `short:"c" long:"programCfgPath" description:"Program config file path to read from or initialize a default"`
 	M3UPath        string       `short:"m" long:"m3uPath"        description:"M3U file path to get channels from. Can be a local file or URL"`
 	AstraAddr      string       `short:"a" long:"astraAddr"      description:"Astra address in format of host:port"`
-	AstraLogin     string       `short:"u" long:"astraLogin"     description:"Astra login"`
+	AstraUser      string       `short:"u" long:"astraUser"      description:"Astra user"`
 	AstraPwd       string       `short:"p" long:"astraPwd"       description:"Astra password"`
 }
 

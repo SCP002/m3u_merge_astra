@@ -23,7 +23,7 @@ defined in `--programCfgPath` and sends requests to astra to modify config.
 | -c, --programCfgPath | Program config file path to read from or initialize a default [default: `m3u_merge_astra.yaml`] |
 | -m, --m3uPath        | M3U file path to get channels from. Can be a local file or URL                                  |
 | -a, --astraAddr      | Astra address in format of `host:port` [default: `127.0.0.1:8000`]                              |
-| -u, --astraLogin     | Astra login                                                                                     |
+| -u, --astraUser      | Astra user                                                                                      |
 | -p, --astraPwd       | Astra password                                                                                  |
 
 Unless `--programCfgPath` is specified, on first run it creates default program config in current directory and terminates.

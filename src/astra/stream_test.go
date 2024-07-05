@@ -234,7 +234,7 @@ func TestEnableStream(t *testing.T) {
 
 	expected = Stream{Enabled: true, MarkDisabled: false}
 	assert.Exactly(t, expected, s2, "should set Enabled field to true")
-	
+
 	s1 = Stream{Enabled: true, MarkDisabled: true}
 	s1Original = copier.TestDeep(t, s1)
 
