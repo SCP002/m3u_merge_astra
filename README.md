@@ -22,7 +22,7 @@ defined in `--programCfgPath` and sends requests to astra to modify config.
 | -l, --logLevel       | Logging level. Can be from `0` (least verbose) to `6` (most verbose) [default: `4`]             |
 | -c, --programCfgPath | Program config file path to read from or initialize a default [default: `m3u_merge_astra.yaml`] |
 | -m, --m3uPath        | M3U file path to get channels from. Can be a local file or URL                                  |
-| -a, --astraAddr      | Astra address in format of `host:port` [default: `127.0.0.1:8000`]                              |
+| -a, --astraAddr      | Astra address in format of `scheme://host:port` [default: `http://127.0.0.1:8000`]              |
 | -u, --astraUser      | Astra user                                                                                      |
 | -p, --astraPwd       | Astra password                                                                                  |
 
@@ -41,7 +41,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 * It is possible to add streams from one instance of astra to another one, for example:  
 
   ```sh
-  m3u_merge_astra -m http://another_astra:8005/playlist.m3u8 -a 127.0.0.1:8002 -u admin -p 123456
+  m3u_merge_astra -m http://another_astra:8005/playlist.m3u8 -a 127.0.0.1:8002 -u admin -p admin
   ```
 
 * It is possible to use dummy M3U file to run independent tasks
@@ -49,7 +49,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 
   ```sh
   touch dummy.m3u
-  m3u_merge_astra -m dummy.m3u -u admin -p 123456
+  m3u_merge_astra -m dummy.m3u -u admin -p admin
   ```
 
 * When `streams.remove_dead_inputs` is enabled, progress of removing dead inputs from streams is printed every 30 seconds.

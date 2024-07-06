@@ -12,7 +12,7 @@ type Flags struct {
 	LogLevel       logrus.Level `short:"l" long:"logLevel"       description:"Logging level. Can be from 0 (least verbose) to 6 (most verbose)"`
 	ProgramCfgPath string       `short:"c" long:"programCfgPath" description:"Program config file path to read from or initialize a default"`
 	M3UPath        string       `short:"m" long:"m3uPath"        description:"M3U file path to get channels from. Can be a local file or URL"`
-	AstraAddr      string       `short:"a" long:"astraAddr"      description:"Astra address in format of host:port"`
+	AstraAddr      string       `short:"a" long:"astraAddr"      description:"Astra address in format of scheme://host:port"`
 	AstraUser      string       `short:"u" long:"astraUser"      description:"Astra user"`
 	AstraPwd       string       `short:"p" long:"astraPwd"       description:"Astra password"`
 }
@@ -23,7 +23,7 @@ func Parse() (Flags, error) {
 		// Set defaults
 		LogLevel:       logrus.InfoLevel,
 		ProgramCfgPath: "m3u_merge_astra.yaml",
-		AstraAddr:      "127.0.0.1:8000",
+		AstraAddr:      "http://127.0.0.1:8000",
 	}
 	parser := goFlags.NewParser(&flags, goFlags.Options(goFlags.Default))
 	_, err := parser.Parse()
