@@ -944,6 +944,10 @@ func TestRemoveDeadInputs(t *testing.T) {
 	expected = []string{"rtp://skip/1", "rtsp://skip/2", "file:///skip/3.ts"}
 	assert.Exactly(t, expected, sl2[3].Inputs, "should not remove inputs with unsupported protocols")
 
+	// Test concurrency
+	// On Windows may unexpectedly freeze after ~20 seconds of the test runnning.
+	// Use test_remove_dead_inputs.sh
+
 	sl1 = []Stream{
 		{
 			Name:   "Name 1",
@@ -1172,7 +1176,7 @@ func TestProgressRemoveDeadInputs(t *testing.T) {
 	defer httpsSrv.Close()
 
 	// Test log output
-	// Unexpectedly freezing on Windows 10 after ~20 seconds of the test runnning.
+	// On Windows may unexpectedly freeze after ~20 seconds of the test runnning.
 	// Use test_progress_remove_dead_inputs.sh
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
