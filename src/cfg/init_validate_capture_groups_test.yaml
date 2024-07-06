@@ -5,6 +5,7 @@ general:
   similar_translit_map:
   name_aliases: false
   name_alias_list:
+  astra_api_resp_timeout: '0s'
 m3u:
   resp_timeout: '0s'
   chann_name_blacklist:

@@ -10,6 +10,7 @@ general:
       - 'Sample Television Channel'
     - - 'Discovery ID'
       - 'Discovery Investigation'
+  astra_api_resp_timeout: '0s'
 m3u:
   resp_timeout: '0s'
   chann_name_blacklist:

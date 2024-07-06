@@ -38,6 +38,9 @@ general:
     # - - 'Discovery ID'
     #   - 'Discovery Investigation'
 
+  # Astra API response timeout.
+  astra_api_resp_timeout: '10s'
+
 # -------------------------------------------------------------------------------------------------------------------
 # M3U related settings of the program.
 m3u:
