@@ -15,7 +15,7 @@ func TestNew(t *testing.T) {
 	assert.Exactly(t, time.Second, analyzer.dialer.HandshakeTimeout, "should set analyzer handshake timeout")
 }
 
-// Requires a running astra analyzer, use test_check.sh
+// Requires a running astra analyzer
 func TestCheck(t *testing.T) {
 	handshakeTimeout := time.Second * 3
 	watchTime := time.Second * 20
@@ -57,7 +57,7 @@ func TestCheck(t *testing.T) {
 		defer wg.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), watchTime)
 		defer cancel()
-		url := "https://speed.hetzner.de/1GB.bin"
+		url := "http://ipv4.download.thinkbroadband.com/1GB.zip"
 		result, err := analyzer.Check(ctx, url)
 		assert.True(t, result.Bitrate == 0, "should have average bitrate equal to 0")
 		assert.False(t, result.HasAudio, "should not have audio stream")
