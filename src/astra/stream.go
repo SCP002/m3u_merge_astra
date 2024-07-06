@@ -691,7 +691,6 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 	out = copier.MustDeep(streams)
 	for sIdx, s := range out {
 		for _, inp := range s.Inputs {
-			s, sIdx, inp := s, sIdx, inp // TODO: This line might not be needed in go 1.22+, google LoopvarExperiment
 			pool.Submit(func() {
 				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
 					"input", inp)
