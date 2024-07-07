@@ -26,16 +26,28 @@ func TestNewHandler(t *testing.T) {
 }
 
 // Requires a running astra
+func TestSetCategory(t *testing.T) {
+	log := logger.New(logrus.DebugLevel)
+	httpClient := network.NewHttpClient(time.Second * 3)
+	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
+	err := apiHandler.SetCategory(astra.Category{
+		Name:   "Category name 1",
+		Groups: []astra.Group{{Name: "Group name 1"}, {Name: "Group name 2"}},
+	})
+	assert.NoError(t, err, "should not return error")
+}
+
+// Requires a running astra
 func TestSetStream(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 	err := apiHandler.SetStream("0000", astra.Stream{
 		Enabled: true,
-		ID: "0000",
-		Inputs: []string{"http://xxx/2", "http://xxx"},
-		Name: "NAME",
-		Type: "spts",
+		ID:      "0000",
+		Inputs:  []string{"http://xxx/2", "http://xxx"},
+		Name:    "Stream name 1",
+		Type:    "spts",
 	})
 	assert.NoError(t, err, "should not return error")
 }

@@ -30,6 +30,17 @@ type setStreamResp struct {
 	Status string `json:"set-stream"`
 }
 
+// setCategoryReq represents request to set category
+type setCategoryReq struct {
+	Cmd      string         `json:"cmd"`
+	Category astra.Category `json:"category"`
+}
+
+// setCategoryResp represents response to setting category
+type setCategoryResp struct {
+	Status string `json:"set-category"`
+}
+
 // handler holds dependencies and credentials to access astra API
 type handler struct {
 	log        *logger.Logger
@@ -42,6 +53,25 @@ type handler struct {
 // NewHandler returns new astra API handler
 func NewHandler(log *logger.Logger, httpClient *http.Client, address string, user string, password string) handler {
 	return handler{log: log, httpClient: httpClient, address: address, user: user, password: password}
+}
+
+// SetCategory makes a request to API setting <category>
+func (h handler) SetCategory(category astra.Category) error {
+	respBytes, err := h.request("POST", "/control/", setCategoryReq{Cmd: "set-category", Category: category})
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Set category %v", category.Name))
+	}
+
+	var resp setCategoryResp
+	err = json.Unmarshal(respBytes, &resp)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Invalid response while setting category %v", category.Name))
+	}
+	if resp.Status != "ok" {
+		return errors.Wrap(err, fmt.Sprintf("Bad response while setting category %v (%v)", category.Name, resp.Status))
+	}
+
+	return nil
 }
 
 // SetStream makes a request to API setting stream with <id> to <stream>
