@@ -33,7 +33,7 @@ func TestSetStream(t *testing.T) {
 	err := apiHandler.SetStream("0000", astra.Stream{
 		Enabled: true,
 		ID: "0000",
-		Inputs: []string{"http://tv.lan:8000/play/cgnj", "http://xxx"},
+		Inputs: []string{"http://xxx/2", "http://xxx"},
 		Name: "NAME",
 		Type: "spts",
 	})
