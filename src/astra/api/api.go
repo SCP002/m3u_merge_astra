@@ -2,8 +2,10 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 
 	"m3u_merge_astra/astra"
 	"m3u_merge_astra/util/logger"
@@ -15,6 +17,13 @@ import (
 // basicReq respresents basic request to astra API
 type basicReq struct {
 	Cmd string `json:"cmd"`
+}
+
+// setStreamReq represents request to set stream
+type setStreamReq struct {
+	Cmd    string       `json:"cmd"`
+	ID     string       `json:"id"`
+	Stream astra.Stream `json:"stream"`
 }
 
 // handler holds dependencies and credentials to access astra API
@@ -31,15 +40,31 @@ func NewHandler(log *logger.Logger, httpClient *http.Client, address string, use
 	return handler{log: log, httpClient: httpClient, address: address, user: user, password: password}
 }
 
+// SetStream makes a request to API setting stream with <id> to <stream>
+func (h handler) SetStream(id string, stream astra.Stream) error {
+	respBytes, err := h.request("POST", "/control/", setStreamReq{Cmd: "set-stream", ID: id, Stream: stream})
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Set stream with ID %v", id))
+	}
+
+	var s astra.Stream
+	err = json.Unmarshal(respBytes, &s)
+	if err != nil || !reflect.DeepEqual(s, stream) {
+		return errors.Wrap(err, fmt.Sprintf("Invalid response while setting stream with ID %v", id))
+	}
+
+	return nil
+}
+
 // FetchCfg makes a request to API and returns astra config
 func (h handler) FetchCfg() (astra.Cfg, error) {
-	resp, err := h.request("POST", "/control/", basicReq{Cmd: "load"})
+	respBytes, err := h.request("POST", "/control/", basicReq{Cmd: "load"})
 	if err != nil {
 		return astra.Cfg{}, errors.Wrap(err, "Fetch astra config")
 	}
 
 	var cfg astra.Cfg
-	err = json.Unmarshal(resp, &cfg)
+	err = json.Unmarshal(respBytes, &cfg)
 	if err != nil {
 		return astra.Cfg{}, errors.Wrap(err, "Decode astra config")
 	}
@@ -54,7 +79,7 @@ func (h handler) request(method string, path string, cmd any) ([]byte, error) {
 		return nil, errors.Wrap(err, "Encode request to API")
 	}
 
-	req, err := http.NewRequest(method, h.address + path, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(method, h.address+path, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, errors.Wrap(err, "Create HTTP request instance to API")
 	}

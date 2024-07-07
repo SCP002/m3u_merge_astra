@@ -1,6 +1,7 @@
 package api
 
 import (
+	"m3u_merge_astra/astra"
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"testing"
@@ -22,6 +23,21 @@ func TestNewHandler(t *testing.T) {
 		password:   "pass",
 	}
 	assert.Exactly(t, expected, NewHandler(log, httpClient, "127.0.0.1", "user", "pass"), "should initialize handler")
+}
+
+// Requires a running astra
+func TestSetStream(t *testing.T) {
+	log := logger.New(logrus.DebugLevel)
+	httpClient := network.NewHttpClient(time.Second * 3)
+	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
+	err := apiHandler.SetStream("0000", astra.Stream{
+		Enabled: true,
+		ID: "0000",
+		Inputs: []string{"http://tv.lan:8000/play/cgnj", "http://xxx"},
+		Name: "NAME",
+		Type: "spts",
+	})
+	assert.NoError(t, err, "should not return error")
 }
 
 // Requires a running astra
