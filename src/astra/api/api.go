@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 
 	"m3u_merge_astra/astra"
 	"m3u_merge_astra/util/logger"
@@ -24,6 +23,11 @@ type setStreamReq struct {
 	Cmd    string       `json:"cmd"`
 	ID     string       `json:"id"`
 	Stream astra.Stream `json:"stream"`
+}
+
+// setStreamResp represents response to setting stream
+type setStreamResp struct {
+	Status string `json:"set-stream"`
 }
 
 // handler holds dependencies and credentials to access astra API
@@ -47,10 +51,13 @@ func (h handler) SetStream(id string, stream astra.Stream) error {
 		return errors.Wrap(err, fmt.Sprintf("Set stream with ID %v", id))
 	}
 
-	var s astra.Stream
-	err = json.Unmarshal(respBytes, &s)
-	if err != nil || !reflect.DeepEqual(s, stream) {
+	var resp setStreamResp
+	err = json.Unmarshal(respBytes, &resp)
+	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("Invalid response while setting stream with ID %v", id))
+	}
+	if resp.Status != "ok" {
+		return errors.Wrap(err, fmt.Sprintf("Bad response while setting stream with ID %v (%v)", id, resp.Status))
 	}
 
 	return nil
