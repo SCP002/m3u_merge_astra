@@ -34,10 +34,11 @@ type Stream struct {
 	ID             string            `json:"id,omitempty"`
 	Inputs         []string          `json:"input,omitempty"`
 	Name           string            `json:"name,omitempty"`
+	Remove         bool              `json:"remove,omitempty"` // Used by API to remove the stream
 	Type           string            `json:"type,omitempty"`
-	Unknown        map[string]any    `json:"-" jsonex:"true"` // All unknown fields go here.
-	MarkAdded      bool              `json:"-"`               // Set added name prefix after processing?
-	MarkDisabled   bool              `json:"-"`               // Set disabled name prefix after processing?
+	Unknown        map[string]any    `json:"-" jsonex:"true"`  // All unknown fields go here.
+	MarkAdded      bool              `json:"-"`                // Set added name prefix after processing?
+	MarkDisabled   bool              `json:"-"`                // Set disabled name prefix after processing?
 }
 
 // NewStream returns new stream with default config
