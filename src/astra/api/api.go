@@ -11,6 +11,7 @@ import (
 
 	json "github.com/SCP002/jsonexraw"
 	"github.com/cockroachdb/errors"
+	"github.com/samber/lo"
 )
 
 // basicReq respresents basic request to astra API
@@ -28,17 +29,20 @@ type setStreamReq struct {
 // setStreamResp represents response to setting stream
 type setStreamResp struct {
 	Status string `json:"set-stream"`
+	Error  string `json:"error"`
 }
 
 // setCategoryReq represents request to set category
 type setCategoryReq struct {
 	Cmd      string         `json:"cmd"`
+	ID       *int           `json:"id,omitempty"`
 	Category astra.Category `json:"category"`
 }
 
 // setCategoryResp represents response to setting category
 type setCategoryResp struct {
 	Status string `json:"set-category"`
+	Error  string `json:"error"`
 }
 
 // handler holds dependencies and credentials to access astra API
@@ -55,20 +59,32 @@ func NewHandler(log *logger.Logger, httpClient *http.Client, address string, use
 	return handler{log: log, httpClient: httpClient, address: address, user: user, password: password}
 }
 
-// SetCategory makes a request to API setting <category>
-func (h handler) SetCategory(category astra.Category) error {
-	respBytes, err := h.request("POST", "/control/", setCategoryReq{Cmd: "set-category", Category: category})
+// AddCategory makes a request to API adding <category>
+func (h handler) AddCategory(category astra.Category) error {
+	return h.SetCategory(-1, category)
+}
+
+// SetCategory makes a request to API setting category with <id> (index) to <category>.
+//
+// To create new category, use AddCategory method or pass negative <id>.
+func (h handler) SetCategory(id int, category astra.Category) error {
+	req := setCategoryReq{Cmd: "set-category", ID: lo.Ternary(id >= 0, &id, nil), Category: category}
+
+	respBytes, err := h.request("POST", "/control/", req)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Set category %v", category.Name))
+		return err
 	}
 
 	var resp setCategoryResp
 	err = json.Unmarshal(respBytes, &resp)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Invalid response while setting category %v", category.Name))
+		return errors.Wrap(err, "Invalid API response")
 	}
 	if resp.Status != "ok" {
-		return errors.Wrap(err, fmt.Sprintf("Bad response while setting category %v (%v)", category.Name, resp.Status))
+		return errors.Wrap(err, fmt.Sprintf("API responded with bad status (%v)", resp.Status))
+	}
+	if resp.Error != "" {
+		return errors.Wrap(err, fmt.Sprintf("API responded with error (%v)", resp.Error))
 	}
 
 	return nil
@@ -78,16 +94,19 @@ func (h handler) SetCategory(category astra.Category) error {
 func (h handler) SetStream(id string, stream astra.Stream) error {
 	respBytes, err := h.request("POST", "/control/", setStreamReq{Cmd: "set-stream", ID: id, Stream: stream})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Set stream with ID %v", id))
+		return err
 	}
 
 	var resp setStreamResp
 	err = json.Unmarshal(respBytes, &resp)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Invalid response while setting stream with ID %v", id))
+		return errors.Wrap(err, "Invalid API response")
 	}
 	if resp.Status != "ok" {
-		return errors.Wrap(err, fmt.Sprintf("Bad response while setting stream with ID %v (%v)", id, resp.Status))
+		return errors.Wrap(err, fmt.Sprintf("API responded with bad status (%v)", resp.Status))
+	}
+	if resp.Error != "" {
+		return errors.Wrap(err, fmt.Sprintf("API responded with error (%v)", resp.Error))
 	}
 
 	return nil
