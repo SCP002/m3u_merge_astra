@@ -30,6 +30,45 @@ func TestNewHandler(t *testing.T) {
 	assert.Exactly(t, expected, NewHandler(log, httpClient, "127.0.0.1", "user", "pass"), "should initialize handler")
 }
 
+func TestAddCategories(t *testing.T) {
+	log := logger.New(logrus.DebugLevel)
+	httpClient := network.NewHttpClient(time.Second * 3)
+	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
+
+	// Remove existing categories
+	config, err := apiHandler.FetchCfg()
+	assert.NoError(t, err, "should not return error")
+	for _, category := range config.Categories {
+		category.Remove = true
+		err := apiHandler.SetCategory(0, category)
+		assert.NoError(t, err, "should not return error")
+	}
+
+	// Set
+	categories := []astra.Category{
+		{Name: "Category 1", Groups: []astra.Group{{Name: "Group 1"}, {Name: "Group 2"}}},
+		{Name: "Category 2", Groups: []astra.Group{{Name: "Group 3"}, {Name: "Group 4"}}},
+		{Name: "Category 3", Groups: []astra.Group{{Name: "Group 5"}, {Name: "Group 6"}}},
+	}
+	apiHandler.AddCategories(categories)
+
+	config, err = apiHandler.FetchCfg()
+	assert.NoError(t, err, "should not return error")
+	assert.Equal(t, categories, config.Categories, "returned config should consist of categories set")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		log := logger.New(logrus.DebugLevel)
+		httpClient := network.NewHttpClient(time.Second * 3)
+		apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
+		apiHandler.AddCategories([]astra.Category{
+			{Name: "Category 0", Groups: []astra.Group{{Name: "Group 0"}}},
+		})
+	})
+	assert.Contains(t, out, `Successfully added category: name "Category 0"`)
+	assert.NotContains(t, out, "Failed")
+}
+
 func TestAddCategory(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)

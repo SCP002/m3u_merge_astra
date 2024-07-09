@@ -59,6 +59,20 @@ func NewHandler(log *logger.Logger, httpClient *http.Client, address string, use
 	return handler{log: log, httpClient: httpClient, address: address, user: user, password: password}
 }
 
+// AddCategories makes a requests to API adding <categories>
+func (h handler) AddCategories(categories []astra.Category) {
+	h.log.Info("Sending new categories to astra")
+
+	for _, category := range categories {
+		err := h.AddCategory(category)
+		if err == nil {
+			h.log.InfoCFi("Successfully added category", "name", category.Name)
+		} else {
+			h.log.ErrorCFi("Failed to add category", "name", category.Name, "error", err)
+		}
+	}
+}
+
 // AddCategory makes a request to API adding <category>
 func (h handler) AddCategory(category astra.Category) error {
 	return h.SetCategory(-1, category)
