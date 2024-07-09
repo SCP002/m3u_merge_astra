@@ -90,6 +90,20 @@ func (h handler) SetCategory(id int, category astra.Category) error {
 	return nil
 }
 
+// SetStreams makes a requests to API setting <streams> synchronously
+func (h handler) SetStreams(streams []astra.Stream) {
+	h.log.Info("Sending changed streams to astra")
+
+	for _, stream := range streams {
+		err := h.SetStream(stream.ID, stream)
+		if err == nil {
+			h.log.InfoCFi("Successfully set stream", "ID", stream.ID, "name", stream.Name)
+		} else {
+			h.log.ErrorCFi("Failed to set stream", "ID", stream.ID, "name", stream.Name, "error", err)
+		}
+	}
+}
+
 // SetStream makes a request to API setting stream with <id> to <stream>
 func (h handler) SetStream(id string, stream astra.Stream) error {
 	respBytes, err := h.request("POST", "/control/", setStreamReq{Cmd: "set-stream", ID: id, Stream: stream})

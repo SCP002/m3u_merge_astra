@@ -46,6 +46,15 @@ func TestWarnCFi(t *testing.T) {
 	assert.Contains(t, out, `WARN message: field 1 "value 1", field 2 "10"`)
 }
 
+func TestErrorCFi(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(logrus.ErrorLevel)
+
+		log.ErrorCFi("message", "field 1", "value 1", "field 2", 10)
+	})
+	assert.Contains(t, out, `ERROR message: field 1 "value 1", field 2 "10"`)
+}
+
 func TestDebug(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		log := New(logrus.DebugLevel)

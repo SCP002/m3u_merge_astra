@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"m3u_merge_astra/astra"
+	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/rnd"
@@ -12,6 +13,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/zenizh/go-capturer"
 )
 
 func TestNewHandler(t *testing.T) {
@@ -75,6 +77,45 @@ func TestSetCategory(t *testing.T) {
 		"last category in returned config be category set")
 }
 
+func TestSetStreams(t *testing.T) {
+	log := logger.New(logrus.DebugLevel)
+	httpClient := network.NewHttpClient(time.Second * 3)
+	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
+
+	// Remove existing streams
+	config, err := apiHandler.FetchCfg()
+	assert.NoError(t, err, "should not return error")
+	apiHandler.SetStreams(lo.Map(config.Streams, func(s astra.Stream, _ int) astra.Stream {
+		s.Remove = true
+		return s
+	}))
+
+	// Set
+	streams := []astra.Stream{
+		{ID: "0001", Name: "Name 1", Type: string(cfg.SPTS)},
+		{ID: "0002", Name: "Name 2", Type: string(cfg.SPTS)},
+		{ID: "0003", Name: "Name 3", Type: string(cfg.SPTS)},
+	}
+	apiHandler.SetStreams(streams)
+
+	config, err = apiHandler.FetchCfg()
+	assert.NoError(t, err, "should not return error")
+	assert.Equal(t, streams, config.Streams, "returned config should consist of streams set")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		log := logger.New(logrus.DebugLevel)
+		httpClient := network.NewHttpClient(time.Second * 3)
+		apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
+		streams := []astra.Stream{
+			{ID: "0000", Name: "Name 0", Type: string(cfg.SPTS)},
+		}
+		apiHandler.SetStreams(streams)
+	})
+	assert.Contains(t, out, `Successfully set stream: ID "0000", name "Name 0"`)
+	assert.NotContains(t, out, "Failed")
+}
+
 // Requires a running astra
 func TestSetStream(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
@@ -86,7 +127,7 @@ func TestSetStream(t *testing.T) {
 		ID:      "0000",
 		Inputs:  []string{"http://xxx/2", "http://xxx"},
 		Name:    streamName,
-		Type:    "spts",
+		Type:    string(cfg.SPTS),
 	})
 	assert.NoError(t, err, "should not return error")
 
