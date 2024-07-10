@@ -76,22 +76,26 @@ func (l Logger) DebugCFi(msg string, fields ...any) {
 }
 
 // buildFields returns comma separated <fields> with every second field quoted and colored
-func buildFields(fields []any) (out string) {
+func buildFields(fields []any) string {
 	cyan := color.New(color.FgHiCyan).SprintFunc()
+	var sb strings.Builder
 
 	for i, field := range fields {
 		fieldStr := fmt.Sprint(field)
 		if i % 2 == 0 {
-			out += fieldStr + " "
+			sb.WriteString(fieldStr)
+			sb.WriteRune(' ')
 		} else {
-			out += `"` + cyan(fieldStr) + `"`
+			sb.WriteRune('"')
+			sb.WriteString(cyan(fieldStr))
+			sb.WriteRune('"')
 			if i < len(fields) - 1 {
-				out += ", "
+				sb.WriteString(", ")
 			}
 		}
 	}
 
-	return strings.TrimSpace(out)
+	return strings.TrimSpace(sb.String())
 }
 
 // getCallerInfo returns runtime caller info with amount of stack frames to <skip> or empty string on error
