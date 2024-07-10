@@ -30,7 +30,8 @@ func TestNewHandler(t *testing.T) {
 	assert.Exactly(t, expected, NewHandler(log, httpClient, "127.0.0.1", "user", "pass"), "should initialize handler")
 }
 
-func TestAddCategories(t *testing.T) {
+// Requires a running astra
+func TestSetCategories(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
@@ -45,47 +46,51 @@ func TestAddCategories(t *testing.T) {
 	}
 
 	// Set
-	categories := []astra.Category{
-		{Name: "Category 1", Groups: []astra.Group{{Name: "Group 1"}, {Name: "Group 2"}}},
-		{Name: "Category 2", Groups: []astra.Group{{Name: "Group 3"}, {Name: "Group 4"}}},
-		{Name: "Category 3", Groups: []astra.Group{{Name: "Group 5"}, {Name: "Group 6"}}},
+	idxCategoryMap := []lo.Entry[int, astra.Category]{
+		{
+			Key:   -1,
+			Value: astra.Category{Name: "Category 1", Groups: []astra.Group{{Name: "Group 1"}, {Name: "Group 2"}}},
+		},
+		{
+			Key:   -1,
+			Value: astra.Category{Name: "Category 2", Groups: []astra.Group{{Name: "Group 3"}, {Name: "Group 4"}}},
+		},
+		{
+			Key:   -1,
+			Value: astra.Category{Name: "Category 3", Groups: []astra.Group{{Name: "Group 5"}, {Name: "Group 6"}}},
+		},
+		{
+			Key:   1,
+			Value: astra.Category{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Name: "Group 4*"}}},
+		},
 	}
-	apiHandler.AddCategories(categories)
+	apiHandler.SetCategories(idxCategoryMap)
 
+	// Check
 	config, err = apiHandler.FetchCfg()
 	assert.NoError(t, err, "should not return error")
-	assert.Equal(t, categories, config.Categories, "returned config should consist of categories set")
+	expected := []astra.Category{
+		{Name: "Category 1", Groups: []astra.Group{{Name: "Group 1"}, {Name: "Group 2"}}},
+		{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Name: "Group 4*"}}},
+		{Name: "Category 3", Groups: []astra.Group{{Name: "Group 5"}, {Name: "Group 6"}}},
+	}
+	assert.Equal(t, expected, config.Categories, "returned config should consist of categories set")
 
 	// Test log output
 	out := capturer.CaptureStderr(func() {
 		log := logger.New(logrus.DebugLevel)
 		httpClient := network.NewHttpClient(time.Second * 3)
 		apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
-		apiHandler.AddCategories([]astra.Category{
-			{Name: "Category 0", Groups: []astra.Group{{Name: "Group 0"}}},
-		})
+		idxCategoryMap = []lo.Entry[int, astra.Category]{
+			{
+				Key:   -1,
+				Value: astra.Category{Name: "Category 0", Groups: []astra.Group{{Name: "Group 0"}, {Name: "Group 01"}}},
+			},
+		}
+		apiHandler.SetCategories(idxCategoryMap)
 	})
-	assert.Contains(t, out, `Successfully added category: name "Category 0"`)
+	assert.Contains(t, out, `Successfully set category: name "Category 0", groups "[{Group 0} {Group 01}]"`)
 	assert.NotContains(t, out, "Failed")
-}
-
-func TestAddCategory(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
-	httpClient := network.NewHttpClient(time.Second * 3)
-	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
-
-	categoryName := fmt.Sprintf("Category %v", rnd.String(4, false, true))
-	err := apiHandler.AddCategory(astra.Category{
-		Name:   categoryName,
-		Groups: []astra.Group{{Name: "Group name 1"}, {Name: "Group name 2"}},
-	})
-	assert.NoError(t, err, "should not return error")
-
-	cfg, err := apiHandler.FetchCfg()
-	assert.NoError(t, err, "should not return error")
-	assert.True(t, lo.ContainsBy(cfg.Categories, func(c astra.Category) bool {
-		return c.Name == categoryName
-	}), "returned config should contain data from category set")
 }
 
 // Requires a running astra
@@ -94,7 +99,7 @@ func TestSetCategory(t *testing.T) {
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 
-	err := apiHandler.AddCategory(astra.Category{
+	err := apiHandler.SetCategory(-1, astra.Category{
 		Name:   fmt.Sprintf("Category %v", rnd.String(4, false, true)),
 		Groups: []astra.Group{{Name: "Group name 1"}, {Name: "Group name 2"}},
 	})
@@ -107,12 +112,12 @@ func TestSetCategory(t *testing.T) {
 		Name:   "Category modified",
 		Groups: []astra.Group{{Name: "Group modified"}},
 	}
-	err = apiHandler.SetCategory(len(cfg.Categories) - 1, modifiedCategory)
+	err = apiHandler.SetCategory(len(cfg.Categories)-1, modifiedCategory)
 	assert.NoError(t, err, "should not return error")
 
 	cfg, err = apiHandler.FetchCfg()
 	assert.NoError(t, err, "should not return error")
-	assert.Equal(t, cfg.Categories[len(cfg.Categories) - 1], modifiedCategory,
+	assert.Equal(t, cfg.Categories[len(cfg.Categories)-1], modifiedCategory,
 		"last category in returned config be category set")
 }
 
@@ -137,6 +142,7 @@ func TestSetStreams(t *testing.T) {
 	}
 	apiHandler.SetStreams(streams)
 
+	// Check
 	config, err = apiHandler.FetchCfg()
 	assert.NoError(t, err, "should not return error")
 	assert.Equal(t, streams, config.Streams, "returned config should consist of streams set")

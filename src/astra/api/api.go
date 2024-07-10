@@ -59,30 +59,28 @@ func NewHandler(log *logger.Logger, httpClient *http.Client, address string, use
 	return handler{log: log, httpClient: httpClient, address: address, user: user, password: password}
 }
 
-// AddCategories makes a requests to API adding <categories>
-func (h handler) AddCategories(categories []astra.Category) {
-	h.log.Info("Sending new categories to astra")
+// SetCategories makes a requests to API setting categories by indexes as defined in <idxCategoryMap> synchronously.
+//
+// Use negative key (index) in <idxCategoryMap> to create new category.
+func (h handler) SetCategories(idxCategoryMap []lo.Entry[int, astra.Category]) {
+	h.log.Info("Sending changed categories to astra")
 
-	for _, category := range categories {
-		err := h.AddCategory(category)
+	for _, entry := range idxCategoryMap {
+		err := h.SetCategory(entry.Key, entry.Value)
 		if err == nil {
-			h.log.InfoCFi("Successfully added category", "name", category.Name)
+			h.log.InfoCFi("Successfully set category", "name", entry.Value.Name, "groups", entry.Value.Groups)
 		} else {
-			h.log.ErrorCFi("Failed to add category", "name", category.Name, "error", err)
+			h.log.ErrorCFi("Failed to set category", "name", entry.Value.Name, "groups", entry.Value.Groups, "error",
+				err)
 		}
 	}
 }
 
-// AddCategory makes a request to API adding <category>
-func (h handler) AddCategory(category astra.Category) error {
-	return h.SetCategory(-1, category)
-}
-
-// SetCategory makes a request to API setting category with <id> (index) to <category>.
+// SetCategory makes a request to API setting category with <idx> to <category>.
 //
-// To create new category, use AddCategory method or pass negative <id>.
-func (h handler) SetCategory(id int, category astra.Category) error {
-	req := setCategoryReq{Cmd: "set-category", ID: lo.Ternary(id >= 0, &id, nil), Category: category}
+// To create new category, pass negative <idx>.
+func (h handler) SetCategory(idx int, category astra.Category) error {
+	req := setCategoryReq{Cmd: "set-category", ID: lo.Ternary(idx >= 0, &idx, nil), Category: category}
 
 	respBytes, err := h.request("POST", "/control/", req)
 	if err != nil {
