@@ -1599,7 +1599,10 @@ func TestRemoveWithoutInputs(t *testing.T) {
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
 
 	expected := []Stream{
+		{Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Group"}, Remove: true},
+		{Enabled: true, Name: "Name", Remove: true},
 		{Enabled: true, Inputs: []string{"http://input/1", "http://input/2"}},
+		{Enabled: false, Name: r.cfg.Streams.DisabledPrefix + "Name", Remove: true},
 		{Inputs: []string{"http://input"}},
 	}
 
@@ -1609,11 +1612,15 @@ func TestRemoveWithoutInputs(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
-		sl1 := []Stream{{ID: "0", Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}}}
+		sl1 := []Stream{
+			{ID: "0", Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}},
+			{ID: "1", Name: "Name 2", Groups: map[string]string{"Cat": "Grp"}, Remove: true},
+		}
 
 		_ = r.RemoveWithoutInputs(sl1)
 	})
 	assert.Contains(t, out, `Removing stream without inputs: ID "0", name "Name 1", group "Cat: Grp"`)
+	assert.NotContains(t, out, `Removing stream without inputs: ID "1", name "Name 2", group "Cat: Grp"`)
 }
 
 func TestDisableWithoutInputs(t *testing.T) {

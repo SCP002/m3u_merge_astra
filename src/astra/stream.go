@@ -34,7 +34,7 @@ type Stream struct {
 	ID             string            `json:"id,omitempty"`
 	Inputs         []string          `json:"input,omitempty"`
 	Name           string            `json:"name,omitempty"`
-	Remove         bool              `json:"remove,omitempty"` // Used by API to remove the stream
+	Remove         bool              `json:"remove,omitempty"` // Used by API to remove the stream.
 	Type           string            `json:"type,omitempty"`
 	Unknown        map[string]any    `json:"-" jsonex:"true"`  // All unknown fields go here.
 	MarkAdded      bool              `json:"-"`                // Set added name prefix after processing?
@@ -526,15 +526,16 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveWithoutInputs returns shallow copy of <streams> without streams which have no inputs
+// RemoveWithoutInputs returns shallow copy of <streams> with Remove field set to true on streams which have no inputs
 func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing streams without inputs")
 
-	out = lo.Reject(streams, func(s Stream, _ int) bool {
-		if s.hasNoInputs() {
+	out = lo.Map(streams, func(s Stream, _ int) Stream {
+		if !s.Remove && s.hasNoInputs() {
 			r.log.InfoCFi("Removing stream without inputs", "ID", s.ID, "name", s.Name, "group", s.FirstGroup())
+			s.Remove = true
 		}
-		return s.hasNoInputs()
+		return s
 	})
 
 	return
