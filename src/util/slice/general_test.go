@@ -26,6 +26,8 @@ func TestAppendNew(t *testing.T) {
 
 	assert.Exactly(t, []int{0, 1, 2, 3}, ol2, "should add unique numbers")
 	assert.Exactly(t, 2, cbCounter, "callback should be called that amount of times")
+
+	assert.NotPanics(t, func() { AppendNew(ol1, nil, []int{4}...) }, "should not panic if callback is nil")
 }
 
 func TestRemoveLast(t *testing.T) {
@@ -61,7 +63,7 @@ func TestHasAnyPrefix(t *testing.T) {
 }
 
 func TestIsAllEmpty(t *testing.T) {
-	type test struct {}
+	type test struct{}
 	assert.True(t, IsAllEmpty([]int{}, []int{}))
 	assert.False(t, IsAllEmpty([]string{"something"}, []string{""}))
 	assert.True(t, IsAllEmpty(make([]bool, 0), []bool{}))

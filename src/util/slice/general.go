@@ -18,7 +18,9 @@ func AppendNew[T comparable](inp []T, callback func(T), elms ...T) []T {
 	for _, elm := range elms {
 		if !lo.Contains(inp, elm) {
 			inp = append(inp, elm)
-			callback(elm)
+			if callback != nil {
+				callback(elm)
+			}
 		}
 	}
 	return inp
