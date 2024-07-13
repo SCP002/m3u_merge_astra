@@ -6,10 +6,12 @@ import (
 
 	"m3u_merge_astra/astra"
 	"m3u_merge_astra/astra/analyzer"
+	"m3u_merge_astra/astra/api"
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/cli"
 	"m3u_merge_astra/m3u"
 	"m3u_merge_astra/merge"
+	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
@@ -27,7 +29,7 @@ func main() {
 	// Parse command line arguments
 	flags, err := cli.Parse()
 	if flags.Version {
-		fmt.Println("v1.5.1")
+		fmt.Println("v1.5.1") // TODO: Bump version
 		os.Exit(0)
 	}
 	if cli.IsErrOfType(err, goFlags.ErrHelp) {
@@ -57,17 +59,19 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Read astra config
-	log.Info("Reading astra config")
-	astraCfg, err := astra.ReadCfg(flags.AstraCfgInput)
+	// Fetch astra config
+	log.Info("Fetching astra config")
+	apiHttpClient := network.NewHttpClient(cfg.General.AstraAPIRespTimeout)
+	apiHandler := api.NewHandler(log, apiHttpClient, flags.AstraAddr, flags.AstraUser, flags.AstraPwd)
+	astraCfg, err := apiHandler.FetchCfg()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Fetch M3U channels
 	log.Info("Fetching M3U channels")
-	httpClient := network.NewHttpClient(cfg.M3U.RespTimeout)
-	m3uResp, err := openuri.Open(flags.M3UPath, openuri.WithHTTPClient(httpClient))
+	m3uHttpClient := network.NewHttpClient(cfg.M3U.RespTimeout)
+	m3uResp, err := openuri.Open(flags.M3UPath, openuri.WithHTTPClient(m3uHttpClient))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -122,7 +126,6 @@ func main() {
 	if cfg.Streams.AddNew {
 		astraCfg.Streams = mergeRepo.AddNewStreams(astraCfg.Streams, m3uChannels)
 	}
-	astraCfg.Categories = astraRepo.AddNewGroups(astraCfg.Categories, astraCfg.Streams)
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
 		analyzer := analyzer.New(cfg.Streams.AnalyzerAddr, cfg.Streams.InputRespTimeout)
@@ -147,10 +150,17 @@ func main() {
 	}
 	astraCfg.Streams = astraRepo.AddNamePrefixes(astraCfg.Streams)
 
-	// Write astra config
-	log.Info("Writing astra config")
-	err = astra.WriteCfg(astraCfg, flags.AstraCfgOutput)
-	if err != nil {
-		log.Fatal(err)
+	// Update astra categories
+	modifiedCats := copier.MustDeep(astraCfg.Categories)
+	if cfg.General.MergeCategories {
+		modifiedCats = astraRepo.MergeCategories(modifiedCats)
 	}
+	modifiedCats = astraRepo.UpdateCategories(modifiedCats, astraCfg.Streams)
+
+	// Search for changes
+	changedCatMap := astraRepo.ChangedCategories(astraCfg.Categories, modifiedCats)
+
+	// Sending changes to astra
+	apiHandler.SetCategories(changedCatMap)
+	// TODO: Write streams
 }

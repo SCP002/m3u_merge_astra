@@ -134,6 +134,5 @@ func TestMergeCategories(t *testing.T) {
 		{Name: "Category 2", Groups: []Group{{Name: "D"}, {Name: "E"}}, Remove: true},
 		{Name: "Category 3", Groups: []Group{{Name: "X"}}},
 	}
-
 	assert.Exactly(t, expected, cl2, "should return unique categories with the combined groups")
 }
