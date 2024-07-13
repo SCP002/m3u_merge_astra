@@ -41,6 +41,9 @@ general:
   # Astra API response timeout.
   astra_api_resp_timeout: '10s'
 
+  # Should duplicated categories be removed with unique groups combined per category?
+  merge_categories: false
+
 # -------------------------------------------------------------------------------------------------------------------
 # M3U related settings of the program.
 m3u:

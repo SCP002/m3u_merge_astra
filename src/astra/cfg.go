@@ -27,9 +27,9 @@ type Group struct {
 	Name string `json:"name"`
 }
 
-// UpdateCategories returns deep copy of categories <cats> with new categories and groups from <streams>
+// UpdateCategories returns deep copy of categories <cats> with new and changed categories and groups from <streams>
 func (r repo) UpdateCategories(cats []Category, streams []Stream) []Category {
-	r.log.Info("Updating categories field with new and modified categories and groups from streams")
+	r.log.Info("Updating categories field with new and changed categories and groups from streams")
 
 	cats = copier.MustDeep(cats)
 
@@ -56,10 +56,12 @@ func (r repo) UpdateCategories(cats []Category, streams []Stream) []Category {
 	return cats
 }
 
-// ChangedCategories returns new and modified categories and groups from <newCats>, which are not in <oldCats>.
+// ChangedCategories returns new and changed categories and groups from <newCats>, which are not in <oldCats>.
 //
 // Key (index) in <out> is negative for new categories and actual indexes for changed categories.
 func (r repo) ChangedCategories(oldCats []Category, newCats []Category) (out []lo.Entry[int, Category]) {
+	r.log.Info("Building changed categories list")
+
 	for _, newCat := range newCats {
 		oldCat, oldCatIdx, found := lo.FindIndexOf(oldCats, func(oldCat Category) bool {
 			return newCat.Name == oldCat.Name
@@ -77,9 +79,14 @@ func (r repo) ChangedCategories(oldCats []Category, newCats []Category) (out []l
 
 // MergeCategories returns shallow copy of <cats> with unique categories and their groups set from all categories with
 // the same name.
-func MergeCategories(cats []Category) []Category {
+//
+// Categories to be removed has Remove field set to true.
+func (r repo) MergeCategories(cats []Category) []Category {
+	r.log.Info("Merging categories")
+
 	cats = lo.Map(cats, func(c Category, _ int) Category {
 		c.Groups = lo.Uniq(c.Groups)
+		c.Remove = true
 		return c
 	})
 
@@ -89,10 +96,9 @@ func MergeCategories(cats []Category) []Category {
 		})
 		if found {
 			cats[firstIdx].Groups = slice.AppendNew(cats[firstIdx].Groups, nil, cat.Groups...)
+			cats[firstIdx].Remove = false
 		}
 	}
 
-	return lo.UniqBy(cats, func(c Category) string {
-		return c.Name
-	})
+	return cats
 }

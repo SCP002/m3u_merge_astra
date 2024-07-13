@@ -75,6 +75,9 @@ type General struct {
 
 	// AstraAPIRespTimeout represents astra API response timeout
 	AstraAPIRespTimeout time.Duration `koanf:"astra_api_resp_timeout"`
+
+	// MergeCategories specifies if duplicated categories should be removed with unique groups combined per category
+	MergeCategories bool `koanf:"merge_categories"`
 }
 
 // SimplifyAliases returns simplified alias list in <c>.
@@ -470,6 +473,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		/* 18 */ "streams.analyzer_pes_errors_threshold",
 		/* 19 */ "streams.disable_dead_inputs",
 		/* 20 */ "general.astra_api_resp_timeout",
+		/* 21 */ "general.merge_categories",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	internalFields := []string{
@@ -927,12 +931,27 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 			StartNewline: false,
 			HeadComment:  []string{"Astra API response timeout."},
 			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: fmt.Sprintf("'%v'", defVal)},
-			EndNewline:   true,
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "general.name_alias_list", true, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
 		}
 		root.General.AstraAPIRespTimeout = defVal
+	}
+	// v1.5.0 to v2.0.0
+	knownField = knownFields[21]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.General.MergeCategories
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment:  []string{"Should duplicated categories be removed with unique groups combined per category?"},
+			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
+			EndNewline:   true,
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "general.astra_api_resp_timeout", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.General.MergeCategories = defVal
 	}
 
 	// Validate amount of capture groups
@@ -990,6 +1009,7 @@ func NewDefCfg() Root {
 			NameAliasList:       [][]string(nil),
 			SimpleNameAliasList: [][]string(nil),
 			AstraAPIRespTimeout: time.Second * 10,
+			MergeCategories:     false,
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,

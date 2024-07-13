@@ -6,6 +6,7 @@ general:
   name_aliases: false
   name_alias_list:
   astra_api_resp_timeout: '0s'
+  merge_categories: false
 m3u:
   resp_timeout: '0s'
   chann_name_blacklist:

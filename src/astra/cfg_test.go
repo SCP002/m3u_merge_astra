@@ -65,12 +65,14 @@ func TestChangedCategories(t *testing.T) {
 	cl1 := []Category{
 		{Name: "Category 1", Groups: []Group{{Name: "A"}}},
 		{Name: "Category 2", Groups: []Group{{Name: "B"}}},
+		{Name: "Category 4"},
 	}
 	cl1Original := copier.TestDeep(t, cl1)
 
 	cl2 := []Category{
 		{Name: "Category 2", Groups: []Group{{Name: "C"}, {Name: "D"}}},
 		{Name: "Category 3", Groups: []Group{{Name: "A"}, {Name: "B"}}},
+		{Name: "Category 4", Remove: true},
 	}
 	cl2Original := copier.TestDeep(t, cl2)
 
@@ -81,6 +83,7 @@ func TestChangedCategories(t *testing.T) {
 	expected := []lo.Entry[int, Category]{
 		{Key: 1, Value: Category{Name: "Category 2", Groups: []Group{{Name: "C"}, {Name: "D"}}}},
 		{Key: -1, Value: Category{Name: "Category 3", Groups: []Group{{Name: "A"}, {Name: "B"}}}},
+		{Key: 2, Value: Category{Name: "Category 4", Remove: true}},
 	}
 	assert.Exactly(t, expected, changed, "should return that category map")
 
@@ -106,16 +109,19 @@ func TestChangedCategories(t *testing.T) {
 }
 
 func TestMergeCategories(t *testing.T) {
+	r := newDefRepo()
+
 	cl1 := []Category{
 		{Name: "Category 1", Groups: []Group{{Name: "A"}, {Name: "A"}, {Name: "B"}}},
 		{Name: "Category 2", Groups: []Group{{Name: "A"}, {Name: "B"}, {Name: "B"}}},
 		{Name: "Category 1", Groups: []Group{{Name: "C"}, {Name: "A"}, {Name: "D"}}},
 		{Name: "Category 2", Groups: []Group{{Name: "A"}, {Name: "C"}}},
 		{Name: "Category 2", Groups: []Group{{Name: "D"}, {Name: "E"}}},
+		{Name: "Category 3", Groups: []Group{{Name: "X"}}},
 	}
 	cl1Original := copier.TestDeep(t, cl1)
 
-	cl2 := MergeCategories(cl1)
+	cl2 := r.MergeCategories(cl1)
 
 	assert.NotSame(t, &cl1, &cl2, "should return copy of categories")
 	assert.Exactly(t, cl1Original, cl1, "should not modify the source categories")
@@ -123,6 +129,10 @@ func TestMergeCategories(t *testing.T) {
 	expected := []Category{
 		{Name: "Category 1", Groups: []Group{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}}},
 		{Name: "Category 2", Groups: []Group{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}, {Name: "E"}}},
+		{Name: "Category 1", Groups: []Group{{Name: "C"}, {Name: "A"}, {Name: "D"}}, Remove: true},
+		{Name: "Category 2", Groups: []Group{{Name: "A"}, {Name: "C"}}, Remove: true},
+		{Name: "Category 2", Groups: []Group{{Name: "D"}, {Name: "E"}}, Remove: true},
+		{Name: "Category 3", Groups: []Group{{Name: "X"}}},
 	}
 
 	assert.Exactly(t, expected, cl2, "should return unique categories with the combined groups")

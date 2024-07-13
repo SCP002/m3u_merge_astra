@@ -175,6 +175,7 @@ func newTestConfig() Root {
 			NameAliasList:       [][]string(nil),  // New field in v1.3.0
 			SimpleNameAliasList: [][]string(nil),  // Field for internal use
 			AstraAPIRespTimeout: time.Second * 10, // New field in v2.0.0
+			MergeCategories:     false,            // New field in v2.0.0
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,
