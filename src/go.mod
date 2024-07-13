@@ -9,6 +9,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/fatih/color v1.16.0
 	github.com/go-co-op/gocron v1.36.0
+	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jinzhu/copier v0.4.0

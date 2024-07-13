@@ -1,9 +1,9 @@
 package slice
 
 import (
-	"reflect"
 	"strings"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/samber/lo"
 )
 
@@ -29,7 +29,7 @@ func AppendNew[T comparable](inp []T, callback func(T), elms ...T) []T {
 // RemoveLast returns new slice with the last occurence of <tElm> removed from <inp>
 func RemoveLast[T any](inp []T, tElm T) (out []T) {
 	_, tIdx, _ := lo.FindLastIndexOf(inp, func(cElm T) bool {
-		return reflect.DeepEqual(tElm, cElm)
+		return cmp.Equal(tElm, cElm)
 	})
 	for cIdx, e := range inp {
 		if cIdx != tIdx {
