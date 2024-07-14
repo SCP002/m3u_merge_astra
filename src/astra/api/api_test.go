@@ -47,21 +47,37 @@ func TestSetCategories(t *testing.T) {
 
 	// Set
 	idxCategoryMap := []lo.Entry[int, astra.Category]{
-		{
+		{ // 0
 			Key:   -1,
 			Value: astra.Category{Name: "Category 1", Groups: []astra.Group{{Name: "Group 1"}, {Name: "Group 2"}}},
 		},
-		{
+		{ // 1
 			Key:   -1,
 			Value: astra.Category{Name: "Category 2", Groups: []astra.Group{{Name: "Group 3"}, {Name: "Group 4"}}},
 		},
-		{
+		{ // 2
 			Key:   -1,
 			Value: astra.Category{Name: "Category 3", Groups: []astra.Group{{Name: "Group 5"}, {Name: "Group 6"}}},
 		},
-		{
+		{ // 3
+			Key:   -1,
+			Value: astra.Category{Name: "Category 4", Groups: []astra.Group{{Name: "Group 7"}, {Name: "Group 8"}}},
+		},
+		{ // 4
+			Key:   -1,
+			Value: astra.Category{Name: "Category 5", Groups: []astra.Group{{Name: "Group 9"}, {Name: "Group 10"}}},
+		},
+		{ // 5
 			Key:   1,
 			Value: astra.Category{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Name: "Group 4*"}}},
+		},
+		{ // 6
+			Key:   4,
+			Value: astra.Category{Remove: true},
+		},
+		{ // 7
+			Key:   3,
+			Value: astra.Category{Remove: true},
 		},
 	}
 	apiHandler.SetCategories(idxCategoryMap)
@@ -89,7 +105,8 @@ func TestSetCategories(t *testing.T) {
 		}
 		apiHandler.SetCategories(idxCategoryMap)
 	})
-	assert.Contains(t, out, `Successfully set category: name "Category 0", groups "[{Group 0} {Group 01}]"`)
+	assert.Contains(t, out, `Successfully set category: name "Category 0", groups "[{Group 0} {Group 01}]", remove `+
+		`"false"`)
 	assert.NotContains(t, out, "Failed")
 }
 

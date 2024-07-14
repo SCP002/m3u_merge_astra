@@ -62,16 +62,25 @@ func NewHandler(log *logger.Logger, httpClient *http.Client, address string, use
 // SetCategories makes a requests to API setting categories by indexes as defined in <idxCategoryMap> synchronously.
 //
 // Use negative key (index) in <idxCategoryMap> to create new category.
+//
+// IMPORTANT: As Astra using indexes to set categories, each category which should be removed (with Remove field set to
+// true) should appear in the end of <idxCategoryMap> with indexes in decreasing order, for example:
+//
+//   - {Key: -1, Value: Category: {Name: "A"}},
+//   - {Key: -1, Value: Category: {Name: "B"}},
+//   - {Key: 1, Remove: true}, // Removes category B
+//   - {Key: 0, Remove: true}, // Removes category A
 func (h handler) SetCategories(idxCategoryMap []lo.Entry[int, astra.Category]) {
 	h.log.Info("Sending changed categories to astra")
 
 	for _, entry := range idxCategoryMap {
 		err := h.SetCategory(entry.Key, entry.Value)
 		if err == nil {
-			h.log.InfoCFi("Successfully set category", "name", entry.Value.Name, "groups", entry.Value.Groups)
+			h.log.InfoCFi("Successfully set category", "name", entry.Value.Name, "groups", entry.Value.Groups, "remove",
+		        entry.Value.Remove)
 		} else {
-			h.log.ErrorCFi("Failed to set category", "name", entry.Value.Name, "groups", entry.Value.Groups, "error",
-				err)
+			h.log.ErrorCFi("Failed to set category", "name", entry.Value.Name, "groups", entry.Value.Groups, "remove",
+			entry.Value.Remove, "error", err)
 		}
 	}
 }

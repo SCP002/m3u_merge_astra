@@ -4,6 +4,7 @@ import (
 	"m3u_merge_astra/util/copier"
 	"m3u_merge_astra/util/slice"
 	"m3u_merge_astra/util/slice/find"
+	"sort"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/samber/lo"
@@ -74,6 +75,18 @@ func (r repo) ChangedCategories(oldCats []Category, newCats []Category) (out []l
 			out = append(out, lo.Entry[int, Category]{Key: -1, Value: newCat})
 		}
 	}
+
+	// Move categories which should be removed to the end of the output and order by indexes in decreasing order
+	sort.SliceStable(out, func(i, j int) bool {
+		if !out[i].Value.Remove && out[j].Value.Remove {
+			return out[i].Key < out[j].Key
+		}
+		if out[i].Value.Remove && out[j].Value.Remove {
+			return out[i].Key > out[j].Key
+		}
+		return i < j
+	})
+
 	return
 }
 

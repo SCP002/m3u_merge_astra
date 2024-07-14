@@ -63,16 +63,21 @@ func TestChangedCategories(t *testing.T) {
 
 	// Test with changes
 	cl1 := []Category{
-		{Name: "Category 1", Groups: []Group{{Name: "A"}}},
-		{Name: "Category 2", Groups: []Group{{Name: "B"}}},
-		{Name: "Category 4"},
+		{Name: "Category 1", Groups: []Group{{Name: "A"}}}, // 0
+		{Name: "Category 2", Groups: []Group{{Name: "B"}}}, // 1
+		{Name: "Category 3", Groups: []Group{{Name: "C"}}}, // 2
+		{Name: "Category 4", Groups: []Group{{Name: "D"}}}, // 3
+		{Name: "Category 5", Groups: []Group{{Name: "E"}}}, // 4
 	}
 	cl1Original := copier.TestDeep(t, cl1)
 
 	cl2 := []Category{
 		{Name: "Category 2", Groups: []Group{{Name: "C"}, {Name: "D"}}},
-		{Name: "Category 3", Groups: []Group{{Name: "A"}, {Name: "B"}}},
-		{Name: "Category 4", Remove: true},
+		{Name: "Category 4", Groups: []Group{{Name: "D"}}, Remove: true},
+		{Name: "Category 6", Groups: []Group{{Name: "A"}, {Name: "B"}}},
+		{Name: "Category 5", Remove: true},
+		{Name: "Category 3", Groups: []Group{{Name: "D"}, {Name: "E"}}},
+		{Name: "Category 7", Groups: []Group{{Name: "A"}, {Name: "B"}}},
 	}
 	cl2Original := copier.TestDeep(t, cl2)
 
@@ -82,8 +87,11 @@ func TestChangedCategories(t *testing.T) {
 
 	expected := []lo.Entry[int, Category]{
 		{Key: 1, Value: Category{Name: "Category 2", Groups: []Group{{Name: "C"}, {Name: "D"}}}},
-		{Key: -1, Value: Category{Name: "Category 3", Groups: []Group{{Name: "A"}, {Name: "B"}}}},
-		{Key: 2, Value: Category{Name: "Category 4", Remove: true}},
+		{Key: -1, Value: Category{Name: "Category 6", Groups: []Group{{Name: "A"}, {Name: "B"}}}},
+		{Key: 2, Value: Category{Name: "Category 3", Groups: []Group{{Name: "D"}, {Name: "E"}}}},
+		{Key: -1, Value: Category{Name: "Category 7", Groups: []Group{{Name: "A"}, {Name: "B"}}}},
+		{Key: 4, Value: Category{Name: "Category 5", Remove: true}},
+		{Key: 3, Value: Category{Name: "Category 4", Groups: []Group{{Name: "D"}}, Remove: true}},
 	}
 	assert.Exactly(t, expected, changed, "should return that category map")
 
