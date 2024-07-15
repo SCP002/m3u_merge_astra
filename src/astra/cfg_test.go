@@ -61,7 +61,7 @@ func TestUpdateCategories(t *testing.T) {
 func TestChangedCategories(t *testing.T) {
 	r := newDefRepo()
 
-	// Test with changes
+	// Test with changes, categories to remove in the end of cl1
 	cl1 := []Category{
 		{Name: "Category 1", Groups: []Group{{Name: "A"}}}, // 0
 		{Name: "Category 2", Groups: []Group{{Name: "B"}}}, // 1
@@ -92,6 +92,40 @@ func TestChangedCategories(t *testing.T) {
 		{Key: -1, Value: Category{Name: "Category 7", Groups: []Group{{Name: "A"}, {Name: "B"}}}},
 		{Key: 4, Value: Category{Name: "Category 5", Remove: true}},
 		{Key: 3, Value: Category{Name: "Category 4", Groups: []Group{{Name: "D"}}, Remove: true}},
+	}
+	assert.Exactly(t, expected, changed, "should return that category map")
+
+	// Test with changes, categories to remove in the beginning of cl1
+	cl1 = []Category{
+		{Name: "Category 1", Groups: []Group{{Name: "A"}}}, // 0
+		{Name: "Category 2", Groups: []Group{{Name: "B"}}}, // 1
+		{Name: "Category 3", Groups: []Group{{Name: "C"}}}, // 2
+		{Name: "Category 4", Groups: []Group{{Name: "D"}}}, // 3
+		{Name: "Category 5", Groups: []Group{{Name: "E"}}}, // 4
+	}
+	cl1Original = copier.TestDeep(t, cl1)
+
+	cl2 = []Category{
+		{Name: "Category 1", Groups: []Group{{Name: "A"}}, Remove: true},
+		{Name: "Category 2", Groups: []Group{{Name: "B"}}, Remove: true},
+		{Name: "Category 6", Groups: []Group{{Name: "A"}, {Name: "B"}}},
+		{Name: "Category 5", Groups: []Group{{Name: "F"}, {Name: "G"}}},
+		{Name: "Category 3", Groups: []Group{{Name: "D"}, {Name: "E"}}},
+		{Name: "Category 7", Groups: []Group{{Name: "A"}, {Name: "B"}}},
+	}
+	cl2Original = copier.TestDeep(t, cl2)
+
+	changed = r.ChangedCategories(cl1, cl2)
+	assert.Exactly(t, cl1Original, cl1, "should not modify the source categories")
+	assert.Exactly(t, cl2Original, cl2, "should not modify the source categories")
+
+	expected = []lo.Entry[int, Category]{
+		{Key: -1, Value: Category{Name: "Category 6", Groups: []Group{{Name: "A"}, {Name: "B"}}}},
+		{Key: 4, Value: Category{Name: "Category 5", Groups: []Group{{Name: "F"}, {Name: "G"}}}},
+		{Key: 2, Value: Category{Name: "Category 3", Groups: []Group{{Name: "D"}, {Name: "E"}}}},
+		{Key: -1, Value: Category{Name: "Category 7", Groups: []Group{{Name: "A"}, {Name: "B"}}}},
+		{Key: 1, Value: Category{Name: "Category 2", Groups: []Group{{Name: "B"}}, Remove: true}},
+		{Key: 0, Value: Category{Name: "Category 1", Groups: []Group{{Name: "A"}}, Remove: true}},
 	}
 	assert.Exactly(t, expected, changed, "should return that category map")
 

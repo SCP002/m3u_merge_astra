@@ -79,7 +79,7 @@ func (r repo) ChangedCategories(oldCats []Category, newCats []Category) (out []l
 	// Move categories which should be removed to the end of the output and order by indexes in decreasing order
 	sort.SliceStable(out, func(i, j int) bool {
 		if !out[i].Value.Remove && out[j].Value.Remove {
-			return out[i].Key < out[j].Key
+			return true
 		}
 		if out[i].Value.Remove && out[j].Value.Remove {
 			return out[i].Key > out[j].Key
