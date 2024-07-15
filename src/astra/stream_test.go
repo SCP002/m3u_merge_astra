@@ -1749,10 +1749,14 @@ func TestChangedStreams(t *testing.T) {
 		{Name: "Stream 3", ID: "0003", Enabled: false, Inputs: []string{"E", "F"}},
 		// Changed groups
 		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"C": "D"}},
+		// New
+		{Name: "Stream 7", ID: "0007", Enabled: true, Inputs: []string{"K", "L"}, Groups: map[string]string{"E": "F"}},
 		// Changed name
 		{Name: "Stream 5*", ID: "0005"},
 		// Changed MarkAdded / MarkDisabled (no changes)
 		{Name: "Stream 6", ID: "0006", Enabled: true, Inputs: []string{"I", "J"}, MarkAdded: false, MarkDisabled: true},
+		// New
+		{Name: "Stream 8", ID: "0008", Enabled: false, DisabledInputs: []string{"A", "B"}},
 	}
 	sl2Original := copier.TestDeep(t, sl2)
 
@@ -1766,7 +1770,9 @@ func TestChangedStreams(t *testing.T) {
 	expected := []Stream{
 		{Name: "Stream 2", ID: "0002", Enabled: false, Inputs: []string{"C2", "D"}},
 		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"C": "D"}},
+		{Name: "Stream 7", ID: "0007", Enabled: true, Inputs: []string{"K", "L"}, Groups: map[string]string{"E": "F"}},
 		{Name: "Stream 5*", ID: "0005"},
+		{Name: "Stream 8", ID: "0008", Enabled: false, DisabledInputs: []string{"A", "B"}},
 	}
 	assert.Exactly(t, expected, actual, "should return that changed streams")
 }
