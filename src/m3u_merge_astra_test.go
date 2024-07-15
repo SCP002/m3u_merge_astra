@@ -62,20 +62,20 @@ func TestMain(t *testing.T) {
 	// Add streams
 	apiHandler.SetStreams([]astra.Stream{
 		{
-			ID: "0001",
-			Name: "Channel 1",
-			Type: string(cfg.SPTS),
+			ID:      "0001",
+			Name:    "Channel 1",
+			Type:    string(cfg.SPTS),
 			Enabled: true,
-			Inputs: []string{"http://url/1"},
-			Groups: map[string]string{"Category 1": "Group 1"},
+			Inputs:  []string{"http://url/1"},
+			Groups:  map[string]string{"Category 1": "Group 1"},
 		},
 		{
-			ID: "0002",
-			Name: "Channel 2",
-			Type: string(cfg.SPTS),
+			ID:      "0002",
+			Name:    "Channel 2",
+			Type:    string(cfg.SPTS),
 			Enabled: true,
-			Inputs: []string{"http://url/2"},
-			Groups: map[string]string{"Category 1": "Group 2"},
+			Inputs:  []string{"http://url/2"},
+			Groups:  map[string]string{"Category 1": "Group 2"},
 		},
 	})
 
