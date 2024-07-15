@@ -71,6 +71,10 @@ func TestSetCategories(t *testing.T) {
 			Key:   1,
 			Value: astra.Category{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Name: "Group 4*"}}},
 		},
+		{ // 4
+			Key:   -1,
+			Value: astra.Category{Name: "Category 6", Groups: []astra.Group{{Name: "Group 11"}, {Name: "Group 12"}}},
+		},
 		{ // 6
 			Key:   4,
 			Value: astra.Category{Remove: true},
@@ -89,6 +93,7 @@ func TestSetCategories(t *testing.T) {
 		{Name: "Category 1", Groups: []astra.Group{{Name: "Group 1"}, {Name: "Group 2"}}},
 		{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Name: "Group 4*"}}},
 		{Name: "Category 3", Groups: []astra.Group{{Name: "Group 5"}, {Name: "Group 6"}}},
+		{Name: "Category 6", Groups: []astra.Group{{Name: "Group 11"}, {Name: "Group 12"}}},
 	}
 	assert.Equal(t, expected, config.Categories, "returned config should consist of categories set")
 
