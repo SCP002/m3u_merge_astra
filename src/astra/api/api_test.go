@@ -134,12 +134,12 @@ func TestSetCategory(t *testing.T) {
 		Name:   "Category modified",
 		Groups: []astra.Group{{Name: "Group modified"}},
 	}
-	err = apiHandler.SetCategory(len(cfg.Categories)-1, modifiedCategory)
+	err = apiHandler.SetCategory(len(cfg.Categories) - 1, modifiedCategory)
 	assert.NoError(t, err, "should not return error")
 
 	cfg, err = apiHandler.FetchCfg()
 	assert.NoError(t, err, "should not return error")
-	assert.Equal(t, cfg.Categories[len(cfg.Categories)-1], modifiedCategory,
+	assert.Equal(t, cfg.Categories[len(cfg.Categories) - 1], modifiedCategory,
 		"last category in returned config be category set")
 }
 

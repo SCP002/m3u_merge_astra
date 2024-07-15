@@ -22,6 +22,7 @@ import (
 
 	"github.com/alitto/pond"
 	"github.com/go-co-op/gocron"
+	"github.com/google/go-cmp/cmp"
 	"github.com/samber/lo"
 )
 
@@ -36,9 +37,9 @@ type Stream struct {
 	Name           string            `json:"name,omitempty"`
 	Remove         bool              `json:"remove,omitempty"` // Used by API to remove the stream.
 	Type           string            `json:"type,omitempty"`
-	Unknown        map[string]any    `json:"-" jsonex:"true"`  // All unknown fields go here.
-	MarkAdded      bool              `json:"-"`                // Set added name prefix after processing?
-	MarkDisabled   bool              `json:"-"`                // Set disabled name prefix after processing?
+	Unknown        map[string]any    `json:"-" jsonex:"true"` // All unknown fields go here.
+	MarkAdded      bool              `json:"-"`               // Set added name prefix after processing?
+	MarkDisabled   bool              `json:"-"`               // Set disabled name prefix after processing?
 }
 
 // NewStream returns new stream with default config
@@ -574,6 +575,30 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 				"group", s.FirstGroup())
 		}
 		out = append(out, s)
+	}
+
+	return
+}
+
+// ChangedStreams returns new and changed streams from <newStreams>, which are not in <oldStreams>
+func (r repo) ChangedStreams(oldStreams, newStreams []Stream) (out []Stream) {
+	r.log.Info("Building changed streams list")
+
+	for _, newStream := range newStreams {
+		oldStream, _, found := lo.FindIndexOf(oldStreams, func(oldStream Stream) bool {
+			return newStream.ID == oldStream.ID
+		})
+		if found {
+			cmpOption := cmp.FilterPath(func(p cmp.Path) bool {
+				lastPathItem := p.Last().String()
+				return lastPathItem == ".MarkAdded" || lastPathItem == ".MarkDisabled"
+			}, cmp.Ignore())
+			if !cmp.Equal(oldStream, newStream, cmpOption) {
+				out = append(out, newStream)
+			}
+		} else {
+			out = append(out, newStream)
+		}
 	}
 
 	return

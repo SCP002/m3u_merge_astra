@@ -1727,6 +1727,50 @@ func TestAddNamePrefixes(t *testing.T) {
 		`new name "%vName_1", group "Cat: Grp"`, r.cfg.Streams.AddedPrefix))
 }
 
+func TestChangedStreams(t *testing.T) {
+	r := newDefRepo()
+
+	sl1 := []Stream{
+		{Name: "Stream 1", ID: "0001", Enabled: true, Inputs: []string{"A", "B"}},
+		{Name: "Stream 2", ID: "0002", Enabled: false, Inputs: []string{"C", "D"}},
+		{Name: "Stream 3", ID: "0003", Enabled: false, Inputs: []string{"E", "F"}},
+		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"A": "B"}},
+		{Name: "Stream 5", ID: "0005"},
+		{Name: "Stream 6", ID: "0006", Enabled: true, Inputs: []string{"I", "J"}, MarkAdded: true, MarkDisabled: false},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := []Stream{
+		// No changes
+		{Name: "Stream 1", ID: "0001", Enabled: true, Inputs: []string{"A", "B"}},
+		// Changed inputs
+		{Name: "Stream 2", ID: "0002", Enabled: false, Inputs: []string{"C2", "D"}},
+		// No changes
+		{Name: "Stream 3", ID: "0003", Enabled: false, Inputs: []string{"E", "F"}},
+		// Changed groups
+		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"C": "D"}},
+		// Changed name
+		{Name: "Stream 5*", ID: "0005"},
+		// Changed MarkAdded / MarkDisabled (no changes)
+		{Name: "Stream 6", ID: "0006", Enabled: true, Inputs: []string{"I", "J"}, MarkAdded: false, MarkDisabled: true},
+	}
+	sl2Original := copier.TestDeep(t, sl2)
+
+	actual := r.ChangedStreams(sl1, sl2)
+
+	assert.NotSame(t, &sl1, &actual, "should return copy of streams")
+	assert.NotSame(t, &sl2, &actual, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+	assert.Exactly(t, sl2Original, sl2, "should not modify the source")
+
+	expected := []Stream{
+		{Name: "Stream 2", ID: "0002", Enabled: false, Inputs: []string{"C2", "D"}},
+		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"C": "D"}},
+		{Name: "Stream 5*", ID: "0005"},
+	}
+	assert.Exactly(t, expected, actual, "should return that changed streams")
+}
+
 func TestGetInputsAmount(t *testing.T) {
 	sl1 := []Stream{
 		{Inputs: []string{"http://input/1"}},

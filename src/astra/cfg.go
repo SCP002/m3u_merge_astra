@@ -60,7 +60,7 @@ func (r repo) UpdateCategories(cats []Category, streams []Stream) []Category {
 // ChangedCategories returns new and changed categories and groups from <newCats>, which are not in <oldCats>.
 //
 // Key (index) in <out> is negative for new categories and actual indexes for changed categories.
-func (r repo) ChangedCategories(oldCats []Category, newCats []Category) (out []lo.Entry[int, Category]) {
+func (r repo) ChangedCategories(oldCats, newCats []Category) (out []lo.Entry[int, Category]) {
 	r.log.Info("Building changed categories list")
 
 	for _, newCat := range newCats {

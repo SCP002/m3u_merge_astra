@@ -170,7 +170,7 @@ func (h handler) request(method string, path string, cmd any) ([]byte, error) {
 		return nil, errors.Wrap(err, "Encode request to API")
 	}
 
-	req, err := http.NewRequest(method, h.address+path, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(method, h.address + path, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, errors.Wrap(err, "Create HTTP request instance to API")
 	}
