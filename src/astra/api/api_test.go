@@ -112,7 +112,7 @@ func TestSetCategories(t *testing.T) {
 		apiHandler.SetCategories(idxCategoryMap)
 	})
 	assert.Contains(t, out, `Successfully set category: name "Category 0", groups "[{Name:Group 0 Remove:false} `+
-	`{Name:Group 01 Remove:false}]", remove "false"`)
+		`{Name:Group 01 Remove:false}]", remove "false"`)
 	assert.NotContains(t, out, "Failed")
 }
 
@@ -154,16 +154,20 @@ func TestSetCategory(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 
 	modifiedCategory := astra.Category{
-		Name:   "Category modified",
-		Groups: []astra.Group{{Remove: true}, {Name: "Group modified"}, {Remove: true}},
+		Name: "Category modified",
+		Groups: []astra.Group{
+			{Name: "Group name 1", Remove: true},
+			{Name: "Group modified"},
+			{Name: "Group name 3", Remove: true},
+		},
 	}
-	err = apiHandler.SetCategory(len(astraCfg.Categories)-1, modifiedCategory)
+	err = apiHandler.SetCategory(0, modifiedCategory)
 	assert.NoError(t, err, "should not return error")
 
 	astraCfg, err = apiHandler.FetchCfg()
 	assert.NoError(t, err, "should not return error")
-	assert.Equal(t, astraCfg.Categories[len(astraCfg.Categories)-1], modifiedCategory,
-		"last category in returned config should be category set")
+	assert.Equal(t, astraCfg.Categories, []astra.Category{modifiedCategory},
+		"category in returned config should be category set")
 }
 
 func TestSetStreams(t *testing.T) {
