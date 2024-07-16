@@ -71,3 +71,49 @@ func TestIsAllEmpty(t *testing.T) {
 	assert.True(t, IsAllEmpty([]test{}, nil))
 	assert.False(t, IsAllEmpty(nil, []test{{}}))
 }
+
+func TestMapFindDuplBy(t *testing.T) {
+	type Struct struct {
+		Str string
+		Int int
+	}
+
+	ol1 := []Struct{{Str: "A", Int: 0}, {Str: "B", Int: 0}, {Str: "A", Int: 0}, {Str: "B", Int: 0}, {Str: "C", Int: 0}}
+	ol1Original := copier.TestDeep(t, ol1)
+
+	// Map to same type
+	ol2Structs := MapFindDuplBy(ol1, func(elm Struct) string {
+		return elm.Str
+	}, func(elm Struct, idx int, dupl bool) Struct {
+		if dupl {
+			elm.Int = 1
+		}
+		return elm
+	})
+	assert.NotSame(t, &ol1, &ol2Structs, "should return copy of objects")
+	assert.Exactly(t, ol1Original, ol1, "should not modify the source")
+
+	expectedStructs := []Struct{
+		{Str: "A", Int: 0},
+		{Str: "B", Int: 0},
+		{Str: "A", Int: 1},
+		{Str: "B", Int: 1},
+		{Str: "C", Int: 0},
+	}
+	assert.Exactly(t, expectedStructs, ol2Structs, "should set Int field for duplicates to 1")
+
+	// Map to different type
+	ol2Ints := MapFindDuplBy(ol1, func(elm Struct) string {
+		return elm.Str
+	}, func(elm Struct, idx int, dupl bool) int {
+		if dupl {
+			return 1
+		}
+		return 0
+	})
+	assert.NotSame(t, &ol1, &ol2Ints, "should return copy of objects")
+	assert.Exactly(t, ol1Original, ol1, "should not modify the source")
+
+	expectedInts := []int{0, 0, 1, 1, 0}
+	assert.Exactly(t, expectedInts, ol2Ints, "should return that integer array")
+}

@@ -23,6 +23,7 @@ func TestUpdateCategories(t *testing.T) {
 		{Groups: map[string]string{"Category 3": "B"}},
 		{Groups: map[string]string{"Category 3": "B"}},
 		{Groups: map[string]string{"Category 3": "C"}},
+		{Groups: map[string]string{"Category 3": ""}},
 		{Groups: map[string]string{"Category 1": ""}},
 		{Groups: map[string]string{"Category 1": "B"}},
 		{Groups: map[string]string{"Category 2": "D"}},
@@ -169,12 +170,33 @@ func TestMergeCategories(t *testing.T) {
 	assert.Exactly(t, cl1Original, cl1, "should not modify the source categories")
 
 	expected := []Category{
-		{Name: "Category 1", Groups: []Group{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}}},
-		{Name: "Category 2", Groups: []Group{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}, {Name: "E"}}},
-		{Name: "Category 1", Groups: []Group{{Name: "C"}, {Name: "A"}, {Name: "D"}}, Remove: true},
-		{Name: "Category 2", Groups: []Group{{Name: "A"}, {Name: "C"}}, Remove: true},
-		{Name: "Category 2", Groups: []Group{{Name: "D"}, {Name: "E"}}, Remove: true},
-		{Name: "Category 3", Groups: []Group{{Name: "X"}}},
+		{
+			Name:   "Category 1",
+			Groups: []Group{{Name: "A"}, {Name: "A", Remove: true}, {Name: "B"}, {Name: "C"}, {Name: "D"}},
+		},
+		{
+			Name:   "Category 2",
+			Groups: []Group{{Name: "A"}, {Name: "B"}, {Name: "B", Remove: true}, {Name: "C"}, {Name: "D"}, {Name: "E"}},
+		},
+		{
+			Name:   "Category 1",
+			Groups: []Group{{Name: "C"}, {Name: "A"}, {Name: "D"}},
+			Remove: true,
+		},
+		{
+			Name:   "Category 2",
+			Groups: []Group{{Name: "A"}, {Name: "C"}},
+			Remove: true,
+		},
+		{
+			Name:   "Category 2",
+			Groups: []Group{{Name: "D"}, {Name: "E"}},
+			Remove: true,
+		},
+		{
+			Name:   "Category 3",
+			Groups: []Group{{Name: "X"}},
+		},
 	}
 	assert.Exactly(t, expected, cl2, "should return unique categories with the combined groups")
 }

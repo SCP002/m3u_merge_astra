@@ -20,12 +20,13 @@ type Cfg struct {
 type Category struct {
 	Name   string  `json:"name"`
 	Groups []Group `json:"groups"`
-	Remove bool    `json:"remove,omitempty"` // Used by API to remove the category
+	Remove bool    `json:"remove,omitempty"` // Used by API to remove category
 }
 
 // Group represents group of astra streams
 type Group struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Remove bool   `json:"remove,omitempty"` // Used by API to remove group
 }
 
 // UpdateCategories returns deep copy of categories <cats> with new and changed categories and groups from <streams>
@@ -97,8 +98,19 @@ func (r repo) ChangedCategories(oldCats, newCats []Category) (out []lo.Entry[int
 func (r repo) MergeCategories(cats []Category) []Category {
 	r.log.Info("Merging categories")
 
+	groupUniqFn := func(g Group) string {
+		return g.Name
+	}
+
+	groupTransformFn := func(g Group, idx int, dupl bool) Group {
+		if dupl {
+			g.Remove = true
+		}
+		return g
+	}
+
 	cats = lo.Map(cats, func(c Category, _ int) Category {
-		c.Groups = lo.Uniq(c.Groups)
+		c.Groups = slice.MapFindDuplBy(c.Groups, groupUniqFn, groupTransformFn)
 		c.Remove = true
 		return c
 	})
