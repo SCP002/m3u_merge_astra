@@ -12,16 +12,16 @@ import (
 	"github.com/samber/lo"
 )
 
-// request represets request to analyzer
-type request struct {
+// analyzeReq represets request to analyzer
+type analyzeReq struct {
 	Cmd     string `json:"cmd"`
 	Address string `json:"address"`
 }
 
-// response represents response from analyzer.
+// analyzeResp represents response from analyzer.
 //
 // Pointers are to distinguish between undefined and zero value.
-type response struct {
+type analyzeResp struct {
 	OnAir   *bool    `json:"on_air"`
 	Cmd     *string  `json:"cmd"`
 	Total   *total   `json:"total"`
@@ -98,7 +98,7 @@ func (a analyzer) Check(ctx context.Context, urlToCheck string) (Result, error) 
 
 	// Read responses
 	readErrCh := make(chan error)
-	readRespCh := make(chan response)
+	readRespCh := make(chan analyzeResp)
 
 	go func() {
 		defer close(readErrCh)
@@ -109,7 +109,7 @@ func (a analyzer) Check(ctx context.Context, urlToCheck string) (Result, error) 
 				readErrCh <- errors.Wrap(err, "Read response")
 				return
 			}
-			var resp response
+			var resp analyzeResp
 			err = json.Unmarshal(respBytes, &resp)
 			if err != nil {
 				readErrCh <- errors.Wrap(err, "Decode response")
@@ -120,7 +120,7 @@ func (a analyzer) Check(ctx context.Context, urlToCheck string) (Result, error) 
 	}()
 
 	// Send start request
-	startReqBytes, err := json.Marshal(request{Cmd: "start", Address: urlToCheck})
+	startReqBytes, err := json.Marshal(analyzeReq{Cmd: "start", Address: urlToCheck})
 	if err != nil {
 		return Result{}, errors.Wrap(err, "Encode start request")
 	}
