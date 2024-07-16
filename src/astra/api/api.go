@@ -76,11 +76,11 @@ func (h handler) SetCategories(idxCategoryMap []lo.Entry[int, astra.Category]) {
 	for _, entry := range idxCategoryMap {
 		err := h.SetCategory(entry.Key, entry.Value)
 		if err == nil {
-			h.log.InfoCFi("Successfully set category", "name", entry.Value.Name, "groups", entry.Value.Groups, "remove",
-		        entry.Value.Remove)
+			h.log.InfoCFi("Successfully set category", "name", entry.Value.Name, "groups",
+				fmt.Sprintf("%+v", entry.Value.Groups), "remove", entry.Value.Remove)
 		} else {
-			h.log.ErrorCFi("Failed to set category", "name", entry.Value.Name, "groups", entry.Value.Groups, "remove",
-			entry.Value.Remove, "error", err)
+			h.log.ErrorCFi("Failed to set category", "name", entry.Value.Name, "groups",
+				fmt.Sprintf("%+v", entry.Value.Groups), "remove", entry.Value.Remove, "error", err)
 		}
 	}
 }

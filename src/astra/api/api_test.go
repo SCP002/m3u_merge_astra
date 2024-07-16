@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -69,7 +70,7 @@ func TestSetCategories(t *testing.T) {
 		},
 		{ // 5
 			Key:   1,
-			Value: astra.Category{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Name: "Group 4*"}}},
+			Value: astra.Category{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Remove: true}}},
 		},
 		{ // 4
 			Key:   -1,
@@ -91,7 +92,7 @@ func TestSetCategories(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 	expected := []astra.Category{
 		{Name: "Category 1", Groups: []astra.Group{{Name: "Group 1"}, {Name: "Group 2"}}},
-		{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Name: "Group 4*"}}},
+		{Name: "Category 2*", Groups: []astra.Group{{Name: "Group 3*"}, {Remove: true}}},
 		{Name: "Category 3", Groups: []astra.Group{{Name: "Group 5"}, {Name: "Group 6"}}},
 		{Name: "Category 6", Groups: []astra.Group{{Name: "Group 11"}, {Name: "Group 12"}}},
 	}
@@ -110,8 +111,8 @@ func TestSetCategories(t *testing.T) {
 		}
 		apiHandler.SetCategories(idxCategoryMap)
 	})
-	assert.Contains(t, out, `Successfully set category: name "Category 0", groups "[{Group 0} {Group 01}]", remove `+
-		`"false"`)
+	assert.Contains(t, out, `Successfully set category: name "Category 0", groups "[{Name:Group 0 Remove:false} `+
+	`{Name:Group 01 Remove:false}]", remove "false"`)
 	assert.NotContains(t, out, "Failed")
 }
 
@@ -121,26 +122,48 @@ func TestSetCategory(t *testing.T) {
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 
-	err := apiHandler.SetCategory(-1, astra.Category{
+	astraCfg, err := apiHandler.FetchCfg()
+	assert.NoError(t, err, "should not return error")
+
+	// Remove old categories
+	for _, category := range astraCfg.Categories {
+		category.Remove = true
+		err = apiHandler.SetCategory(0, category)
+		if ok := assert.NoError(t, err, "should remove category"); !ok {
+			t.FailNow()
+		}
+	}
+
+	// Set new category
+	err = apiHandler.SetCategory(-1, astra.Category{
 		Name:   fmt.Sprintf("Category %v", rnd.String(4, false, true)),
-		Groups: []astra.Group{{Name: "Group name 1"}, {Name: "Group name 2"}},
+		Groups: []astra.Group{{Name: "Group name 1"}, {Name: "Group name 2"}, {Name: "Group name 3"}},
 	})
 	assert.NoError(t, err, "should not return error")
 
-	cfg, err := apiHandler.FetchCfg()
+	// Set new stream (test for crash when changing categories with existing streams)
+	err = apiHandler.SetStream("0001", astra.Stream{
+		ID:      "0001",
+		Name:    "Name 1",
+		Enabled: true,
+		Type:    string(cfg.SPTS),
+	})
+	assert.NoError(t, err, "should not return error")
+
+	astraCfg, err = apiHandler.FetchCfg()
 	assert.NoError(t, err, "should not return error")
 
 	modifiedCategory := astra.Category{
 		Name:   "Category modified",
-		Groups: []astra.Group{{Name: "Group modified"}},
+		Groups: []astra.Group{{Remove: true}, {Name: "Group modified"}, {Remove: true}},
 	}
-	err = apiHandler.SetCategory(len(cfg.Categories) - 1, modifiedCategory)
+	err = apiHandler.SetCategory(len(astraCfg.Categories)-1, modifiedCategory)
 	assert.NoError(t, err, "should not return error")
 
-	cfg, err = apiHandler.FetchCfg()
+	astraCfg, err = apiHandler.FetchCfg()
 	assert.NoError(t, err, "should not return error")
-	assert.Equal(t, cfg.Categories[len(cfg.Categories) - 1], modifiedCategory,
-		"last category in returned config be category set")
+	assert.Equal(t, astraCfg.Categories[len(astraCfg.Categories)-1], modifiedCategory,
+		"last category in returned config should be category set")
 }
 
 func TestSetStreams(t *testing.T) {
@@ -188,20 +211,34 @@ func TestSetStream(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
+
+	// Set
 	streamName := fmt.Sprintf("Stream %v", rnd.String(4, false, true))
 	err := apiHandler.SetStream("0000", astra.Stream{
 		Enabled: true,
 		ID:      "0000",
 		Inputs:  []string{"http://xxx/2", "http://xxx"},
+		Groups:  map[string]string{"Category 1": "Group 1"},
 		Name:    streamName,
 		Type:    string(cfg.SPTS),
 	})
 	assert.NoError(t, err, "should not return error")
 
+	// Change
+	err = apiHandler.SetStream("0000", astra.Stream{
+		Enabled: true,
+		ID:      "0000",
+		Inputs:  []string{"http://xxx"},
+		Name:    streamName,
+		Type:    string(cfg.SPTS),
+	})
+	assert.NoError(t, err, "should not return error")
+
+	// Check
 	cfg, err := apiHandler.FetchCfg()
 	assert.NoError(t, err, "should not return error")
 	assert.True(t, lo.ContainsBy(cfg.Streams, func(s astra.Stream) bool {
-		return s.ID == "0000" && s.Name == streamName
+		return s.ID == "0000" && s.Name == streamName && cmp.Equal(s.Inputs, []string{"http://xxx"})
 	}), "returned config should contain data from stream set")
 }
 
