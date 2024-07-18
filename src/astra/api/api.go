@@ -14,8 +14,8 @@ import (
 	"github.com/samber/lo"
 )
 
-// basicReq respresents basic request to astra API
-type basicReq struct {
+// loadReq respresents request to load config
+type loadReq struct {
 	Cmd string `json:"cmd"`
 }
 
@@ -149,7 +149,7 @@ func (h handler) SetStream(id string, stream astra.Stream) error {
 
 // FetchCfg makes a request to API and returns astra config
 func (h handler) FetchCfg() (astra.Cfg, error) {
-	respBytes, err := h.request("POST", "/control/", basicReq{Cmd: "load"})
+	respBytes, err := h.request("POST", "/control/", loadReq{Cmd: "load"})
 	if err != nil {
 		return astra.Cfg{}, errors.Wrap(err, "Fetch astra config")
 	}

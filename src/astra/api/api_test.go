@@ -261,7 +261,7 @@ func TestRequest(t *testing.T) {
 	log := logger.New(logrus.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
-	resp, err := apiHandler.request("POST", "/control/", basicReq{Cmd: "sessions"})
+	resp, err := apiHandler.request("POST", "/control/", loadReq{Cmd: "sessions"})
 	assert.Contains(t, string(resp), "sessions", "should return sessions list")
 	assert.NoError(t, err, "should not return error")
 }
