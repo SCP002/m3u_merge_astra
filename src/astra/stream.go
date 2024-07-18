@@ -641,7 +641,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 		if r.cfg.Streams.UseAnalyzer {
 			ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Streams.AnalyzerWatchTime)
 			defer cancel()
-			result, err := analyzer.Check(ctx, inp)
+			result, err := analyzer.Check(ctx, r.cfg.Streams.AnalyzerMaxAttempts, inp)
 			if err != nil {
 				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
 				return ""

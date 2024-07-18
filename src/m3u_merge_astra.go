@@ -129,11 +129,11 @@ func main() {
 	}
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
-		analyzer := analyzer.New(cfg.Streams.AnalyzerAddr, cfg.Streams.InputRespTimeout)
+		analyzer := analyzer.New(log, cfg.Streams.AnalyzerAddr, cfg.Streams.InputRespTimeout)
 		modifiedStreams = astraRepo.RemoveDeadInputs(httpClient, analyzer, modifiedStreams)
 	} else if cfg.Streams.DisableDeadInputs {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
-		analyzer := analyzer.New(cfg.Streams.AnalyzerAddr, cfg.Streams.InputRespTimeout)
+		analyzer := analyzer.New(log, cfg.Streams.AnalyzerAddr, cfg.Streams.InputRespTimeout)
 		modifiedStreams = astraRepo.DisableDeadInputs(httpClient, analyzer, modifiedStreams)
 	}
 	if !slice.IsAllEmpty(cfg.Streams.NameToInputHashMap, cfg.Streams.GroupToInputHashMap,
