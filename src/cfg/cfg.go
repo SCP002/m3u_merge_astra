@@ -242,8 +242,12 @@ type Streams struct {
 	// AnalyzerAddr represents astra analyzer address in format of 'host:port'
 	AnalyzerAddr string `koanf:"analyzer_addr"`
 
-	// AnalyzerWatchTime represents amount of time astra analyzer should spend collecting results
+	// AnalyzerWatchTime represents amount of time per attempt that astra analyzer should spend collecting results
 	AnalyzerWatchTime time.Duration `koanf:"analyzer_watch_time"`
+
+	// AnalyzerMaxAttempts represents maximum amount of attempts that astra analyzer should perform trying to get
+	// response from stream input.
+	AnalyzerMaxAttempts int `koanf:"analyzer_max_attempts"`
 
 	// AnalyzerWatchTime represents average bitrate threshold in kbit/s for stream inputs.
 	//
@@ -474,6 +478,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		/* 19 */ "streams.disable_dead_inputs",
 		/* 20 */ "general.astra_api_resp_timeout",
 		/* 21 */ "general.merge_categories",
+		/* 22 */ "streams.analyzer_max_attempts",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	internalFields := []string{
@@ -771,7 +776,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
 			StartNewline: true,
-			HeadComment:  []string{"Amount of time astra analyzer should spend collecting results."},
+			HeadComment:  []string{"Amount of time per attempt that astra analyzer should spend collecting results."},
 			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: fmt.Sprintf("'%v'", defVal)},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_addr", false, node); err != nil {
@@ -953,6 +958,24 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.General.MergeCategories = defVal
 	}
+	// v1.5.0 to v2.0.0
+	knownField = knownFields[22]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.AnalyzerMaxAttempts
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			StartNewline: true,
+			HeadComment: []string{
+				"Maximum amount of attempts that astra analyzer should perform trying to get response from stream " +
+					"input.",
+			},
+			Data: yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.Itoa(defVal)},
+		}
+		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.analyzer_watch_time", false, node); err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.AnalyzerMaxAttempts = defVal
+	}
 
 	// Validate amount of capture groups
 	for _, rx := range root.Streams.RemoveDuplicatedInputsByRxList {
@@ -1049,6 +1072,7 @@ func NewDefCfg() Root {
 			UseAnalyzer:                       false,
 			AnalyzerAddr:                      "127.0.0.1:8001",
 			AnalyzerWatchTime:                 time.Second * 20,
+			AnalyzerMaxAttempts:               3,
 			AnalyzerBitrateThreshold:          1,
 			AnalyzerVideoOnlyBitrateThreshold: 1,
 			AnalyzerAudioOnlyBitrateThreshold: 1,

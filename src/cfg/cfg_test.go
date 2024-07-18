@@ -227,6 +227,7 @@ func newTestConfig() Root {
 			UseAnalyzer:                       false,            // New field in v1.5.0
 			AnalyzerAddr:                      "127.0.0.1:8001", // New field in v1.5.0
 			AnalyzerWatchTime:                 time.Second * 20, // New field in v1.5.0
+			AnalyzerMaxAttempts:               3,                // New field in v2.0.0
 			AnalyzerBitrateThreshold:          1,                // New field in v1.5.0
 			AnalyzerVideoOnlyBitrateThreshold: 1,                // New field in v1.5.0
 			AnalyzerAudioOnlyBitrateThreshold: 1,                // New field in v1.5.0

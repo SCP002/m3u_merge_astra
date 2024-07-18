@@ -193,8 +193,11 @@ streams:
   # Astra analyzer address in format of 'host:port'.
   analyzer_addr: '127.0.0.1:8001'
 
-  # Amount of time astra analyzer should spend collecting results.
+  # Amount of time per attempt that astra analyzer should spend collecting results.
   analyzer_watch_time: '20s'
+
+  # Maximum amount of attempts that astra analyzer should perform trying to get response from stream input.
+  analyzer_max_attempts: 3
 
   # Average bitrate threshold in kbit/s for stream inputs.
   # 
