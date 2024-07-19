@@ -210,13 +210,13 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 	// Make attempts
 	var result Result
 	var err error
-	util.Times(maxAttempts, func (attempt int) bool {
+	util.Times(maxAttempts, func(attempt int) bool {
 		a.log.DebugCFi("Analyzing", "url", urlToCheck, "attempt", attempt)
 		ctx, cancel := context.WithTimeout(context.Background(), watchTime)
 		defer cancel()
 		result, err = check(ctx, urlToCheck)
 		if result.Bitrate > 0 || err != nil {
-			return false
+			return false // Stop trying
 		}
 		return true
 	})
