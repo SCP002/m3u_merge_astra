@@ -102,7 +102,7 @@ func (r repo) MergeCategories(cats []Category) []Category {
 		return g.Name
 	}
 
-	groupTransformFn := func(g Group, idx int, dupl bool) Group {
+	groupTransformFn := func(g Group, _ int, dupl bool) Group {
 		if dupl {
 			g.Remove = true
 		}
@@ -111,7 +111,7 @@ func (r repo) MergeCategories(cats []Category) []Category {
 
 	cats = lo.Map(cats, func(c Category, _ int) Category {
 		c.Groups = slice.MapFindDuplBy(c.Groups, groupUniqFn, groupTransformFn)
-		c.Remove = true
+		c.Remove = true // Will set to false for uniques later
 		return c
 	})
 
