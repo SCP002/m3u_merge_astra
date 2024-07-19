@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"m3u_merge_astra/util"
+	"m3u_merge_astra/util/iter"
 	"m3u_merge_astra/util/logger"
 
 	json "github.com/SCP002/jsonexraw"
@@ -210,7 +210,7 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 	// Make attempts
 	var result Result
 	var err error
-	util.Times(maxAttempts, func(attempt int) bool {
+	iter.Times(maxAttempts, func(attempt int) bool {
 		a.log.DebugCFi("Analyzing", "url", urlToCheck, "attempt", attempt)
 		ctx, cancel := context.WithTimeout(context.Background(), watchTime)
 		defer cancel()

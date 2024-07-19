@@ -1,4 +1,4 @@
-package util
+package iter
 
 // Times runs <iteratee> <count> amount of times.
 //
