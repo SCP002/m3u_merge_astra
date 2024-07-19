@@ -2,7 +2,7 @@
 
 ## What is this?
 
-Heavily configurable CLI tool to add channels from M3U playlist into Cesbo Astra 5 config.
+Heavily configurable CLI tool to add channels from M3U playlist into Cesbo Astra 5.
 
 ## Why was it made?
 
@@ -83,6 +83,12 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     Names defined here will be considered identical to any other name in the same nested group.
     During comparsion, names will be simplified (lowercase, no special characters except the `+` sign),
     but not transliterated.
+
+  * `astra_api_resp_timeout`  
+    Astra API response timeout.
+
+  * `merge_categories`  
+    Should duplicated categories be removed with unique groups combined per category?
 
 * `m3u`  
   M3U related settings of the program.
@@ -240,7 +246,13 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     Astra analyzer address in format of 'host:port'.
 
   * `analyzer_watch_time`  
-    Amount of time astra analyzer should spend collecting results.
+    Amount of time per attempt that astra analyzer should spend collecting results.
+
+  * `analyzer_max_attempts`  
+    Maximum amount of attempts that astra analyzer should perform trying to get response from stream input.
+    > Why does it exist?  
+    > On rare occasions, some streams may not respond after first request no matter how much time analyzer will
+    > spend trying to get info from it.
 
   * `analyzer_bitrate_threshold`  
     Average bitrate threshold in kbit/s for stream inputs.  
