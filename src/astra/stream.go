@@ -1,7 +1,6 @@
 package astra
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"sort"
@@ -639,9 +638,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 	// getRemovalReason returns reason why <inp> should be removed
 	getRemovalReason := func(inp string) string {
 		if r.cfg.Streams.UseAnalyzer {
-			ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Streams.AnalyzerWatchTime)
-			defer cancel()
-			result, err := analyzer.Check(ctx, r.cfg.Streams.AnalyzerMaxAttempts, inp)
+			result, err := analyzer.Check(r.cfg.Streams.AnalyzerWatchTime, r.cfg.Streams.AnalyzerMaxAttempts, inp)
 			if err != nil {
 				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
 				return ""

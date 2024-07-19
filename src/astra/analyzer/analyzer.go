@@ -68,7 +68,7 @@ type stopReq struct {
 
 // Analyzer represents astra analyzer client interface
 type Analyzer interface {
-	Check(ctx context.Context, maxAttempts int, urlToCheck string) (Result, error)
+	Check(watchTime time.Duration, maxAttempts int, urlToCheck string) (Result, error)
 }
 
 // analyzer represents astra analyzer client
@@ -93,13 +93,14 @@ func New(log *logger.Logger, address string, handshakeTimeout time.Duration) *an
 	}
 }
 
-// Check returns check result of <urlToCheck> using astra analyzer with context <ctx>.
+// Check returns check result of <urlToCheck> using astra analyzer.
 //
-// Returns when <ctx> is done up to <maxAttempts> times or earlier if average bitrate was > 0 during previous attempts.
+// Returns when <watchTime> is up, up to <maxAttempts> times or earlier if average bitrate was > 0 during previous
+// attempts.
 //
 // Does Not return error if <urlToCheck> is dead or invalid, rely on bitrate == 0.
-func (a analyzer) Check(ctx context.Context, maxAttempts int, urlToCheck string) (Result, error) {
-	// Does the same as it's parent but without retry logic
+func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck string) (Result, error) {
+	// Does the same as it's parent but without retry logic and returns when <ctx> is done
 	check := func(ctx context.Context, urlToCheck string) (Result, error) {
 		conn, _, err := a.dialer.Dial(a.url, nil)
 		if err != nil {
@@ -210,7 +211,9 @@ func (a analyzer) Check(ctx context.Context, maxAttempts int, urlToCheck string)
 	var err error
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		a.log.DebugCFi("Analyzing", "url", urlToCheck, "attempt", attempt)
+		ctx, cancel := context.WithTimeout(context.Background(), watchTime)
 		result, err = check(ctx, urlToCheck)
+		cancel()
 		if result.Bitrate > 0 || err != nil {
 			break
 		}
@@ -237,6 +240,6 @@ func (a fakeAnalyzer) AddResult(url string, result Result) {
 }
 
 // Check returns fake result for <urlToCheck> and nil error
-func (a fakeAnalyzer) Check(ctx context.Context, maxAttempts int, urlToCheck string) (Result, error) {
+func (a fakeAnalyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck string) (Result, error) {
 	return a.urlResultMap[urlToCheck], nil
 }
