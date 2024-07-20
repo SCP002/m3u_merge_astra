@@ -138,21 +138,21 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	}
 
 	indent := strings.Repeat(" ", step * depth)
-	newlineSeq := "\r\n"
+	newlineSeq := "\n" // Prefer LF
 	commentSeq := "# "
 	listValSeq := "- "
 	listAlignSeq := "  "
 	keyValDelimSeq := ": "
-	chunk := ""
+	var chunk strings.Builder
 
 	// Add top newline
 	if node.StartNewline {
-		chunk += newlineSeq
+		chunk.WriteString(newlineSeq)
 	}
 
 	// Add comment
 	for _, line := range node.HeadComment {
-		chunk += indent + commentSeq + line + newlineSeq
+		chunk.WriteString(indent + commentSeq + line + newlineSeq)
 	}
 
 	// Add keys and values
@@ -160,58 +160,58 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	case nil:
 		//
 	case Key:
-		chunk += indent
+		chunk.WriteString(indent)
 		if data.Commented {
-			chunk += commentSeq
+			chunk.WriteString(commentSeq)
 		}
-		chunk += data.Key + ":" + newlineSeq
+		chunk.WriteString(data.Key + ":" + newlineSeq)
 	case Scalar:
-		chunk += indent
+		chunk.WriteString(indent)
 		if data.Commented {
-			chunk += commentSeq
+			chunk.WriteString(commentSeq)
 		}
-		chunk += data.Key + keyValDelimSeq + data.Value + newlineSeq
+		chunk.WriteString(data.Key + keyValDelimSeq + data.Value + newlineSeq)
 	case Sequence:
-		chunk += indent + data.Key + ":" + newlineSeq
+		chunk.WriteString(indent + data.Key + ":" + newlineSeq)
 		for _, set := range data.Sets {
 			for i, pair := range set {
-				chunk += indent + strings.Repeat(" ", step)
+				chunk.WriteString(indent + strings.Repeat(" ", step))
 				if pair.Commented {
-					chunk += commentSeq
+					chunk.WriteString(commentSeq)
 				}
 				if i == 0 {
-					chunk += listValSeq
+					chunk.WriteString(listValSeq)
 				} else {
-					chunk += listAlignSeq
+					chunk.WriteString(listAlignSeq)
 				}
-				chunk += pair.Key + keyValDelimSeq + pair.Value + newlineSeq
+				chunk.WriteString(pair.Key + keyValDelimSeq + pair.Value + newlineSeq)
 			}
 		}
 	case List:
-		chunk += indent + data.Key + ":" + newlineSeq
+		chunk.WriteString(indent + data.Key + ":" + newlineSeq)
 		for _, value := range data.Values {
-			chunk += indent + strings.Repeat(" ", step)
+			chunk.WriteString(indent + strings.Repeat(" ", step))
 			if value.Commented {
-				chunk += commentSeq
+				chunk.WriteString(commentSeq)
 			}
-			chunk += listValSeq + value.Value + newlineSeq
+			chunk.WriteString(listValSeq + value.Value + newlineSeq)
 		}
 	case NestedList:
-		chunk += indent + data.Key + ":" + newlineSeq
+		chunk.WriteString(indent + data.Key + ":" + newlineSeq)
 		var maxDepth int
 		for _, branch := range flatten(data.Tree, &maxDepth) {
-			chunk += indent + strings.Repeat(" ", step)
+			chunk.WriteString(indent + strings.Repeat(" ", step))
 			if branch.Value.Commented {
-				chunk += commentSeq
+				chunk.WriteString(commentSeq)
 			}
 			// Add extra spaces on top of regular indent to align deep values
-			chunk += strings.Repeat(listAlignSeq, branch.depth - 1)
+			chunk.WriteString(strings.Repeat(listAlignSeq, branch.depth - 1))
 			// Add hyphens based on how deep value is
-			chunk += strings.Repeat(listValSeq, maxDepth - branch.depth + 1)
-			chunk += branch.Value.Value + newlineSeq
+			chunk.WriteString(strings.Repeat(listValSeq, maxDepth - branch.depth + 1))
+			chunk.WriteString(branch.Value.Value + newlineSeq)
 		}
 	case Map:
-		chunk += indent + data.Key + ":" + newlineSeq
+		chunk.WriteString(indent + data.Key + ":" + newlineSeq)
 		// Transform map to slice and sort it to ensure key order
 		pairs := lo.MapToSlice(data.Map, func(key string, value Value) Pair {
 			return Pair{Key: key, Value: value.Value, Commented: value.Commented}
@@ -220,21 +220,21 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 			return pairs[i].Key < pairs[j].Key
 		})
 		for _, pair := range pairs {
-			chunk += indent + strings.Repeat(" ", step)
+			chunk.WriteString(indent + strings.Repeat(" ", step))
 			if pair.Commented {
-				chunk += commentSeq
+				chunk.WriteString(commentSeq)
 			}
-			chunk += pair.Key + keyValDelimSeq + pair.Value + newlineSeq
+			chunk.WriteString(pair.Key + keyValDelimSeq + pair.Value + newlineSeq)
 		}
 	}
 
 	// Add bottom newline
 	if node.EndNewline {
-		chunk += newlineSeq
+		chunk.WriteString(newlineSeq)
 	}
 
 	// Insert chunk into output
-	output = slices.Insert(output, insertIdx, []rune(chunk)...)
+	output = slices.Insert(output, insertIdx, []rune(chunk.String())...)
 
 	return []byte(string(output)), nil
 }
