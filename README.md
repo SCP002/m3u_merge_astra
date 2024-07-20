@@ -380,11 +380,4 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     go build -o ../build/ m3u_merge_astra.go
     ```
 
-    Or use convenient cross-compile tool to build binaries for every OS / architecture pair:
-
-    ```sh
-    cd src
-    go get github.com/mitchellh/gox
-    go install github.com/mitchellh/gox
-    gox -output "../build/{{.Dir}}_{{.OS}}_{{.Arch}}" ./
-    ```
+    Or run `/src/build.sh` to build binaries for every OS / architecture pair.
