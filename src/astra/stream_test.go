@@ -234,7 +234,7 @@ func TestEnableStream(t *testing.T) {
 
 	expected = Stream{Enabled: true, MarkDisabled: false}
 	assert.Exactly(t, expected, s2, "should set Enabled field to true")
-	
+
 	s1 = Stream{Enabled: true, MarkDisabled: true}
 	s1Original = copier.TestDeep(t, s1)
 
@@ -945,7 +945,7 @@ func TestRemoveDeadInputs(t *testing.T) {
 	assert.Exactly(t, expected, sl2[3].Inputs, "should not remove inputs with unsupported protocols")
 
 	// Test concurrency
-	// Unexpectedly freezing on Windows 10 after ~20 seconds of the test runnning.
+	// On Windows may unexpectedly freeze after ~20 seconds of the test runnning.
 	// Use test_remove_dead_inputs.sh
 
 	sl1 = []Stream{
@@ -1176,7 +1176,7 @@ func TestProgressRemoveDeadInputs(t *testing.T) {
 	defer httpsSrv.Close()
 
 	// Test log output
-	// Unexpectedly freezing on Windows 10 after ~20 seconds of the test runnning.
+	// On Windows may unexpectedly freeze after ~20 seconds of the test runnning.
 	// Use test_progress_remove_dead_inputs.sh
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
@@ -1599,7 +1599,10 @@ func TestRemoveWithoutInputs(t *testing.T) {
 	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
 
 	expected := []Stream{
+		{Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Group"}, Remove: true},
+		{Enabled: true, Name: "Name", Remove: true},
 		{Enabled: true, Inputs: []string{"http://input/1", "http://input/2"}},
+		{Enabled: false, Name: r.cfg.Streams.DisabledPrefix + "Name", Remove: true},
 		{Inputs: []string{"http://input"}},
 	}
 
@@ -1609,11 +1612,15 @@ func TestRemoveWithoutInputs(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
-		sl1 := []Stream{{ID: "0", Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}}}
+		sl1 := []Stream{
+			{ID: "0", Name: "Name 1", Groups: map[string]string{"Cat": "Grp"}},
+			{ID: "1", Name: "Name 2", Groups: map[string]string{"Cat": "Grp"}, Remove: true},
+		}
 
 		_ = r.RemoveWithoutInputs(sl1)
 	})
 	assert.Contains(t, out, `Removing stream without inputs: ID "0", name "Name 1", group "Cat: Grp"`)
+	assert.NotContains(t, out, `Removing stream without inputs: ID "1", name "Name 2", group "Cat: Grp"`)
 }
 
 func TestDisableWithoutInputs(t *testing.T) {
@@ -1718,6 +1725,56 @@ func TestAddNamePrefixes(t *testing.T) {
 	})
 	assert.Contains(t, out, fmt.Sprintf(`Adding name prefix to stream: ID "0", old name "Name_1", `+
 		`new name "%vName_1", group "Cat: Grp"`, r.cfg.Streams.AddedPrefix))
+}
+
+func TestChangedStreams(t *testing.T) {
+	r := newDefRepo()
+
+	sl1 := []Stream{
+		{Name: "Stream 1", ID: "0001", Enabled: true, Inputs: []string{"A", "B"}},
+		{Name: "Stream 2", ID: "0002", Enabled: false, Inputs: []string{"C", "D"}},
+		{Name: "Stream 3", ID: "0003", Enabled: false, Inputs: []string{"E", "F"}},
+		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"A": "B"}},
+		{Name: "Stream 5", ID: "0005"},
+		{Name: "Stream 6", ID: "0006", Enabled: true, Inputs: []string{"I", "J"}, MarkAdded: true, MarkDisabled: false},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := []Stream{
+		// No changes
+		{Name: "Stream 1", ID: "0001", Enabled: true, Inputs: []string{"A", "B"}},
+		// Changed inputs
+		{Name: "Stream 2", ID: "0002", Enabled: false, Inputs: []string{"C2", "D"}},
+		// No changes
+		{Name: "Stream 3", ID: "0003", Enabled: false, Inputs: []string{"E", "F"}},
+		// Changed groups
+		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"C": "D"}},
+		// New
+		{Name: "Stream 7", ID: "0007", Enabled: true, Inputs: []string{"K", "L"}, Groups: map[string]string{"E": "F"}},
+		// Changed name
+		{Name: "Stream 5*", ID: "0005"},
+		// Changed MarkAdded / MarkDisabled (no changes)
+		{Name: "Stream 6", ID: "0006", Enabled: true, Inputs: []string{"I", "J"}, MarkAdded: false, MarkDisabled: true},
+		// New
+		{Name: "Stream 8", ID: "0008", Enabled: false, DisabledInputs: []string{"A", "B"}},
+	}
+	sl2Original := copier.TestDeep(t, sl2)
+
+	actual := r.ChangedStreams(sl1, sl2)
+
+	assert.NotSame(t, &sl1, &actual, "should return copy of streams")
+	assert.NotSame(t, &sl2, &actual, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+	assert.Exactly(t, sl2Original, sl2, "should not modify the source")
+
+	expected := []Stream{
+		{Name: "Stream 2", ID: "0002", Enabled: false, Inputs: []string{"C2", "D"}},
+		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"C": "D"}},
+		{Name: "Stream 7", ID: "0007", Enabled: true, Inputs: []string{"K", "L"}, Groups: map[string]string{"E": "F"}},
+		{Name: "Stream 5*", ID: "0005"},
+		{Name: "Stream 8", ID: "0008", Enabled: false, DisabledInputs: []string{"A", "B"}},
+	}
+	assert.Exactly(t, expected, actual, "should return that changed streams")
 }
 
 func TestGetInputsAmount(t *testing.T) {

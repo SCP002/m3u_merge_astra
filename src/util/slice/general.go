@@ -1,9 +1,9 @@
 package slice
 
 import (
-	"reflect"
 	"strings"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/samber/lo"
 )
 
@@ -18,7 +18,9 @@ func AppendNew[T comparable](inp []T, callback func(T), elms ...T) []T {
 	for _, elm := range elms {
 		if !lo.Contains(inp, elm) {
 			inp = append(inp, elm)
-			callback(elm)
+			if callback != nil {
+				callback(elm)
+			}
 		}
 	}
 	return inp
@@ -27,7 +29,7 @@ func AppendNew[T comparable](inp []T, callback func(T), elms ...T) []T {
 // RemoveLast returns new slice with the last occurence of <tElm> removed from <inp>
 func RemoveLast[T any](inp []T, tElm T) (out []T) {
 	_, tIdx, _ := lo.FindLastIndexOf(inp, func(cElm T) bool {
-		return reflect.DeepEqual(tElm, cElm)
+		return cmp.Equal(tElm, cElm)
 	})
 	for cIdx, e := range inp {
 		if cIdx != tIdx {
@@ -41,7 +43,7 @@ func RemoveLast[T any](inp []T, tElm T) (out []T) {
 func Filled[T any](elm T, times int) []T {
 	out := []T{}
 	for i := 0; i < times; i++ {
-		out = append(out, elm)		
+		out = append(out, elm)
 	}
 	return out
 }
@@ -63,4 +65,25 @@ func HasAnyPrefix(inp string, prefixes ...string) bool {
 // IsAllEmpty reurns true if every slice in <inp> is empty
 func IsAllEmpty[T any](inp ...[]T) bool {
 	return len(lo.Flatten(inp)) == 0
+}
+
+// MapFindDuplBy returns <inp> with every element transformed by <transform>.
+//
+// <transform> invokes with element, it's index and boolean whether element is a duplicate or not.
+//
+// <by> is used to generate the criterion by which uniqueness is computed.
+func MapFindDuplBy[T, R any, U comparable](inp []T, by func(elm T) U, transform func(elm T, idx int, dupl bool) R) []R {
+	result := make([]R, len(inp))
+	seen := make(map[U]struct{}, len(inp))
+
+	for idx, elm := range inp {
+		key := by(elm)
+
+		_, dupl := seen[key]
+
+		result[idx] = transform(elm, idx, dupl)
+		seen[key] = struct{}{}
+	}
+
+	return result
 }

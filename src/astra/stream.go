@@ -1,7 +1,6 @@
 package astra
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"sort"
@@ -22,6 +21,7 @@ import (
 
 	"github.com/alitto/pond"
 	"github.com/go-co-op/gocron"
+	"github.com/google/go-cmp/cmp"
 	"github.com/samber/lo"
 )
 
@@ -34,6 +34,7 @@ type Stream struct {
 	ID             string            `json:"id,omitempty"`
 	Inputs         []string          `json:"input,omitempty"`
 	Name           string            `json:"name,omitempty"`
+	Remove         bool              `json:"remove,omitempty"` // Used by API to remove stream.
 	Type           string            `json:"type,omitempty"`
 	Unknown        map[string]any    `json:"-" jsonex:"true"` // All unknown fields go here.
 	MarkAdded      bool              `json:"-"`               // Set added name prefix after processing?
@@ -525,15 +526,16 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveWithoutInputs returns shallow copy of <streams> without streams which have no inputs
+// RemoveWithoutInputs returns shallow copy of <streams> with Remove field set to true on streams which have no inputs
 func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing streams without inputs")
 
-	out = lo.Reject(streams, func(s Stream, _ int) bool {
-		if s.hasNoInputs() {
+	out = lo.Map(streams, func(s Stream, _ int) Stream {
+		if !s.Remove && s.hasNoInputs() {
 			r.log.InfoCFi("Removing stream without inputs", "ID", s.ID, "name", s.Name, "group", s.FirstGroup())
+			s.Remove = true
 		}
-		return s.hasNoInputs()
+		return s
 	})
 
 	return
@@ -577,6 +579,30 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 	return
 }
 
+// ChangedStreams returns new and changed streams from <newStreams>, which are not in <oldStreams>
+func (r repo) ChangedStreams(oldStreams, newStreams []Stream) (out []Stream) {
+	r.log.Info("Building changed streams list")
+
+	for _, newStream := range newStreams {
+		oldStream, _, found := lo.FindIndexOf(oldStreams, func(oldStream Stream) bool {
+			return newStream.ID == oldStream.ID
+		})
+		if found {
+			cmpOption := cmp.FilterPath(func(p cmp.Path) bool {
+				lastPathItem := p.Last().String()
+				return lastPathItem == ".MarkAdded" || lastPathItem == ".MarkDisabled"
+			}, cmp.Ignore())
+			if !cmp.Equal(oldStream, newStream, cmpOption) {
+				out = append(out, newStream)
+			}
+		} else {
+			out = append(out, newStream)
+		}
+	}
+
+	return
+}
+
 // removeDeadInputs returns deep copy of <streams> without dead inputs.
 //
 // If <disable> is true, disable dead inputs instead of deleting them.
@@ -612,9 +638,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 	// getRemovalReason returns reason why <inp> should be removed
 	getRemovalReason := func(inp string) string {
 		if r.cfg.Streams.UseAnalyzer {
-			ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Streams.AnalyzerWatchTime)
-			defer cancel()
-			result, err := analyzer.Check(ctx, inp)
+			result, err := analyzer.Check(r.cfg.Streams.AnalyzerWatchTime, r.cfg.Streams.AnalyzerMaxAttempts, inp)
 			if err != nil {
 				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
 				return ""
@@ -691,7 +715,6 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 	out = copier.MustDeep(streams)
 	for sIdx, s := range out {
 		for _, inp := range s.Inputs {
-			s, sIdx, inp := s, sIdx, inp // TODO: This line might not be needed in go 1.22+, google LoopvarExperiment
 			pool.Submit(func() {
 				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
 					"input", inp)

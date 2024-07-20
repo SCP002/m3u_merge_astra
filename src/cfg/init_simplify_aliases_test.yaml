@@ -10,6 +10,8 @@ general:
       - 'Sample Television Channel'
     - - 'Discovery ID'
       - 'Discovery Investigation'
+  astra_api_resp_timeout: '0s'
+  merge_categories: false
 m3u:
   resp_timeout: '0s'
   chann_name_blacklist:
@@ -47,6 +49,7 @@ streams:
   use_analyzer: false
   analyzer_addr: ''
   analyzer_watch_time: '0s'
+  analyzer_max_attempts: 0
   analyzer_bitrate_threshold: 0
   analyzer_video_only_bitrate_threshold: 0
   analyzer_audio_only_bitrate_threshold: 0

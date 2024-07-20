@@ -26,6 +26,8 @@ func TestAppendNew(t *testing.T) {
 
 	assert.Exactly(t, []int{0, 1, 2, 3}, ol2, "should add unique numbers")
 	assert.Exactly(t, 2, cbCounter, "callback should be called that amount of times")
+
+	assert.NotPanics(t, func() { AppendNew(ol1, nil, []int{4}...) }, "should not panic if callback is nil")
 }
 
 func TestRemoveLast(t *testing.T) {
@@ -61,11 +63,57 @@ func TestHasAnyPrefix(t *testing.T) {
 }
 
 func TestIsAllEmpty(t *testing.T) {
-	type test struct {}
+	type test struct{}
 	assert.True(t, IsAllEmpty([]int{}, []int{}))
 	assert.False(t, IsAllEmpty([]string{"something"}, []string{""}))
 	assert.True(t, IsAllEmpty(make([]bool, 0), []bool{}))
 	assert.False(t, IsAllEmpty([]bool{}, make([]bool, 1)))
 	assert.True(t, IsAllEmpty([]test{}, nil))
 	assert.False(t, IsAllEmpty(nil, []test{{}}))
+}
+
+func TestMapFindDuplBy(t *testing.T) {
+	type Struct struct {
+		Str string
+		Int int
+	}
+
+	ol1 := []Struct{{Str: "A", Int: 0}, {Str: "B", Int: 0}, {Str: "A", Int: 0}, {Str: "B", Int: 0}, {Str: "C", Int: 0}}
+	ol1Original := copier.TestDeep(t, ol1)
+
+	// Map to same type
+	ol2Structs := MapFindDuplBy(ol1, func(elm Struct) string {
+		return elm.Str
+	}, func(elm Struct, idx int, dupl bool) Struct {
+		if dupl {
+			elm.Int = 1
+		}
+		return elm
+	})
+	assert.NotSame(t, &ol1, &ol2Structs, "should return copy of objects")
+	assert.Exactly(t, ol1Original, ol1, "should not modify the source")
+
+	expectedStructs := []Struct{
+		{Str: "A", Int: 0},
+		{Str: "B", Int: 0},
+		{Str: "A", Int: 1},
+		{Str: "B", Int: 1},
+		{Str: "C", Int: 0},
+	}
+	assert.Exactly(t, expectedStructs, ol2Structs, "should set Int field for duplicates to 1")
+
+	// Map to different type
+	ol2Ints := MapFindDuplBy(ol1, func(elm Struct) string {
+		return elm.Str
+	}, func(elm Struct, idx int, dupl bool) int {
+		if dupl {
+			return 1
+		}
+		return 0
+	})
+	assert.NotSame(t, &ol1, &ol2Ints, "should return copy of objects")
+	assert.Exactly(t, ol1Original, ol1, "should not modify the source")
+
+	expectedInts := []int{0, 0, 1, 1, 0}
+	assert.Exactly(t, expectedInts, ol2Ints, "should return that integer array")
 }

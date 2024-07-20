@@ -3,6 +3,7 @@ package compare
 import (
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/util/simplify"
+	"strings"
 
 	"github.com/samber/lo"
 )
@@ -42,16 +43,17 @@ func IsNameSame(cfg cfg.General, lName, rName string) bool {
 }
 
 // remap returns remapped <inp> using <dict>
-func remap(inp string, dict map[string]string) (out string) {
+func remap(inp string, dict map[string]string) string {
+	var sb strings.Builder
 	for _, oldChar := range inp {
 		newChar := dict[string(oldChar)]
 		if newChar != "" {
-			out += newChar
+			sb.WriteString(newChar)
 		} else {
-			out += string(oldChar)
+			sb.WriteRune(oldChar)
 		}
 	}
-	return
+	return sb.String()
 }
 
 // firstAlias returns first alias for <name> from <aliases> or <name> if not found

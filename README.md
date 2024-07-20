@@ -2,7 +2,7 @@
 
 ## What is this?
 
-Heavily configurable CLI tool to add channels from M3U playlist into Cesbo Astra 5 config.
+Heavily configurable CLI tool to add channels from M3U playlist into Cesbo Astra 5.
 
 ## Why was it made?
 
@@ -10,8 +10,8 @@ To simplify the process of adding new, updating and removing astra streams and i
 
 ## How it works?
 
-It takes input astra config from `--astraCfgInput`, adds M3U channels into it from `--m3uPath` by rules defined in
-`--programCfgPath` and produces modified astra config to `--astraCfgOutput`.
+It connects to astra using API, reads its config (mostly streams), adds M3U channels into it from `--m3uPath` by rules
+defined in `--programCfgPath` and sends requests to astra to modify config.
 
 ## How to use it?
 
@@ -22,16 +22,12 @@ It takes input astra config from `--astraCfgInput`, adds M3U channels into it fr
 | -l, --logLevel       | Logging level. Can be from `0` (least verbose) to `6` (most verbose) [default: `4`]             |
 | -c, --programCfgPath | Program config file path to read from or initialize a default [default: `m3u_merge_astra.yaml`] |
 | -m, --m3uPath        | M3U file path to get channels from. Can be a local file or URL                                  |
-| -i, --astraCfgInput  | Input astra config. Can be `clipboard`, `stdio` or **file path**                                |
-| -o, --astraCfgOutput | Output astra config. Can be `clipboard`, `stdio` or **file path**                               |
+| -a, --astraAddr      | Astra address in format of `scheme://host:port` [default: `http://127.0.0.1:8000`]              |
+| -u, --astraUser      | Astra user                                                                                      |
+| -p, --astraPwd       | Astra password                                                                                  |
 
 Unless `--programCfgPath` is specified, on first run it creates default program config in current directory and terminates.
 Tweak it to suit your needs and start the program again.
-
-## Dependencies
-
-To use clipboard feature on linux, install either `xsel`, `xclip`, `wl-clipboard`
-or `Termux:API` add-on for termux-clipboard-get/set.
 
 ## Downloads
 
@@ -39,21 +35,13 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 
 ## Tips
 
-* `--astraCfgOutput stdio`, `--version` and `--help` goes to **stdout**.  
+* `--version` and `--help` goes to **stdout**.  
   Logs goes to **stderr**.
-
-* It can be used in chain, for example:  
-
-  ```sh
-  m3u_merge_astra -c cfg_1.yaml -m list_1.m3u -i astra_cfg.json -o stdio | \
-    m3u_merge_astra -c cfg_2.yaml -m list_2.m3u -i stdio -o stdio | \
-      grep _ADDED
-  ```
 
 * It is possible to add streams from one instance of astra to another one, for example:  
 
   ```sh
-  m3u_merge_astra -m http://another_astra/playlist.m3u8 -i astra_cfg.json -o new_astra_cfg.json
+  m3u_merge_astra -m http://another_astra:8005/playlist.m3u8 -a 127.0.0.1:8002 -u admin -p admin
   ```
 
 * It is possible to use dummy M3U file to run independent tasks
@@ -61,16 +49,8 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 
   ```sh
   touch dummy.m3u
-  m3u_merge_astra -m dummy.m3u -i astra_cfg.json -o astra_cfg.json
+  m3u_merge_astra -m dummy.m3u -u admin -p admin
   ```
-
-* `--astraCfgInput clipboard` and `--astraCfgOutput clipboard` is convenient to use in graphical environment:  
-
-  Open astra dashboard, click `Settings` -> `Edit Config`.  
-  Press Ctrl + A, Ctrl + C.  
-  Run this program.  
-  Press Ctrl + V to paste modified config back to astra.  
-  Click `Save`.
 
 * When `streams.remove_dead_inputs` is enabled, progress of removing dead inputs from streams is printed every 30 seconds.
 
@@ -103,6 +83,12 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     Names defined here will be considered identical to any other name in the same nested group.
     During comparsion, names will be simplified (lowercase, no special characters except the `+` sign),
     but not transliterated.
+
+  * `astra_api_resp_timeout`  
+    Astra API response timeout.
+
+  * `merge_categories`  
+    Should duplicated categories be removed with unique groups combined per category?
 
 * `m3u`  
   M3U related settings of the program.
@@ -260,7 +246,13 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     Astra analyzer address in format of 'host:port'.
 
   * `analyzer_watch_time`  
-    Amount of time astra analyzer should spend collecting results.
+    Amount of time per attempt that astra analyzer should spend collecting results.
+
+  * `analyzer_max_attempts`  
+    Maximum amount of attempts that astra analyzer should perform trying to get response from stream input.
+    > Why does it exist?  
+    > On rare occasions, some streams may not respond after first request no matter how much time analyzer will
+    > spend trying to get info from it.
 
   * `analyzer_bitrate_threshold`  
     Average bitrate threshold in kbit/s for stream inputs.  

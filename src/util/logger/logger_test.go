@@ -46,13 +46,22 @@ func TestWarnCFi(t *testing.T) {
 	assert.Contains(t, out, `WARN message: field 1 "value 1", field 2 "10"`)
 }
 
+func TestErrorCFi(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(logrus.ErrorLevel)
+
+		log.ErrorCFi("message", "field 1", "value 1", "field 2", 10)
+	})
+	assert.Contains(t, out, `ERROR message: field 1 "value 1", field 2 "10"`)
+}
+
 func TestDebug(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
 		log := New(logrus.DebugLevel)
 
 		log.Debug("message")
 	})
-	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebug.func1; L53): message`)
+	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebug.func1; L62): message`)
 }
 
 func TestDebugf(t *testing.T) {
@@ -61,7 +70,7 @@ func TestDebugf(t *testing.T) {
 
 		log.Debugf("_%v_", "message")
 	})
-	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebugf.func1; L62): _message_`)
+	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebugf.func1; L71): _message_`)
 }
 
 func TestDebugCFi(t *testing.T) {
@@ -70,7 +79,7 @@ func TestDebugCFi(t *testing.T) {
 
 		log.DebugCFi("message", "field 1", "value 1", "field 2", 10)
 	})
-	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L71): message: field 1 "value 1", field 2 "10"`
+	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L80): message: field 1 "value 1", field 2 "10"`
 	assert.Contains(t, out, msg)
 }
 
@@ -86,5 +95,5 @@ func TestBuildFields(t *testing.T) {
 }
 
 func TestGetCallerInfo(t *testing.T) {
-	assert.Exactly(t, `m3u_merge_astra/util/logger.TestGetCallerInfo; L89`, getCallerInfo(1))
+	assert.Exactly(t, `m3u_merge_astra/util/logger.TestGetCallerInfo; L98`, getCallerInfo(1))
 }

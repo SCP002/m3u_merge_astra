@@ -1,15 +1,15 @@
 module m3u_merge_astra
 
-go 1.21.4
+go 1.22
 
 require (
-	github.com/SCP002/clipboard v0.1.5
 	github.com/SCP002/jsonexraw v0.1.0
 	github.com/adampresley/sigint v0.0.0-20150906022118-7e8d2ad16a94
 	github.com/alitto/pond v1.8.3
 	github.com/cockroachdb/errors v1.11.1
 	github.com/fatih/color v1.16.0
 	github.com/go-co-op/gocron v1.36.0
+	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jinzhu/copier v0.4.0
@@ -21,7 +21,6 @@ require (
 	github.com/utahta/go-openuri v0.1.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/zenizh/go-capturer v0.0.0-20211219060012-52ea6c8fed04
-	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 )
 
 require (
@@ -48,6 +47,7 @@ require (
 	github.com/yaegashi/jsonex.go v0.0.0-20191218175351-e6c64c300063 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect

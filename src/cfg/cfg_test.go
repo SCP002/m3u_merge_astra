@@ -171,9 +171,11 @@ func newTestConfig() Root {
 			FullTranslitMap:     map[string]string{"ş": "ш", "\\n": ""},
 			SimilarTranslit:     false,
 			SimilarTranslitMap:  map[string]string(nil),
-			NameAliases:         true,            // New field in v1.3.0
-			NameAliasList:       [][]string(nil), // New field in v1.3.0
-			SimpleNameAliasList: [][]string(nil), // Field for internal use
+			NameAliases:         true,             // New field in v1.3.0
+			NameAliasList:       [][]string(nil),  // New field in v1.3.0
+			SimpleNameAliasList: [][]string(nil),  // Field for internal use
+			AstraAPIRespTimeout: time.Second * 10, // New field in v2.0.0
+			MergeCategories:     false,            // New field in v2.0.0
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,
@@ -225,6 +227,7 @@ func newTestConfig() Root {
 			UseAnalyzer:                       false,            // New field in v1.5.0
 			AnalyzerAddr:                      "127.0.0.1:8001", // New field in v1.5.0
 			AnalyzerWatchTime:                 time.Second * 20, // New field in v1.5.0
+			AnalyzerMaxAttempts:               3,                // New field in v2.0.0
 			AnalyzerBitrateThreshold:          1,                // New field in v1.5.0
 			AnalyzerVideoOnlyBitrateThreshold: 1,                // New field in v1.5.0
 			AnalyzerAudioOnlyBitrateThreshold: 1,                // New field in v1.5.0
