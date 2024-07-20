@@ -346,7 +346,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 
 ## Build from source code [Go / Golang]
 
-1. Install [Golang](https://golang.org/) 1.18 or newer.
+1. Install [Golang](https://golang.org/) 1.22 or newer.
 
 2. Download the source code:  
 
