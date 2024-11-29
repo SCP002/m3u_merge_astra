@@ -12,3 +12,10 @@ func Times(count int, iteratee func(iteration int) bool) {
 		}
 	}
 }
+
+// ForEach runs <iteratee> for every element in <inp>
+func ForEach[T any](inp []T, iteratee func(item T)) {
+	for _, e := range inp {
+		iteratee(e)
+	}
+}

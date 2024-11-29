@@ -39,6 +39,7 @@ streams:
     - '(rx_in_capture_group)'
     - 'rx_without_capture_group'
     - ''
+  disable_all_but_one_input_by_rx_list:
   remove_dead_inputs: false
   disable_dead_inputs: false
   dead_inputs_check_blacklist:

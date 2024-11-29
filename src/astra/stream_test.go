@@ -344,6 +344,65 @@ func TestRemoveDuplicatedInputsByRx(t *testing.T) {
 	assert.Exactly(t, expected, removed, "callback should return these removed iputs")
 }
 
+func TestDisableAllButOneInputByRx(t *testing.T) {
+	r := newDefRepo()
+
+	r.cfg.Streams.DisableAllButOneInputByRxList = []regexp.Regexp{
+		*regexp.MustCompile(`[#&]no_sync(&|$)`),
+		*regexp.MustCompile(`[#&]i_might_stay(&|$)`),
+	}
+
+	s1 := Stream{
+		Inputs:         []string{"http://input/1#abc", "http://input/1#no_sync&abc", "http://input/1#abc&i_might_stay"},
+		DisabledInputs: []string{"http://input/1#def"},
+	}
+	s1Original := copier.TestDeep(t, s1)
+
+	disabled := []string{}
+	s2 := s1.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
+		disabled = append(disabled, input)
+	})
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected := []string{"http://input/1#no_sync&abc"}
+	assert.Exactly(t, expected, s2.Inputs,
+		"should remove all inputs except the first matching first found regular expression")
+
+	expected = []string{"http://input/1#abc", "http://input/1#abc&i_might_stay"}
+	assert.Exactly(t, expected, disabled, "callback should return these disabled iputs")
+
+	expected = []string{"http://input/1#def", "http://input/1#abc", "http://input/1#abc&i_might_stay"}
+	assert.Exactly(t, expected, s2.DisabledInputs, "should add all normal removed inputs to the list of disabled ones")
+
+	s1 = Stream{
+		Inputs: []string{
+			"http://input/1#abc&i_might_stay",
+			"http://input/1#abc&i_might_stay",
+			"http://input/1#abc",
+		},
+		DisabledInputs: []string{},
+	}
+	s1Original = copier.TestDeep(t, s1)
+
+	disabled = []string{}
+	s2 = s1.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
+		disabled = append(disabled, input)
+	})
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected = []string{"http://input/1#abc&i_might_stay"}
+	assert.Exactly(t, expected, s2.Inputs,
+		"should remove all inputs except the first matching first found regular expression")
+
+	expected = []string{"http://input/1#abc&i_might_stay", "http://input/1#abc"}
+	assert.Exactly(t, expected, disabled, "callback should return these disabled iputs")
+
+	expected = []string{"http://input/1#abc&i_might_stay", "http://input/1#abc"}
+	assert.Exactly(t, expected, s2.DisabledInputs, "should add all normal removed inputs to the list of disabled ones")
+}
+
 func TestRemoveBlockedInputs(t *testing.T) {
 	cfg := cfg.NewDefCfg().Streams
 
@@ -692,6 +751,83 @@ func TestAllRemoveDuplicatedInputsByRx(t *testing.T) {
 	})
 	assert.Contains(t, out, `Removing duplicated input per stream by regular expressions: ID "0", name "Name 1", `+
 		`group "Cat: Grp", input "http://input/1"`)
+}
+
+func TestAllDisableAllButOneInputByRx(t *testing.T) {
+	r := newDefRepo()
+
+	r.cfg.Streams.DisableAllButOneInputByRxList = []regexp.Regexp{
+		*regexp.MustCompile(`[#&]no_sync(&|$)`),
+		*regexp.MustCompile(`[#&]i_might_stay(&|$)`),
+	}
+
+	sl1 := []Stream{
+		{
+			Inputs: []string{
+				"http://input/1#abc",
+				"http://input/1#no_sync&abc",
+				"http://input/1#abc&i_might_stay",
+			},
+			DisabledInputs: []string{"http://input/1#def"},
+		},
+		{
+			Inputs:         []string{"http://input/1#abc"},
+			DisabledInputs: []string{"http://input/1#no_sync&abc"},
+		},
+		{
+			Inputs: []string{
+				"http://input/1#abc&i_might_stay",
+				"http://input/1#abc&i_might_stay",
+				"http://input/1#abc",
+			},
+			DisabledInputs: []string{},
+		},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := r.DisableAllButOneInputByRx(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	expected := []Stream{
+		{
+			Inputs:         []string{"http://input/1#no_sync&abc"},
+			DisabledInputs: []string{"http://input/1#def", "http://input/1#abc", "http://input/1#abc&i_might_stay"},
+		},
+		{
+			Inputs:         []string{"http://input/1#abc"},
+			DisabledInputs: []string{"http://input/1#no_sync&abc"},
+		},
+		{
+			Inputs:         []string{"http://input/1#abc&i_might_stay"},
+			DisabledInputs: []string{"http://input/1#abc&i_might_stay", "http://input/1#abc"},
+		},
+	}
+	assert.Exactly(t, expected, sl2, "should return these streams")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		r.cfg.Streams.DisableAllButOneInputByRxList = []regexp.Regexp{
+			*regexp.MustCompile(`[#&]no_sync(&|$)`),
+		}
+
+		sl1 := []Stream{
+			{
+				ID:     "0",
+				Name:   "Name 1",
+				Groups: map[string]string{"Cat": "Grp"},
+				Inputs: []string{"http://input/1#abc", "http://input/1#no_sync&abc"},
+			},
+		}
+
+		_ = r.DisableAllButOneInputByRx(sl1)
+	})
+	assert.Contains(t, out, `Disabling other input per stream by regular expressions: ID "0", name "Name 1", `+
+		`group "Cat: Grp", input "http://input/1#abc"`)
 }
 
 func TestUniteInputs(t *testing.T) {

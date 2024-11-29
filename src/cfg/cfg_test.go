@@ -216,6 +216,7 @@ func newTestConfig() Root {
 			},
 			RemoveDuplicatedInputs:         true,
 			RemoveDuplicatedInputsByRxList: []regexp.Regexp(nil), // New field in v1.4.0
+			DisableAllButOneInputByRxList:  []regexp.Regexp(nil), // New field in v2.1.0
 			RemoveDeadInputs:               false,
 			DisableDeadInputs:              false, // New field in v1.5.0
 			DeadInputsCheckBlacklist: []regexp.Regexp{

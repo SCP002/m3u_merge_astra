@@ -39,6 +39,19 @@ func RemoveLast[T any](inp []T, tElm T) (out []T) {
 	return
 }
 
+// RemoveFirst returns new slice with the first occurence of <tElm> removed from <inp>
+func RemoveFirst[T any](inp []T, tElm T) (out []T) {
+	_, tIdx, _ := lo.FindIndexOf(inp, func(cElm T) bool {
+		return cmp.Equal(tElm, cElm)
+	})
+	for cIdx, e := range inp {
+		if cIdx != tIdx {
+			out = append(out, e)
+		}
+	}
+	return
+}
+
 // Filled returns new slice of <times> amount of <elm>
 func Filled[T any](elm T, times int) []T {
 	out := []T{}

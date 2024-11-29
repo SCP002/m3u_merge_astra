@@ -163,6 +163,12 @@ streams:
     # - '^.*:\/\/([^#?/]*)' # By host
     # - '^.*:\/\/.*?\/([^#?]*)' # By path
 
+  # List of regular expressions.
+  # If any expression match URL of a stream's input, only this input will be kept and all other will be disabled.
+  # If list has multiple entries, only input matching first found expression will be kept.
+  disable_all_but_one_input_by_rx_list:
+    # - '[#&]no_sync(&|$)'
+
   # Remove inputs of astra streams which do not respond or give invalid response?
   # Supports HTTP(S), enable 'use_analyzer' option for more.
   # It has priority over 'disable_dead_inputs'.

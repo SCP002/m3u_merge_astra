@@ -50,7 +50,7 @@ func TestNamed(t *testing.T) {
 	}
 
 	o, idx, found := Named(cfg, ol, "name2")
-	assert.NotSame(t, ol[1], o, "should return copy of object")
+	assert.NotSame(t, &ol[1], &o, "should return copy of object")
 	assert.Exactly(t, ol[1], o, "should return object matching the specified name")
 	assert.Exactly(t, 1, idx, "should return index of first found element")
 	assert.True(t, found, "should find object matching the specified name")

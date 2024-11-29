@@ -207,6 +207,13 @@ type Streams struct {
 	// This setting is not controlled by 'remove_duplicated_inputs'.
 	RemoveDuplicatedInputsByRxList []regexp.Regexp `koanf:"remove_duplicated_inputs_by_rx_list"`
 
+	// DisableAllButOneInputByRxList represens the list of regular expressions.
+	//
+	// If any expression match URL of a stream's input, only this input will be kept and all other will be disabled.
+	//
+	// If list has multiple entries, only input matching first found expression will be kept.
+	DisableAllButOneInputByRxList []regexp.Regexp `koanf:"disable_all_but_one_input_by_rx_list"`
+
 	// RemoveDeadInputs specifies if inputs of astra streams which do not respond or give invalid response should be
 	// removed.
 	//
@@ -479,6 +486,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		/* 20 */ "general.astra_api_resp_timeout",
 		/* 21 */ "general.merge_categories",
 		/* 22 */ "streams.analyzer_max_attempts",
+		/* 23 */ "streams.disable_all_but_one_input_by_rx_list",
 	}
 	missingFields, _ := lo.Difference(metadata.Unset, knownFields)
 	internalFields := []string{
@@ -618,7 +626,8 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 				Values: []yamlUtil.Value{
 					{Value: `'^.*:\/\/([^#?/]*)' # By host`, Commented: true},
 					{Value: `'^.*:\/\/.*?\/([^#?]*)' # By path`, Commented: true},
-				}},
+				},
+			},
 		}
 		if cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.remove_duplicated_inputs", false, node); err != nil {
 			return root, false, errors.Wrap(err, "Add missing field to config")
@@ -933,7 +942,6 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		defVal := defCfg.General.AstraAPIRespTimeout
 		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
-			StartNewline: false,
 			HeadComment:  []string{"Astra API response timeout."},
 			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: fmt.Sprintf("'%v'", defVal)},
 		}
@@ -975,6 +983,32 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 			return root, false, errors.Wrap(err, "Add missing field to config")
 		}
 		root.Streams.AnalyzerMaxAttempts = defVal
+	}
+	// v2.0.0 to v2.1.0
+	knownField = knownFields[23]
+	if lo.Contains(metadata.Unset, knownField) {
+		defVal := defCfg.Streams.DisableAllButOneInputByRxList
+		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
+		node := yamlUtil.Node{
+			HeadComment: []string{
+				"List of regular expressions.",
+				"If any expression match URL of a stream's input, only this input will be kept and all other will be " +
+				"disabled.",
+				"If list has multiple entries, only input matching first found expression will be kept.",
+			},
+			Data: yamlUtil.List{
+				Key: parse.LastPathItem(knownField, "."),
+				Values: []yamlUtil.Value{
+					{Value: `'[#&]no_sync(&|$)'`, Commented: true},
+				},
+			},
+			EndNewline: true,
+		}
+		cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.remove_duplicated_inputs_by_rx_list", true, node)
+		if err != nil {
+			return root, false, errors.Wrap(err, "Add missing field to config")
+		}
+		root.Streams.DisableAllButOneInputByRxList = defVal
 	}
 
 	// Validate amount of capture groups
@@ -1064,6 +1098,7 @@ func NewDefCfg() Root {
 			InputBlacklist:                    []regexp.Regexp(nil),
 			RemoveDuplicatedInputs:            true,
 			RemoveDuplicatedInputsByRxList:    []regexp.Regexp(nil),
+			DisableAllButOneInputByRxList:     []regexp.Regexp(nil),
 			RemoveDeadInputs:                  false,
 			DisableDeadInputs:                 false,
 			DeadInputsCheckBlacklist:          []regexp.Regexp(nil),

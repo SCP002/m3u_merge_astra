@@ -215,6 +215,16 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     > Why does it exist?  
     > To be able to remove dulticated inputs per stream by specific conditions, for example by host name.
 
+  * `disable_all_but_one_input_by_rx_list`  
+    List of regular expressions.  
+    If any expression match URL of a stream's input, only this input will be kept and all other will be disabled.  
+    If list has multiple entries, only input matching first found expression will be kept.
+    > Why does it exist?  
+    > To give an option to leave only one input in stream, if specific inputs implies so.
+    >
+    > For example, input with `#no_sync` will periodically be unavailable, causing stream to switch to another input,
+    > causing unwanted interruptions.
+
   * `remove_dead_inputs`  
     Remove inputs of astra streams which do not respond or give invalid response?  
     Supports HTTP(S), enable `use_analyzer` option for more.  
@@ -346,7 +356,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 
 ## Build from source code [Go / Golang]
 
-1. Install [Golang](https://golang.org/) 1.22 or newer.
+1. Install [Golang](https://golang.org/) 1.23 or newer.
 
 2. Download the source code:  
 

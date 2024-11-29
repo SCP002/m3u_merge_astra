@@ -42,6 +42,18 @@ func TestRemoveLast(t *testing.T) {
 	assert.Exactly(t, expected, ol2, "should remove last object for which predicate returns true")
 }
 
+func TestRemoveFirst(t *testing.T) {
+	ol1 := []string{"C", "A", "", "A", "B"}
+	ol1Original := copier.TestDeep(t, ol1)
+
+	ol2 := RemoveFirst(ol1, "A")
+	assert.NotSame(t, &ol1, &ol2, "should return copy of objects")
+	assert.Exactly(t, ol1Original, ol1, "should not modify the source")
+
+	expected := []string{"C", "", "A", "B"}
+	assert.Exactly(t, expected, ol2, "should remove first object for which predicate returns true")
+}
+
 func TestFilled(t *testing.T) {
 	assert.Exactly(t, []string{}, Filled("a", 0))
 	assert.Exactly(t, []string{"", ""}, Filled("", 2))

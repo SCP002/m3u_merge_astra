@@ -13,6 +13,7 @@ import (
 	"m3u_merge_astra/cfg"
 	"m3u_merge_astra/deps"
 	"m3u_merge_astra/util/copier"
+	"m3u_merge_astra/util/iter"
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
@@ -214,6 +215,26 @@ func (s Stream) removeDuplicatedInputsByRx(r repo, callback func(string)) Stream
 	return s
 }
 
+// disableAllButOneInputByRx returns stream with all inputs disabled except the input which matches any regular
+// expression defined in config.
+//
+// Runs <callback> for every disabled input.
+func (s Stream) disableAllButOneInputByRx(cfg cfg.Streams, callback func(string)) Stream {
+	for _, rx := range cfg.DisableAllButOneInputByRxList {
+		for _, inp := range s.Inputs {
+			if rx.MatchString(inp) {
+				inputsToDisable := slice.RemoveFirst(s.Inputs, inp)
+				iter.ForEach(inputsToDisable, callback)
+				s.DisabledInputs = append(s.DisabledInputs, inputsToDisable...)
+				s.Inputs = []string{inp}
+				return s
+			}
+		}
+	}
+
+	return s
+}
+
 // removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input
 func (s Stream) removeBlockedInputs(cfg cfg.Streams, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
@@ -341,6 +362,21 @@ func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 	for _, s := range streams {
 		out = append(out, s.removeDuplicatedInputsByRx(r, func(input string) {
 			r.log.InfoCFi("Removing duplicated input per stream by regular expressions", "ID", s.ID, "name", s.Name,
+				"group", s.FirstGroup(), "input", input)
+		}))
+	}
+
+	return
+}
+
+// DisableAllButOneInputByRx returns shallow copy of <streams> with all inputs in every stream disabled except the input
+// which matches any regular expression defined in config.
+func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
+	r.log.Info("Disabling all but one input per stream by regular expressions")
+
+	for _, s := range streams {
+		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
+			r.log.InfoCFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
 				"group", s.FirstGroup(), "input", input)
 		}))
 	}
