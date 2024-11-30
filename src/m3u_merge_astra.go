@@ -110,9 +110,6 @@ func main() {
 	if len(cfg.Streams.RemoveDuplicatedInputsByRxList) > 0 {
 		modifiedStreams = astraRepo.RemoveDuplicatedInputsByRx(modifiedStreams)
 	}
-	if len(cfg.Streams.DisableAllButOneInputByRxList) > 0 {
-		modifiedStreams = astraRepo.DisableAllButOneInputByRx(modifiedStreams)
-	}
 	if cfg.Streams.UpdateInputs {
 		modifiedStreams = mergeRepo.UpdateInputs(modifiedStreams, m3uChannels)
 	}
@@ -124,6 +121,9 @@ func main() {
 	}
 	if cfg.Streams.UniteInputs {
 		modifiedStreams = astraRepo.UniteInputs(modifiedStreams)
+	}
+	if len(cfg.Streams.DisableAllButOneInputByRxList) > 0 {
+		modifiedStreams = astraRepo.DisableAllButOneInputByRx(modifiedStreams)
 	}
 	if cfg.Streams.SortInputs {
 		modifiedStreams = astraRepo.SortInputs(modifiedStreams)

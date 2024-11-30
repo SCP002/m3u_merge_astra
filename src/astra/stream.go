@@ -369,21 +369,6 @@ func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 	return
 }
 
-// DisableAllButOneInputByRx returns shallow copy of <streams> with all inputs in every stream disabled except the input
-// which matches any regular expression defined in config.
-func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
-	r.log.Info("Disabling all but one input per stream by regular expressions")
-
-	for _, s := range streams {
-		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
-			r.log.InfoCFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
-				"group", s.FirstGroup(), "input", input)
-		}))
-	}
-
-	return
-}
-
 // UniteInputs returns deep copy of <streams> with inputs of every equally named stream moved to the first stream found.
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
@@ -410,6 +395,21 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 				out[nextIdx] = nextStream
 			}
 		})
+	}
+
+	return
+}
+
+// DisableAllButOneInputByRx returns shallow copy of <streams> with all inputs in every stream disabled except the input
+// which matches any regular expression defined in config.
+func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
+	r.log.Info("Disabling all but one input per stream by regular expressions")
+
+	for _, s := range streams {
+		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
+			r.log.InfoCFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
+				"group", s.FirstGroup(), "input", input)
+		}))
 	}
 
 	return
