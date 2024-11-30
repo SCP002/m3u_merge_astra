@@ -169,7 +169,7 @@ func main() {
 	// Sending changes to astra
 	sendChangesAllowed := true
 	if !flags.Noninteractive {
-		sendChangesAllowed = input.AskYesNo(log, os.Stdin, "Send changes to astra (Y/N)?")
+		sendChangesAllowed = input.AskYesNo(log, os.Stdin, "Send changes to astra (Y/N)? ")
 	}
 	if sendChangesAllowed {
 		apiHandler.SetCategories(changedCatMap)
