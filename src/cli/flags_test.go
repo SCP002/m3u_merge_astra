@@ -38,10 +38,11 @@ func TestParse(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 	assert.Exactly(t, logrus.Level(999), flags.LogLevel, "flag should have this value")
 
-	os.Args = []string{"", "--programCfgPath=/cfg/path", "--m3uPath=/m3u/path", "--astraAddr=http://127.0.0.1:8005",
-		"--astraUser=admin", "--astraPwd=admin"}
+	os.Args = []string{"", "--noninteractive", "--programCfgPath=/cfg/path", "--m3uPath=/m3u/path",
+		"--astraAddr=http://127.0.0.1:8005", "--astraUser=admin", "--astraPwd=admin"}
 	flags, err = Parse()
 	assert.NoError(t, err, "should not return error")
+	assert.True(t, flags.Noninteractive, "flag should have this value")
 	assert.Exactly(t, logrus.InfoLevel, flags.LogLevel, "flag should have this value")
 	assert.Exactly(t, "/cfg/path", flags.ProgramCfgPath, "flag should have this value")
 	assert.Exactly(t, "/m3u/path", flags.M3UPath, "flag should have this value")

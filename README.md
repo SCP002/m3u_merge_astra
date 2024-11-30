@@ -19,6 +19,7 @@ defined in `--programCfgPath` and sends requests to astra to modify config.
 | -------------------- | ----------------------------------------------------------------------------------------------- |
 | -v, --version        | Print the program version                                                                       |
 | -h, --help           | Print help message                                                                              |
+| -n, --noninteractive | Do not ask user for input (confirmations etc.)                                                  |
 | -l, --logLevel       | Logging level. Can be from `0` (least verbose) to `6` (most verbose) [default: `4`]             |
 | -c, --programCfgPath | Program config file path to read from or initialize a default [default: `m3u_merge_astra.yaml`] |
 | -m, --m3uPath        | M3U file path to get channels from. Can be a local file or URL                                  |

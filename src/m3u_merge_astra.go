@@ -12,6 +12,7 @@ import (
 	"m3u_merge_astra/m3u"
 	"m3u_merge_astra/merge"
 	"m3u_merge_astra/util/copier"
+	"m3u_merge_astra/util/input"
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
@@ -166,6 +167,12 @@ func main() {
 	changedStreams := astraRepo.ChangedStreams(astraCfg.Streams, modifiedStreams)
 
 	// Sending changes to astra
-	apiHandler.SetCategories(changedCatMap)
-	apiHandler.SetStreams(changedStreams)
+	sendChangesAllowed := true
+	if !flags.Noninteractive {
+		sendChangesAllowed = input.AskYesNo(log, os.Stdin, "Send changes to astra (Y/N)?")
+	}
+	if sendChangesAllowed {
+		apiHandler.SetCategories(changedCatMap)
+		apiHandler.SetStreams(changedStreams)
+	}
 }

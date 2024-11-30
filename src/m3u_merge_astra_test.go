@@ -80,7 +80,7 @@ func TestMain(t *testing.T) {
 	})
 
 	// Run program
-	os.Args = []string{"", "-l", "6", "-c", programCfgPath, "-m", m3uPath, "-u", "admin", "-p", "admin"}
+	os.Args = []string{"", "-n", "-l", "6", "-c", programCfgPath, "-m", m3uPath, "-u", "admin", "-p", "admin"}
 	main()
 
 	// Read modified config
