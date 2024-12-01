@@ -141,12 +141,12 @@ func main() {
 		cfg.Streams.InputToInputHashMap) {
 		modifiedStreams = astraRepo.AddHashes(modifiedStreams)
 	}
+	if len(cfg.Streams.DisableAllButOneInputByRxList) > 0 {
+		modifiedStreams = astraRepo.DisableAllButOneInputByRx(modifiedStreams)
+	}
 	if !slice.IsAllEmpty(cfg.Streams.NameToKeepActiveMap, cfg.Streams.GroupToKeepActiveMap,
 		cfg.Streams.InputToKeepActiveMap) {
 		modifiedStreams = astraRepo.SetKeepActive(modifiedStreams)
-	}
-	if len(cfg.Streams.DisableAllButOneInputByRxList) > 0 {
-		modifiedStreams = astraRepo.DisableAllButOneInputByRx(modifiedStreams)
 	}
 	if cfg.Streams.RemoveWithoutInputs {
 		modifiedStreams = astraRepo.RemoveWithoutInputs(modifiedStreams)
