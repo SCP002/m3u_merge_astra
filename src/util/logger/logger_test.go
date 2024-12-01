@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"io"
+	"path/filepath"
 	"regexp"
 	"testing"
 
@@ -61,7 +63,7 @@ func TestDebug(t *testing.T) {
 
 		log.Debug("message")
 	})
-	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebug.func1; L62): message`)
+	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebug.func1; L64): message`)
 }
 
 func TestDebugf(t *testing.T) {
@@ -70,7 +72,7 @@ func TestDebugf(t *testing.T) {
 
 		log.Debugf("_%v_", "message")
 	})
-	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebugf.func1; L71): _message_`)
+	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebugf.func1; L73): _message_`)
 }
 
 func TestDebugCFi(t *testing.T) {
@@ -79,8 +81,44 @@ func TestDebugCFi(t *testing.T) {
 
 		log.DebugCFi("message", "field 1", "value 1", "field 2", 10)
 	})
-	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L80): message: field 1 "value 1", field 2 "10"`
+	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L82): message: field 1 "value 1", field 2 "10"`
 	assert.Contains(t, out, msg)
+}
+
+func TestAddFileHook(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "test.log")
+
+	log := New(logrus.DebugLevel)
+	file, err := log.AddFileHook("")
+	assert.NoError(t, err, "should not return error for empty file path")
+	assert.Nil(t, file, "should return nil file for empty file path")
+
+	file, err = log.AddFileHook(path)
+	assert.NoError(t, err, "should not return error")
+	assert.NotNil(t, file, "should create object")
+	defer file.Close()
+	assert.FileExists(t, path, "should create log file at given path")
+}
+
+func TestFileHookLevels(t *testing.T) {
+	assert.Exactly(t, logrus.AllLevels, fileHook{}.Levels())
+}
+
+func TestFileHookFire(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "test.log")
+
+	log := New(logrus.DebugLevel)
+	file, err := log.AddFileHook(path)
+	assert.NoError(t, err, "should not return error")
+	assert.NotNil(t, file, "should create file object")
+	defer file.Close()
+	assert.FileExists(t, path, "should create log file at given path")
+
+	log.WithFields(logrus.Fields{"a": "b", "c": "d"}).Info("message")
+
+	content, err := io.ReadAll(file)
+	assert.NoError(t, err, "should not return error")
+	assert.Regexp(t, regexp.MustCompile(".*"), content, "log file contents should match this regexp")
 }
 
 func TestBuildFields(t *testing.T) {
@@ -95,5 +133,5 @@ func TestBuildFields(t *testing.T) {
 }
 
 func TestGetCallerInfo(t *testing.T) {
-	assert.Exactly(t, `m3u_merge_astra/util/logger.TestGetCallerInfo; L98`, getCallerInfo(1))
+	assert.Exactly(t, `m3u_merge_astra/util/logger.TestGetCallerInfo; L136`, getCallerInfo(1))
 }

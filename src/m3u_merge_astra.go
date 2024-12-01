@@ -41,8 +41,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Set log level
+	// Setup logger
 	log.SetLevel(flags.LogLevel)
+	logFile, err := log.AddFileHook(flags.LogFile)
+	if err == nil {
+		defer logFile.Close()
+	} else {
+		log.Error(err)
+	}
 
 	// Register SIGINT and SIGTERM event handler
 	sigint.Listen(func() {

@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
@@ -73,6 +75,49 @@ func (l Logger) DebugCFi(msg string, fields ...any) {
 	msgWithCaller := fmt.Sprintf(`(%v): %v`, getCallerInfo(2), msg)
 
 	l.Logger.Debugf("%v: %v", msgWithCaller, buildFields(fields))
+}
+
+// AddFileHook creates log file at <filePath> and adds file hook to logrus.
+//
+// If <filePath> is empty string, it does nothing and returns nil error.
+func (l Logger) AddFileHook(filePath string) (*os.File, error) {
+	if filePath == "" {
+		return nil, nil
+	}
+
+	logFile, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, errors.Wrap(err, "Open or create log file")
+	}
+	l.AddHook(fileHook{file: logFile})
+
+	return logFile, nil
+}
+
+// fileHook represents logrus file hook
+type fileHook struct {
+	file *os.File
+}
+
+// Levels returns which levels to fire the hook at.
+//
+// Used to implement logrus Hook interface.
+func (h fileHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
+
+// Fire is executed when the hook runs, writing formatted <entry> to file.
+//
+// Used to implement logrus Hook interface.
+func (h fileHook) Fire(entry *logrus.Entry) error {
+	time := entry.Time.Format("2006.01.02 15:04:05")
+	level := strings.ToUpper(entry.Level.String())
+	fields := lo.MapToSlice(entry.Data, func(key string, val any) string {
+		return fmt.Sprintf("%v=%v,", key, val)
+	})
+	msg := fmt.Sprintf("%s %s %s: %+v\n", time, level, entry.Message, fields)
+	_, err := h.file.WriteString(msg)
+	return err
 }
 
 // buildFields returns comma separated <fields> with every second field quoted and colored
