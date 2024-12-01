@@ -175,4 +175,6 @@ func main() {
 		apiHandler.SetCategories(changedCatMap)
 		apiHandler.SetStreams(changedStreams)
 	}
+
+	log.Info("Done")
 }
