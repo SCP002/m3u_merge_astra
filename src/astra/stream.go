@@ -424,21 +424,6 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// DisableAllButOneInputByRx returns shallow copy of <streams> with all inputs in every stream disabled except the input
-// which matches any regular expression defined in config.
-func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
-	r.log.Info("Disabling all but one input per stream by regular expressions")
-
-	for _, s := range streams {
-		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
-			r.log.InfoCFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
-				"group", s.FirstGroup(), "input", input)
-		}))
-	}
-
-	return
-}
-
 // RemoveDeadInputs returns deep copy of <streams> without dead inputs.
 //
 // For detailed description, see removeDeadInputs method.
@@ -557,6 +542,21 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 		}
 	Append:
 		out = append(out, s)
+	}
+
+	return
+}
+
+// DisableAllButOneInputByRx returns shallow copy of <streams> with all inputs in every stream disabled except the input
+// which matches any regular expression defined in config.
+func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
+	r.log.Info("Disabling all but one input per stream by regular expressions")
+
+	for _, s := range streams {
+		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
+			r.log.InfoCFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
+				"group", s.FirstGroup(), "input", input)
+		}))
 	}
 
 	return

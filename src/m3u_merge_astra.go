@@ -128,9 +128,6 @@ func main() {
 	if cfg.Streams.AddNew {
 		modifiedStreams = mergeRepo.AddNewStreams(modifiedStreams, m3uChannels)
 	}
-	if len(cfg.Streams.DisableAllButOneInputByRxList) > 0 {
-		modifiedStreams = astraRepo.DisableAllButOneInputByRx(modifiedStreams)
-	}
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)
 		analyzer := analyzer.New(log, cfg.Streams.AnalyzerAddr, cfg.Streams.InputRespTimeout)
@@ -147,6 +144,9 @@ func main() {
 	if !slice.IsAllEmpty(cfg.Streams.NameToKeepActiveMap, cfg.Streams.GroupToKeepActiveMap,
 		cfg.Streams.InputToKeepActiveMap) {
 		modifiedStreams = astraRepo.SetKeepActive(modifiedStreams)
+	}
+	if len(cfg.Streams.DisableAllButOneInputByRxList) > 0 {
+		modifiedStreams = astraRepo.DisableAllButOneInputByRx(modifiedStreams)
 	}
 	if cfg.Streams.RemoveWithoutInputs {
 		modifiedStreams = astraRepo.RemoveWithoutInputs(modifiedStreams)
