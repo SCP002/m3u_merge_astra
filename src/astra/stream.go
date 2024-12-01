@@ -400,21 +400,6 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// DisableAllButOneInputByRx returns shallow copy of <streams> with all inputs in every stream disabled except the input
-// which matches any regular expression defined in config.
-func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
-	r.log.Info("Disabling all but one input per stream by regular expressions")
-
-	for _, s := range streams {
-		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
-			r.log.InfoCFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
-				"group", s.FirstGroup(), "input", input)
-		}))
-	}
-
-	return
-}
-
 // SortInputs returns deep copy of <streams> with all inputs sorted by InputWeightToTypeMap in config
 func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Sorting inputs of streams")
@@ -434,6 +419,21 @@ func (r repo) SortInputs(streams []Stream) (out []Stream) {
 
 			return leftInpWeight < rightInpWeight
 		})
+	}
+
+	return
+}
+
+// DisableAllButOneInputByRx returns shallow copy of <streams> with all inputs in every stream disabled except the input
+// which matches any regular expression defined in config.
+func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
+	r.log.Info("Disabling all but one input per stream by regular expressions")
+
+	for _, s := range streams {
+		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
+			r.log.InfoCFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
+				"group", s.FirstGroup(), "input", input)
+		}))
 	}
 
 	return

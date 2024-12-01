@@ -122,14 +122,14 @@ func main() {
 	if cfg.Streams.UniteInputs {
 		modifiedStreams = astraRepo.UniteInputs(modifiedStreams)
 	}
-	if len(cfg.Streams.DisableAllButOneInputByRxList) > 0 {
-		modifiedStreams = astraRepo.DisableAllButOneInputByRx(modifiedStreams)
-	}
 	if cfg.Streams.SortInputs {
 		modifiedStreams = astraRepo.SortInputs(modifiedStreams)
 	}
 	if cfg.Streams.AddNew {
 		modifiedStreams = mergeRepo.AddNewStreams(modifiedStreams, m3uChannels)
+	}
+	if len(cfg.Streams.DisableAllButOneInputByRxList) > 0 {
+		modifiedStreams = astraRepo.DisableAllButOneInputByRx(modifiedStreams)
 	}
 	if cfg.Streams.RemoveDeadInputs {
 		httpClient := network.NewHttpClient(cfg.Streams.InputRespTimeout)

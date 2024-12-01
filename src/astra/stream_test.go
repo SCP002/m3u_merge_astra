@@ -853,6 +853,73 @@ func TestUniteInputs(t *testing.T) {
 		`ID "0", name "Name 1"`)
 }
 
+func TestSortInputs(t *testing.T) {
+	r := newDefRepo()
+
+	// Multiple entries
+	r.cfg.Streams.UnknownInputWeight = 25
+	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{
+		20: *regexp.MustCompile(`input/20`),
+		30: *regexp.MustCompile(`input/30`),
+	}
+	sl1 := []Stream{
+		{Inputs: []string{"http://other/a", "http://other/b", "http://input/30", "http://input/20"}},
+		{},
+		{Inputs: []string{"http://other/c", "http://other/d"}},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := r.SortInputs(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	expected := []string{"http://input/20", "http://other/a", "http://other/b", "http://input/30"}
+	assert.Exactly(t, expected, sl2[0].Inputs, "inputs should have this order")
+
+	assert.Exactly(t, sl1[1], sl2[1], "should not modify streams without inputs")
+
+	assert.Exactly(t, sl1[2], sl2[2], "should not modify streams with unknown inputs")
+
+	// One entry
+	r.cfg.Streams.UnknownInputWeight = 30
+	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{
+		20: *regexp.MustCompile(`input/20`),
+	}
+	sl1 = []Stream{
+		{Inputs: []string{"http://other/a", "http://other/b", "http://other/c", "http://input/20"}},
+		{Inputs: []string{"http://other/d", "http://other/e"}},
+	}
+	sl1Original = copier.TestDeep(t, sl1)
+
+	sl2 = r.SortInputs(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	expected = []string{"http://input/20", "http://other/a", "http://other/b", "http://other/c"}
+	assert.Exactly(t, expected, sl2[0].Inputs, "inputs should have this order")
+
+	assert.Exactly(t, sl1[1], sl2[1], "should not modify streams with unknown inputs")
+
+	// Empty map
+	r.cfg.Streams.UnknownInputWeight = 50
+	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{}
+	sl1 = []Stream{
+		{Inputs: []string{"http://other/d", "http://other/c", "http://other/b", "http://other/a"}},
+		{Inputs: []string{"http://other/f", "http://other/e"}},
+	}
+	sl1Original = copier.TestDeep(t, sl1)
+
+	sl2 = r.SortInputs(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Exactly(t, sl1, sl2, "should stay the same")
+}
+
 func TestAllDisableAllButOneInputByRx(t *testing.T) {
 	r := newDefRepo()
 
@@ -928,73 +995,6 @@ func TestAllDisableAllButOneInputByRx(t *testing.T) {
 	})
 	assert.Contains(t, out, `Disabling other input per stream by regular expressions: ID "0", name "Name 1", `+
 		`group "Cat: Grp", input "http://input/1#abc"`)
-}
-
-func TestSortInputs(t *testing.T) {
-	r := newDefRepo()
-
-	// Multiple entries
-	r.cfg.Streams.UnknownInputWeight = 25
-	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{
-		20: *regexp.MustCompile(`input/20`),
-		30: *regexp.MustCompile(`input/30`),
-	}
-	sl1 := []Stream{
-		{Inputs: []string{"http://other/a", "http://other/b", "http://input/30", "http://input/20"}},
-		{},
-		{Inputs: []string{"http://other/c", "http://other/d"}},
-	}
-	sl1Original := copier.TestDeep(t, sl1)
-
-	sl2 := r.SortInputs(sl1)
-	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
-	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
-
-	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
-
-	expected := []string{"http://input/20", "http://other/a", "http://other/b", "http://input/30"}
-	assert.Exactly(t, expected, sl2[0].Inputs, "inputs should have this order")
-
-	assert.Exactly(t, sl1[1], sl2[1], "should not modify streams without inputs")
-
-	assert.Exactly(t, sl1[2], sl2[2], "should not modify streams with unknown inputs")
-
-	// One entry
-	r.cfg.Streams.UnknownInputWeight = 30
-	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{
-		20: *regexp.MustCompile(`input/20`),
-	}
-	sl1 = []Stream{
-		{Inputs: []string{"http://other/a", "http://other/b", "http://other/c", "http://input/20"}},
-		{Inputs: []string{"http://other/d", "http://other/e"}},
-	}
-	sl1Original = copier.TestDeep(t, sl1)
-
-	sl2 = r.SortInputs(sl1)
-	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
-	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
-
-	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
-
-	expected = []string{"http://input/20", "http://other/a", "http://other/b", "http://other/c"}
-	assert.Exactly(t, expected, sl2[0].Inputs, "inputs should have this order")
-
-	assert.Exactly(t, sl1[1], sl2[1], "should not modify streams with unknown inputs")
-
-	// Empty map
-	r.cfg.Streams.UnknownInputWeight = 50
-	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{}
-	sl1 = []Stream{
-		{Inputs: []string{"http://other/d", "http://other/c", "http://other/b", "http://other/a"}},
-		{Inputs: []string{"http://other/f", "http://other/e"}},
-	}
-	sl1Original = copier.TestDeep(t, sl1)
-
-	sl2 = r.SortInputs(sl1)
-	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
-	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
-
-	assert.Exactly(t, sl1, sl2, "should stay the same")
 }
 
 func TestRemoveDeadInputs(t *testing.T) {
