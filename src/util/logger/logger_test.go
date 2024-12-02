@@ -1,7 +1,8 @@
 package logger
 
 import (
-	"io"
+	"bufio"
+	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
@@ -111,14 +112,27 @@ func TestFileHookFire(t *testing.T) {
 	file, err := log.AddFileHook(path)
 	assert.NoError(t, err, "should not return error")
 	assert.NotNil(t, file, "should create file object")
-	defer file.Close()
 	assert.FileExists(t, path, "should create log file at given path")
 
-	log.WithFields(logrus.Fields{"a": "b", "c": "d"}).Info("message")
+	log.WithFields(logrus.Fields{"a": "b", "c": "d"}).Info("message 1")
+	log.InfoCFi("message 2", "e", "f", "g", "h")
 
-	content, err := io.ReadAll(file)
+	// file.Sync() does not help, content is empty, closing and opening the file again
+	file.Close()
+	file, err = os.Open(path)
 	assert.NoError(t, err, "should not return error")
-	assert.Regexp(t, regexp.MustCompile(".*"), content, "log file contents should match this regexp")
+	defer file.Close()
+	reader := bufio.NewReader(file)
+
+	line, err := reader.ReadString('\n')
+	assert.NoError(t, err, "should not return error")
+	rx := regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} INFO message 1: a=b, c=d, \n$`)
+	assert.Regexp(t, rx, line, "first line in log file should match this regexp")
+
+	line, err = reader.ReadString('\n')
+	assert.NoError(t, err, "should not return error")
+	rx = regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} INFO message 2: e "f", g "h"\n$`)
+	assert.Regexp(t, rx, line, "second line in log file should match this regexp")
 }
 
 func TestBuildFields(t *testing.T) {

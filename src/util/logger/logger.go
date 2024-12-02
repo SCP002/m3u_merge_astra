@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -112,10 +113,18 @@ func (h fileHook) Levels() []logrus.Level {
 func (h fileHook) Fire(entry *logrus.Entry) error {
 	time := entry.Time.Format("2006.01.02 15:04:05")
 	level := strings.ToUpper(entry.Level.String())
-	fields := lo.MapToSlice(entry.Data, func(key string, val any) string {
-		return fmt.Sprintf("%v=%v,", key, val)
-	})
-	msg := fmt.Sprintf("%s %s %s: %+v\n", time, level, entry.Message, fields)
+	msg := fmt.Sprintf("%s %s %s", time, level, entry.Message)
+	if len(entry.Data) > 0 {
+		var sb strings.Builder
+		keys := lo.Keys(entry.Data)
+		slices.Sort(keys)
+		for _, key := range keys {
+			val := entry.Data[key]
+			sb.WriteString(fmt.Sprintf("%s=%+v, ", key, val))
+		}
+		msg = fmt.Sprintf("%s: %+v", msg, sb.String())
+	}
+	msg += "\n"
 	_, err := h.file.WriteString(msg)
 	return err
 }
