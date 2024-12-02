@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
@@ -113,7 +114,16 @@ func (h fileHook) Levels() []logrus.Level {
 func (h fileHook) Fire(entry *logrus.Entry) error {
 	time := entry.Time.Format("2006.01.02 15:04:05")
 	level := strings.ToUpper(entry.Level.String())
-	msg := fmt.Sprintf("%s %s %s", time, level, entry.Message)
+
+	// Start building message and remove non-printable characters from it to cleanup after InfoCFi etc. calls
+	msg := fmt.Sprintf("%s %s %s", time, level, strings.Map(func(r rune) rune {
+		if unicode.IsGraphic(r) {
+			return r
+		}
+		return -1
+	}, entry.Message))
+
+	// Format and add fields
 	if len(entry.Data) > 0 {
 		var sb strings.Builder
 		keys := lo.Keys(entry.Data)
@@ -123,10 +133,10 @@ func (h fileHook) Fire(entry *logrus.Entry) error {
 			sb.WriteString(fmt.Sprintf("%s=%+v, ", key, val))
 		}
 		msg = fmt.Sprintf("%s: %+v", msg, sb.String())
+		msg = strings.TrimRight(msg, ", ")
 	}
-	msg = strings.Trim(msg, ", ")
-	msg += "\n"
-	_, err := h.file.WriteString(msg)
+
+	_, err := h.file.WriteString(msg + "\n")
 	return err
 }
 
