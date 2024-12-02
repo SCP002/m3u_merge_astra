@@ -56,6 +56,9 @@ func main() {
 		os.Exit(0)
 	})
 
+	log.InfoCFi("Running with", "program config path", flags.ProgramCfgPath, "M3U path", flags.M3UPath, "Astra address",
+		flags.AstraAddr)
+
 	// Read program config
 	cfg, isNewCfg, err := cfg.Init(log, flags.ProgramCfgPath)
 	if err != nil {
