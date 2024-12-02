@@ -11,15 +11,17 @@ import (
 
 func TestParse(t *testing.T) {
 	os.Args = []string{""}
-	_, err := Parse()
+	flags, err := Parse()
 	assert.NoError(t, err, "should not return error")
+	assert.False(t, flags.Noninteractive, "noninteracive flag should be false if not specified")
+	assert.Empty(t, flags.LogFile, "logFile flag should be empty if not specified")
 
 	os.Args = []string{"", "--help"}
 	_, err = Parse()
 	assert.True(t, IsErrOfType(err, goFlags.ErrHelp), "should return help error")
 
 	os.Args = []string{"", "--version"}
-	flags, err := Parse()
+	flags, err = Parse()
 	assert.NoError(t, err, "should not return error")
 	assert.True(t, flags.Version, "flag should be specified")
 
