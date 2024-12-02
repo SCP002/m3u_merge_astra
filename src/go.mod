@@ -4,6 +4,7 @@ go 1.23
 
 require (
 	github.com/SCP002/jsonexraw v0.1.0
+	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/adampresley/sigint v0.0.0-20150906022118-7e8d2ad16a94
 	github.com/alitto/pond v1.9.2
 	github.com/cockroachdb/errors v1.11.3

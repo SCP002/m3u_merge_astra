@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 	"time"
-	"unicode"
 
+	"github.com/acarl005/stripansi"
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
 	"github.com/samber/lo"
@@ -115,13 +115,8 @@ func (h fileHook) Fire(entry *logrus.Entry) error {
 	time := entry.Time.Format("2006.01.02 15:04:05")
 	level := strings.ToUpper(entry.Level.String())
 
-	// Start building message and remove non-printable characters from it to cleanup after InfoCFi etc. calls
-	msg := fmt.Sprintf("%s %s %s", time, level, strings.Map(func(r rune) rune {
-		if unicode.IsGraphic(r) {
-			return r
-		}
-		return -1
-	}, entry.Message))
+	// Start building message and remove ANSI escape codes from it to cleanup after InfoCFi etc. calls
+	msg := fmt.Sprintf("%s %s %s", time, level, stripansi.Strip(entry.Message))
 
 	// Format and add fields
 	if len(entry.Data) > 0 {

@@ -3,6 +3,8 @@ cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/SCP002/jsonexraw v0.1.0 h1:IHUn+G3C1KWzwMBl9R/3Nix3JT2Ekkp7alWvFAAC8/c=
 github.com/SCP002/jsonexraw v0.1.0/go.mod h1:Yt7yAKAsPZH9ZxSy3Gbcryz312Az6qnl2x7qhWInmck=
+github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpHMqeKTCYkitsPqHNxTmd4SNR5r94FGM8=
+github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
 github.com/adampresley/sigint v0.0.0-20150906022118-7e8d2ad16a94 h1:+ZZxOAOgtc5xZjeh4bt2JDKqYH5r91h8dVXF1KZabsU=
 github.com/adampresley/sigint v0.0.0-20150906022118-7e8d2ad16a94/go.mod h1:Z78z6BReSpl2eqVy/IxspW8YxnSkIcK3hXoxhiaaGZ8=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
