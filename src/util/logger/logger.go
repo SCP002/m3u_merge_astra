@@ -124,6 +124,7 @@ func (h fileHook) Fire(entry *logrus.Entry) error {
 		}
 		msg = fmt.Sprintf("%s: %+v", msg, sb.String())
 	}
+	msg = strings.Trim(msg, ", ")
 	msg += "\n"
 	_, err := h.file.WriteString(msg)
 	return err

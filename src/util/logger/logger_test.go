@@ -126,7 +126,7 @@ func TestFileHookFire(t *testing.T) {
 
 	line, err := reader.ReadString('\n')
 	assert.NoError(t, err, "should not return error")
-	rx := regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} INFO message 1: a=b, c=d, \n$`)
+	rx := regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} INFO message 1: a=b, c=d\n$`)
 	assert.Regexp(t, rx, line, "first line in log file should match this regexp")
 
 	line, err = reader.ReadString('\n')
