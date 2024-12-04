@@ -2,120 +2,55 @@ package logger
 
 import (
 	"bufio"
+	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	pLogger "github.com/phuslu/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/zenizh/go-capturer"
 )
 
 func TestNew(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(logrus.DebugLevel)
-		log.Trace("message")
-		log.Debug("message")
-		log.Info("message")
-		log.Warning("message")
-		log.Error("message")
-		assert.Panics(t, func() { log.Panic("message") }, "should panic")
+		log := New(pLogger.DebugLevel)
+		log.Trace().Caller(1).Msg("message")
+		log.Debug().Caller(1).Msg("message")
+		log.Debug().Caller(1).Str("k", "v").Msg("message")
+		log.Info().Str("k", "v").Msg("message")
+		log.Warn().Msg("message")
+		log.Error().Msg("message")
+		assert.Panics(t, func() { log.Panic().Msg("message") }, "should panic")
 	})
 	msg := "should not print trace messages with debug level logger"
-	assert.NotRegexp(t, regexp.MustCompile(`\[.*\] TRACE message`), out, msg)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\] DEBUG \(.*TestNew.*\): message`), out)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\]  INFO message`), out)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\]  WARN message`), out)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\] ERROR message`), out)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\] PANIC message`), out)
+	timeRx := `[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}`
+	assert.NotRegexp(t, regexp.MustCompile(timeRx + `TRACE \[logger\/logger_test\.go:20\] message`), out, msg)
+	assert.Regexp(t, regexp.MustCompile(timeRx + ` DEBUG \[logger\/logger_test\.go:21\] message`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx + ` DEBUG \[logger\/logger_test\.go:22\] message: k "v"`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx + ` INFO message: k "v"`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx + ` WARN message`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx + ` ERROR message`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx + ` PANIC message`), out)
 }
 
-func TestInfoCFi(t *testing.T) {
-	out := capturer.CaptureStderr(func() {
-		log := New(logrus.InfoLevel)
-
-		log.InfoCFi("message", "field 1", "value 1", "field 2", 10)
-	})
-	assert.Contains(t, out, `INFO message: field 1 "value 1", field 2 "10"`)
-}
-
-func TestWarnCFi(t *testing.T) {
-	out := capturer.CaptureStderr(func() {
-		log := New(logrus.WarnLevel)
-
-		log.WarnCFi("message", "field 1", "value 1", "field 2", 10)
-	})
-	assert.Contains(t, out, `WARN message: field 1 "value 1", field 2 "10"`)
-}
-
-func TestErrorCFi(t *testing.T) {
-	out := capturer.CaptureStderr(func() {
-		log := New(logrus.ErrorLevel)
-
-		log.ErrorCFi("message", "field 1", "value 1", "field 2", 10)
-	})
-	assert.Contains(t, out, `ERROR message: field 1 "value 1", field 2 "10"`)
-}
-
-func TestDebug(t *testing.T) {
-	out := capturer.CaptureStderr(func() {
-		log := New(logrus.DebugLevel)
-
-		log.Debug("message")
-	})
-	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebug.func1; L65): message`)
-}
-
-func TestDebugf(t *testing.T) {
-	out := capturer.CaptureStderr(func() {
-		log := New(logrus.DebugLevel)
-
-		log.Debugf("_%v_", "message")
-	})
-	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebugf.func1; L74): _message_`)
-}
-
-func TestDebugCFi(t *testing.T) {
-	out := capturer.CaptureStderr(func() {
-		log := New(logrus.DebugLevel)
-
-		log.DebugCFi("message", "field 1", "value 1", "field 2", 10)
-	})
-	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L83): message: field 1 "value 1", field 2 "10"`
-	assert.Contains(t, out, msg)
-}
-
-func TestAddFileHook(t *testing.T) {
+func TestAddFileWriter(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "test.log")
 
-	log := New(logrus.DebugLevel)
-	file, err := log.AddFileHook("")
+	log := New(pLogger.DebugLevel)
+	file, err := log.AddFileWriter("")
 	assert.NoError(t, err, "should not return error for empty file path")
 	assert.Nil(t, file, "should return nil file for empty file path")
 
-	file, err = log.AddFileHook(path)
+	file, err = log.AddFileWriter(path)
 	assert.NoError(t, err, "should not return error")
 	assert.NotNil(t, file, "should create object")
-	defer file.Close()
-	assert.FileExists(t, path, "should create log file at given path")
-}
-
-func TestFileHookLevels(t *testing.T) {
-	assert.Exactly(t, logrus.AllLevels, fileHook{}.Levels())
-}
-
-func TestFileHookFire(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "test.log")
-
-	log := New(logrus.DebugLevel)
-	file, err := log.AddFileHook(path)
-	assert.NoError(t, err, "should not return error")
-	assert.NotNil(t, file, "should create file object")
 	assert.FileExists(t, path, "should create log file at given path")
 
-	log.WithFields(logrus.Fields{"a": "b", "c": "d"}).Info("message 1")
-	log.InfoCFi("message 2", "e", "f", "g", "h")
+	log.Info().Str("field1", "value 1").Str("field2", "value 2").Msg("message 1")
+	log.Warn().Str("field1", "value 3").Str("field2", "value 4").Msg("message 2")
 
 	// file.Sync() does not help, content is empty, closing and opening the file again
 	file.Close()
@@ -124,28 +59,40 @@ func TestFileHookFire(t *testing.T) {
 	defer file.Close()
 	reader := bufio.NewReader(file)
 
-	line, err := reader.ReadString('\n')
-	assert.NoError(t, err, "should not return error")
-	rx := regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} INFO message 1: a=b, c=d\n$`)
-	assert.Regexp(t, rx, line, "first line in log file should match this regexp")
+	type logEntry struct {
+		Time    string `json:"time"`
+		Level   string `json:"level"`
+		Field1  string `json:"field1"`
+		Field2  string `json:"field2"`
+		Message string `json:"message"`
+	}
 
-	line, err = reader.ReadString('\n')
+	var entry logEntry
+	timeRx := regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}\+[0-9]{2}:[0-9]{2}$`)
+
+	line, err := reader.ReadBytes('\n')
 	assert.NoError(t, err, "should not return error")
-	rx = regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} INFO message 2: e "f", g "h"\n$`)
-	assert.Regexp(t, rx, line, "second line in log file should match this regexp")
+	err = json.Unmarshal(line, &entry)
+	assert.NoError(t, err, "should not return error")
+	assert.Regexp(t, timeRx, entry.Time, "time in entry must match regexp format")
+	assert.Exactly(t, "info", entry.Level, "log severity must be that level")
+	assert.Exactly(t, "value 1", entry.Field1, "field should have this value")
+	assert.Exactly(t, "value 2", entry.Field2, "field should have this value")
+	assert.Exactly(t, "message 1", entry.Message, "should be that entry message")
+
+	line, err = reader.ReadBytes('\n')
+	assert.NoError(t, err, "should not return error")
+	err = json.Unmarshal(line, &entry)
+	assert.NoError(t, err, "should not return error")
+	assert.Regexp(t, timeRx, entry.Time, "time in entry must match regexp format")
+	assert.Exactly(t, "warn", entry.Level, "log severity must be that level")
+	assert.Exactly(t, "value 3", entry.Field1, "field should have this value")
+	assert.Exactly(t, "value 4", entry.Field2, "field should have this value")
+	assert.Exactly(t, "message 2", entry.Message, "should be that entry message")
 }
 
-func TestBuildFields(t *testing.T) {
-	assert.Exactly(t, ``, buildFields([]any{}))
-	assert.Exactly(t, ``, buildFields([]any{""}))
-	assert.Exactly(t, `a`, buildFields([]any{"a"}))
-	assert.Exactly(t, `a ""`, buildFields([]any{"a", ""}))
-	assert.Exactly(t, `"10"`, buildFields([]any{"", 10}))
-	assert.Exactly(t, `"10", b ""`, buildFields([]any{"", 10, "b", ""}))
-	assert.Exactly(t, `a "10"`, buildFields([]any{"a", 10}))
-	assert.Exactly(t, `a "10", b "c"`, buildFields([]any{"a", 10, "b", "c"}))
-}
-
-func TestGetCallerInfo(t *testing.T) {
-	assert.Exactly(t, `m3u_merge_astra/util/logger.TestGetCallerInfo; L150`, getCallerInfo(1))
+func TestNewConsoleFormatter(t *testing.T) {
+	// Tested in TestNew
+	var formatter func(io.Writer, *pLogger.FormatterArgs) (int, error)
+	assert.IsType(t, formatter, newConsoleFormatter(false, ""), "formatter function should have this definition")
 }
