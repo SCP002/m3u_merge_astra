@@ -20,7 +20,7 @@ defined in `--programCfgPath` and sends requests to astra to modify config.
 | -v, --version        | Print the program version                                                                       |
 | -h, --help           | Print help message                                                                              |
 | -n, --noninteractive | Do not ask user for input (confirmations etc.)                                                  |
-| -l, --logLevel       | Logging level. Can be from `0` (least verbose) to `6` (most verbose) [default: `4`]             |
+| -l, --logLevel       | Logging level. Can be from `1` (most verbose) to `7` (least verbose) [default: `3`]             |
 | -f, --logFile        | Log file. If set, mirror log to a file at the specified path                                    |
 | -c, --programCfgPath | Program config file path to read from or initialize a default [default: `m3u_merge_astra.yaml`] |
 | -m, --m3uPath        | M3U file path to get channels from. Can be a local file or URL                                  |
