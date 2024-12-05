@@ -53,8 +53,8 @@ func New(lvl pLog.Level) *Logger {
 }
 
 // Trace prints trace level <msg> with caller
-func (l Logger) Trace(msg string) {
-	l.Logger.Trace().Caller(2).Msg(msg)
+func (l Logger) Trace(msg any) {
+	l.Logger.Trace().Caller(2).Msg(fmt.Sprint(msg))
 }
 
 // Tracef prints trace level message from <args> in given <format>
@@ -68,8 +68,8 @@ func (l Logger) TraceFi(msg string, fields ...any) {
 }
 
 // Debug prints debug level <msg> with caller
-func (l Logger) Debug(msg string) {
-	l.Logger.Debug().Caller(2).Msg(msg)
+func (l Logger) Debug(msg any) {
+	l.Logger.Debug().Caller(2).Msg(fmt.Sprint(msg))
 }
 
 // Debugf prints debug level message from <args> in given <format>
@@ -83,8 +83,8 @@ func (l Logger) DebugFi(msg string, fields ...any) {
 }
 
 // Info prints info level <msg>
-func (l Logger) Info(msg string) {
-	l.Logger.Info().Msg(msg)
+func (l Logger) Info(msg any) {
+	l.Logger.Info().Msg(fmt.Sprint(msg))
 }
 
 // Infof prints info level message from <args> in given <format>
@@ -98,8 +98,8 @@ func (l Logger) InfoFi(msg string, fields ...any) {
 }
 
 // Warn prints warning level <msg>
-func (l Logger) Warn(msg string) {
-	l.Logger.Warn().Msg(msg)
+func (l Logger) Warn(msg any) {
+	l.Logger.Warn().Msg(fmt.Sprint(msg))
 }
 
 // Warnf prints warning level message from <args> in given <format>
@@ -113,8 +113,8 @@ func (l Logger) WarnFi(msg string, fields ...any) {
 }
 
 // Error prints error level <msg>
-func (l Logger) Error(msg string) {
-	l.Logger.Error().Msg(msg)
+func (l Logger) Error(msg any) {
+	l.Logger.Error().Msg(fmt.Sprint(msg))
 }
 
 // Errorf prints error level message from <args> in given <format>
@@ -128,8 +128,8 @@ func (l Logger) ErrorFi(msg string, fields ...any) {
 }
 
 // Fatal prints fatal level <msg> and exits the program
-func (l Logger) Fatal(msg string) {
-	l.Logger.Fatal().Msg(msg)
+func (l Logger) Fatal(msg any) {
+	l.Logger.Fatal().Msg(fmt.Sprint(msg))
 }
 
 // Fatalf prints fatal level message from <args> in given <format> and exits the program
@@ -143,8 +143,8 @@ func (l Logger) FatalFi(msg string, fields ...any) {
 }
 
 // Panic prints panic level <msg> and panics
-func (l Logger) Panic(msg string) {
-	l.Logger.Panic().Msg(msg)
+func (l Logger) Panic(msg any) {
+	l.Logger.Panic().Msg(fmt.Sprint(msg))
 }
 
 // Panicf prints panic level message from <args> in given <format> and panics
