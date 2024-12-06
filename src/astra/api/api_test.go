@@ -12,13 +12,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/samber/lo"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/zenizh/go-capturer"
 )
 
 func TestNewHandler(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 
 	expected := handler{
@@ -33,7 +32,7 @@ func TestNewHandler(t *testing.T) {
 
 // Requires a running astra
 func TestSetCategories(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 
@@ -100,7 +99,7 @@ func TestSetCategories(t *testing.T) {
 
 	// Test log output
 	out := capturer.CaptureStderr(func() {
-		log := logger.New(logrus.DebugLevel)
+		log := logger.New(logger.DebugLevel)
 		httpClient := network.NewHttpClient(time.Second * 3)
 		apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 		idxCategoryMap = []lo.Entry[int, astra.Category]{
@@ -118,7 +117,7 @@ func TestSetCategories(t *testing.T) {
 
 // Requires a running astra
 func TestSetCategory(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 
@@ -171,7 +170,7 @@ func TestSetCategory(t *testing.T) {
 }
 
 func TestSetStreams(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 
@@ -198,7 +197,7 @@ func TestSetStreams(t *testing.T) {
 
 	// Test log output
 	out := capturer.CaptureStderr(func() {
-		log := logger.New(logrus.DebugLevel)
+		log := logger.New(logger.DebugLevel)
 		httpClient := network.NewHttpClient(time.Second * 3)
 		apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 		streams := []astra.Stream{
@@ -212,7 +211,7 @@ func TestSetStreams(t *testing.T) {
 
 // Requires a running astra
 func TestSetStream(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 
@@ -248,7 +247,7 @@ func TestSetStream(t *testing.T) {
 
 // Requires a running astra
 func TestFetchCfg(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 	astraCfg, err := apiHandler.FetchCfg()
@@ -258,7 +257,7 @@ func TestFetchCfg(t *testing.T) {
 
 // Requires a running astra
 func TestRequest(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	httpClient := network.NewHttpClient(time.Second * 3)
 	apiHandler := NewHandler(log, httpClient, "http://127.0.0.1:8000", "admin", "admin")
 	resp, err := apiHandler.request("POST", "/control/", loadReq{Cmd: "sessions"})

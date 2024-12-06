@@ -7,12 +7,11 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewHttpServer(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ok/", func(w http.ResponseWriter, r *http.Request) {

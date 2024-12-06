@@ -199,7 +199,7 @@ func (s Stream) removeDuplicatedInputsByRx(r repo, callback func(string)) Stream
 		for _, inp := range s.Inputs {
 			matchList := rx.FindStringSubmatch(inp)
 			if len(matchList) < 2 {
-				r.log.DebugCFi("Found no matches", "regexp", rx.String(), "for input", inp)
+				r.log.DebugFi("Found no matches", "regexp", rx.String(), "for input", inp)
 				continue
 			}
 			captureGroup := matchList[1]
@@ -299,7 +299,7 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 			}
 		}
 		if oldName != s.Name {
-			r.log.InfoCFi("Temporarily removing name prefix from stream", "ID", s.ID, "old name", oldName,
+			r.log.InfoFi("Temporarily removing name prefix from stream", "ID", s.ID, "old name", oldName,
 				"new name", s.Name, "group", s.FirstGroup())
 		}
 		out = append(out, s)
@@ -323,7 +323,7 @@ func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 
 	for _, s := range streams {
 		out = append(out, s.removeBlockedInputs(r.cfg.Streams, func(input string) {
-			r.log.InfoCFi("Removing blocked input from stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
+			r.log.InfoFi("Removing blocked input from stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
 				"input", input)
 		}))
 	}
@@ -341,7 +341,7 @@ func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	for _, s := range streams {
 		for _, inp := range s.Inputs {
 			if _, duplicate := inputsMap[inp]; duplicate {
-				r.log.InfoCFi("Removing duplicated input from stream", "ID", s.ID, "name", s.Name,
+				r.log.InfoFi("Removing duplicated input from stream", "ID", s.ID, "name", s.Name,
 					"group", s.FirstGroup(), "input", inp)
 				s.Inputs = slice.RemoveLast(s.Inputs, inp)
 			} else {
@@ -361,7 +361,7 @@ func (r repo) RemoveDuplicatedInputsByRx(streams []Stream) (out []Stream) {
 
 	for _, s := range streams {
 		out = append(out, s.removeDuplicatedInputsByRx(r, func(input string) {
-			r.log.InfoCFi("Removing duplicated input per stream by regular expressions", "ID", s.ID, "name", s.Name,
+			r.log.InfoFi("Removing duplicated input per stream by regular expressions", "ID", s.ID, "name", s.Name,
 				"group", s.FirstGroup(), "input", input)
 		}))
 	}
@@ -377,15 +377,15 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 
 	out = copier.MustDeep(streams)
 	for currIdx, currStream := range out {
-		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx + 1, func(nextStream Stream, nextIdx int) {
+		find.EverySimilar(r.cfg.General, out, currStream.Name, currIdx+1, func(nextStream Stream, nextIdx int) {
 			for _, nextInput := range nextStream.Inputs {
-				r.log.InfoCFi("Uniting inputs of streams", "from ID", nextStream.ID, "from name", nextStream.Name,
+				r.log.InfoFi("Uniting inputs of streams", "from ID", nextStream.ID, "from name", nextStream.Name,
 					"input", nextInput, "to ID", currStream.ID, "to name", currStream.Name,
 					"note", currStream.InputsUpdateNote(r.cfg.Streams))
 				if !currStream.HasInput(r.log, nextInput, true) {
 					currStream = currStream.AddInput(nextInput)
 					if r.cfg.Streams.EnableOnInputUpdate && !currStream.Enabled {
-						r.log.InfoCFi("Enabling the stream (uniting inputs of streams, enable_on_input_update is on)",
+						r.log.InfoFi("Enabling the stream (uniting inputs of streams, enable_on_input_update is on)",
 							"ID", currStream.ID, "name", currStream.Name)
 						currStream = currStream.Enable()
 					}
@@ -458,7 +458,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 						r.log.Debug(err)
 					}
 					if changed {
-						r.log.InfoCFi("Adding hash to input of stream", "ID", s.ID, "name", s.Name,
+						r.log.InfoFi("Adding hash to input of stream", "ID", s.ID, "name", s.Name,
 							"group", s.FirstGroup(), "hash", rule.Hash, "result", inp)
 					}
 				}
@@ -472,7 +472,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 						r.log.Debug(err)
 					}
 					if changed {
-						r.log.InfoCFi("Adding hash to input of stream", "ID", s.ID, "name", s.Name,
+						r.log.InfoFi("Adding hash to input of stream", "ID", s.ID, "name", s.Name,
 							"group", s.FirstGroup(), "hash", rule.Hash, "result", inp)
 					}
 				}
@@ -486,7 +486,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 						r.log.Debug(err)
 					}
 					if changed {
-						r.log.InfoCFi("Adding hash to input of stream", "ID", s.ID, "name", s.Name,
+						r.log.InfoFi("Adding hash to input of stream", "ID", s.ID, "name", s.Name,
 							"group", s.FirstGroup(), "hash", rule.Hash, "result", inp)
 					}
 				}
@@ -505,7 +505,7 @@ func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
 
 	for _, s := range streams {
 		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
-			r.log.InfoCFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
+			r.log.InfoFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
 				"group", s.FirstGroup(), "input", input)
 		}))
 	}
@@ -524,7 +524,7 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 			if slice.RxMatchAny(rule.By, s.Inputs...) {
 				keepActiveStr := strconv.Itoa(rule.KeepActive)
 				if s.HTTPKeepActive != keepActiveStr {
-					r.log.InfoCFi("Setting keep active on stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
+					r.log.InfoFi("Setting keep active on stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
 						"keep active", keepActiveStr)
 					s.HTTPKeepActive = keepActiveStr
 				}
@@ -536,7 +536,7 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 			if rule.By.MatchString(s.Name) {
 				keepActiveStr := strconv.Itoa(rule.KeepActive)
 				if s.HTTPKeepActive != keepActiveStr {
-					r.log.InfoCFi("Setting keep active on stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
+					r.log.InfoFi("Setting keep active on stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
 						"keep active", keepActiveStr)
 					s.HTTPKeepActive = keepActiveStr
 				}
@@ -548,7 +548,7 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 			if rule.By.MatchString(s.FirstGroup()) {
 				keepActiveStr := strconv.Itoa(rule.KeepActive)
 				if s.HTTPKeepActive != keepActiveStr {
-					r.log.InfoCFi("Setting keep active on stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
+					r.log.InfoFi("Setting keep active on stream", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(),
 						"keep active", keepActiveStr)
 					s.HTTPKeepActive = keepActiveStr
 				}
@@ -568,7 +568,7 @@ func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 
 	out = lo.Map(streams, func(s Stream, _ int) Stream {
 		if !s.Remove && s.hasNoInputs() {
-			r.log.InfoCFi("Removing stream without inputs", "ID", s.ID, "name", s.Name, "group", s.FirstGroup())
+			r.log.InfoFi("Removing stream without inputs", "ID", s.ID, "name", s.Name, "group", s.FirstGroup())
 			s.Remove = true
 		}
 		return s
@@ -583,7 +583,7 @@ func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
 
 	for _, s := range streams {
 		if s.Enabled && s.hasNoInputs() {
-			r.log.InfoCFi("Disabling stream without inputs", "ID", s.ID, "name", s.Name, "group", s.FirstGroup())
+			r.log.InfoFi("Disabling stream without inputs", "ID", s.ID, "name", s.Name, "group", s.FirstGroup())
 			s = s.disable()
 		}
 		out = append(out, s)
@@ -606,7 +606,7 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 			s = s.setPrefix(r.cfg.Streams.DisabledPrefix)
 		}
 		if oldName != s.Name {
-			r.log.InfoCFi("Adding name prefix to stream", "ID", s.ID, "old name", oldName, "new name", s.Name,
+			r.log.InfoFi("Adding name prefix to stream", "ID", s.ID, "old name", oldName, "new name", s.Name,
 				"group", s.FirstGroup())
 		}
 		out = append(out, s)
@@ -741,7 +741,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 	progressScheduler := gocron.NewScheduler(time.UTC)
 	_, err := progressScheduler.Every(30).Seconds().Do(func() {
 		msg := lo.Ternary(disable, "Disabling dead inputs of streams", "Removing dead inputs from streams")
-		r.log.InfoCFi(msg, "progress", getProgress())
+		r.log.InfoFi(msg, "progress", getProgress())
 	})
 	if err != nil {
 		r.log.Errorf("Failed to print progress of removing dead inputs: %v", err)
@@ -752,13 +752,13 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 	for sIdx, s := range out {
 		for _, inp := range s.Inputs {
 			pool.Submit(func() {
-				r.log.DebugCFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
+				r.log.DebugFi("Start checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
 					"input", inp)
 				if canCheck(inp) {
 					removalReason := getRemovalReason(inp)
 					if removalReason != "" {
 						msg := lo.Ternary(disable, "Disabling dead input of stream", "Removing dead input from stream")
-						r.log.WarnCFi(msg, "ID", s.ID, "name", s.Name, "group", s.FirstGroup(), "input", inp,
+						r.log.WarnFi(msg, "ID", s.ID, "name", s.Name, "group", s.FirstGroup(), "input", inp,
 							"reason", removalReason)
 						mut.Lock()
 						out[sIdx].Inputs = slice.RemoveLast(out[sIdx].Inputs, inp)
@@ -772,7 +772,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 				mut.Lock()
 				inputsDone++
 				mut.Unlock()
-				r.log.DebugCFi("End checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
+				r.log.DebugFi("End checking input", "stream ID", s.ID, "stream name", s.Name, "stream index", sIdx,
 					"input", inp)
 			})
 		}

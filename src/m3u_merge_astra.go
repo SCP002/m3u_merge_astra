@@ -19,13 +19,12 @@ import (
 
 	"github.com/adampresley/sigint"
 	goFlags "github.com/jessevdk/go-flags"
-	"github.com/sirupsen/logrus"
 	"github.com/utahta/go-openuri"
 )
 
 func main() {
 	// Init default logger
-	log := logger.New(logrus.FatalLevel)
+	log := logger.New(logger.FatalLevel)
 
 	// Parse command line arguments
 	flags, err := cli.Parse()
@@ -43,8 +42,9 @@ func main() {
 
 	// Setup logger
 	log.SetLevel(flags.LogLevel)
-	logFile, err := log.AddFileHook(flags.LogFile)
+	logFile, err := log.AddFileWriter(flags.LogFile)
 	if err == nil {
+		// Closing nil file does not panic
 		defer logFile.Close()
 	} else {
 		log.Error(err)
@@ -56,7 +56,7 @@ func main() {
 		os.Exit(0)
 	})
 
-	log.InfoCFi("Running with", "program config path", flags.ProgramCfgPath, "M3U path", flags.M3UPath, "Astra address",
+	log.InfoFi("Running with", "program config path", flags.ProgramCfgPath, "M3U path", flags.M3UPath, "astra address",
 		flags.AstraAddr)
 
 	// Read program config

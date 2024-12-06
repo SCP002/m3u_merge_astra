@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,7 +49,7 @@ func TestBadRegexpError(t *testing.T) {
 }
 
 func TestInitDefault(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
@@ -72,7 +71,7 @@ func TestInitDefault(t *testing.T) {
 }
 
 func TestInitAddMissing(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
@@ -99,7 +98,7 @@ func TestInitAddMissing(t *testing.T) {
 }
 
 func TestInitDamaged(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
@@ -124,7 +123,7 @@ func TestInitDamaged(t *testing.T) {
 }
 
 func TestInitValidateCaptureGroups(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
@@ -144,7 +143,7 @@ func TestInitValidateCaptureGroups(t *testing.T) {
 }
 
 func TestInitSimplifyAliases(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
 
