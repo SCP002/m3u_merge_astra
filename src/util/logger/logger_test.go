@@ -19,7 +19,7 @@ var timeRx = `[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}`
 
 func TestNew(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Trace("message")
 		log.Debug("message")
 		log.DebugFi("message", "k", "v")
@@ -39,7 +39,7 @@ func TestNew(t *testing.T) {
 
 func TestTrace(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.TraceLevel)
+		log := New(TraceLevel)
 		log.Trace("message")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` TRACE logger\/logger_test\.go:43 message`), out)
@@ -47,7 +47,7 @@ func TestTrace(t *testing.T) {
 
 func TestTracef(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.TraceLevel)
+		log := New(TraceLevel)
 		log.Tracef("%v + %v", "message 1", "message 2")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` TRACE logger\/logger_test\.go:51 message 1 \+ message 2`), out)
@@ -55,7 +55,7 @@ func TestTracef(t *testing.T) {
 
 func TestTraceFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.TraceLevel)
+		log := New(TraceLevel)
 		log.TraceFi("message", "a", "b", 1, 2)
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` TRACE logger\/logger_test\.go:59 message: a "b", 1 "2"`), out)
@@ -63,7 +63,7 @@ func TestTraceFi(t *testing.T) {
 
 func TestDebug(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Debug("message")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` DEBUG logger\/logger_test\.go:67 message`), out)
@@ -71,7 +71,7 @@ func TestDebug(t *testing.T) {
 
 func TestDebugf(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Debugf("%v + %v", "message 1", "message 2")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` DEBUG logger\/logger_test\.go:75 message 1 \+ message 2`), out)
@@ -79,7 +79,7 @@ func TestDebugf(t *testing.T) {
 
 func TestDebugFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.DebugFi("message", "a", "b", 1, 2)
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` DEBUG logger\/logger_test\.go:83 message: a "b", 1 "2"`), out)
@@ -87,7 +87,7 @@ func TestDebugFi(t *testing.T) {
 
 func TestInfo(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Info("message")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message`), out)
@@ -95,7 +95,7 @@ func TestInfo(t *testing.T) {
 
 func TestInfof(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Infof("%v + %v", "message 1", "message 2")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message 1 \+ message 2`), out)
@@ -103,7 +103,7 @@ func TestInfof(t *testing.T) {
 
 func TestInfoFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.InfoFi("message", "a", "b", 1, 2)
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message: a "b", 1 "2"`), out)
@@ -111,7 +111,7 @@ func TestInfoFi(t *testing.T) {
 
 func TestWarn(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Warn("message")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` WARN message`), out)
@@ -119,7 +119,7 @@ func TestWarn(t *testing.T) {
 
 func TestWarnf(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Warnf("%v + %v", "message 1", "message 2")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` WARN message 1 \+ message 2`), out)
@@ -127,7 +127,7 @@ func TestWarnf(t *testing.T) {
 
 func TestWarnFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.WarnFi("message", "a", "b", 1, 2)
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` WARN message: a "b", 1 "2"`), out)
@@ -135,7 +135,7 @@ func TestWarnFi(t *testing.T) {
 
 func TestError(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Error("message")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` ERROR message`), out)
@@ -143,7 +143,7 @@ func TestError(t *testing.T) {
 
 func TestErrorf(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Errorf("%v + %v", "message 1", "message 2")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` ERROR message 1 \+ message 2`), out)
@@ -151,7 +151,7 @@ func TestErrorf(t *testing.T) {
 
 func TestErrorFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.ErrorFi("message", "a", "b", 1, 2)
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` ERROR message: a "b", 1 "2"`), out)
@@ -159,7 +159,7 @@ func TestErrorFi(t *testing.T) {
 
 func TestFatal(t *testing.T) {
 	if os.Getenv("TestFatal") == "1" {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Fatal("message")
 		return
 	}
@@ -168,6 +168,8 @@ func TestFatal(t *testing.T) {
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
+		// Does not collect Stderr
+		// assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message`), string(e.Stderr))
 		return
 	}
 	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
@@ -175,7 +177,7 @@ func TestFatal(t *testing.T) {
 
 func TestFatalf(t *testing.T) {
 	if os.Getenv("TestFatal") == "1" {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.Fatalf("%v + %v", "message 1", "message 2")
 		return
 	}
@@ -184,6 +186,8 @@ func TestFatalf(t *testing.T) {
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
+		// Does not collect Stderr
+		// assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message 1 \+ message 2`), string(e.Stderr))
 		return
 	}
 	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
@@ -191,7 +195,7 @@ func TestFatalf(t *testing.T) {
 
 func TestFatalFi(t *testing.T) {
 	if os.Getenv("TestFatal") == "1" {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		log.FatalFi("message", "a", "b", 1, 2)
 		return
 	}
@@ -200,6 +204,8 @@ func TestFatalFi(t *testing.T) {
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
+		// Does not collect Stderr
+		// assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message: a "b", 1 "2"`), string(e.Stderr))
 		return
 	}
 	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
@@ -207,7 +213,7 @@ func TestFatalFi(t *testing.T) {
 
 func TestPanic(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		assert.Panics(t, func() { log.Panic("message") }, "should panic")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` PANIC message`), out)
@@ -215,7 +221,7 @@ func TestPanic(t *testing.T) {
 
 func TestPanicf(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		assert.Panics(t, func() { log.Panicf("%v + %v", "message 1", "message 2") }, "should panic")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` PANIC message 1 \+ message 2`), out)
@@ -223,7 +229,7 @@ func TestPanicf(t *testing.T) {
 
 func TestPanicFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		assert.Panics(t, func() { log.PanicFi("message", "a", "b", 1, 2) }, "should panic")
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` PANIC message: a "b", 1 "2"`), out)
@@ -232,7 +238,7 @@ func TestPanicFi(t *testing.T) {
 func TestAddFileWriter(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "test.log")
 
-	log := New(pLog.DebugLevel)
+	log := New(DebugLevel)
 	file, err := log.AddFileWriter("")
 	assert.NoError(t, err, "should not return error for empty file path")
 	assert.Nil(t, file, "should return nil file for empty file path")
@@ -286,13 +292,13 @@ func TestAddFileWriter(t *testing.T) {
 
 func TestPrint(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		print(log.Logger.Info(), "message", nil)
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message`), out)
 
 	out = capturer.CaptureStderr(func() {
-		log := New(pLog.DebugLevel)
+		log := New(DebugLevel)
 		print(log.Logger.Info(), "message", []any{"a", "b", 1, 2})
 	})
 	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message: a "b", 1 "2"`), out)

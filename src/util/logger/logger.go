@@ -31,6 +31,19 @@ type keyValue = struct {
 	ValueType byte
 }
 
+// Level represents log level
+type Level uint32
+
+const (
+	TraceLevel Level = Level(pLog.TraceLevel) // 1
+	DebugLevel Level = Level(pLog.DebugLevel) // 2
+	InfoLevel  Level = Level(pLog.InfoLevel)  // 3
+	WarnLevel  Level = Level(pLog.WarnLevel)  // 4
+	ErrorLevel Level = Level(pLog.ErrorLevel) // 5
+	FatalLevel Level = Level(pLog.FatalLevel) // 6
+	PanicLevel Level = Level(pLog.PanicLevel) // 7
+)
+
 // Logger represents wrapper over logging library
 type Logger struct {
 	writer *pLog.MultiEntryWriter
@@ -38,7 +51,7 @@ type Logger struct {
 }
 
 // New returns new configured logger with log level <lvl>
-func New(lvl pLog.Level) *Logger {
+func New(lvl Level) *Logger {
 	writer := pLog.MultiEntryWriter{
 		&pLog.ConsoleWriter{
 			Formatter: newConsoleFormatter(true, time.DateTime),
@@ -46,7 +59,7 @@ func New(lvl pLog.Level) *Logger {
 		},
 	}
 	log := pLog.Logger{
-		Level:  lvl,
+		Level:  pLog.Level(lvl),
 		Writer: &writer,
 	}
 	return &Logger{Logger: &log, writer: &writer}
@@ -178,6 +191,7 @@ func (l Logger) AddFileWriter(filePath string) (*os.File, error) {
 
 // print adds message <msg> and <fields> to <entry> and prints it
 func print(entry *pLog.Entry, msg string, fields []any) {
+	// Not using entry.KeysAndValues() as it will not add keys which can't be converted to string by type assertion
 	var key string
 	for i, field := range fields {
 		if i%2 == 0 {
