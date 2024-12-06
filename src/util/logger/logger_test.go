@@ -165,47 +165,44 @@ func TestFatal(t *testing.T) {
 	}
 	cmd := exec.Command(os.Args[0], "-test.run=^TestFatal$")
 	cmd.Env = append(os.Environ(), "TestFatal=1")
-	err := cmd.Run()
+	out, err := cmd.CombinedOutput()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
-		// Does not collect Stderr
-		// assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message`), string(e.Stderr))
+		assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message`), string(out))
 		return
 	}
 	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
 }
 
 func TestFatalf(t *testing.T) {
-	if os.Getenv("TestFatal") == "1" {
+	if os.Getenv("TestFatalf") == "1" {
 		log := New(DebugLevel)
 		log.Fatalf("%v + %v", "message 1", "message 2")
 		return
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=^TestFatal$")
-	cmd.Env = append(os.Environ(), "TestFatal=1")
-	err := cmd.Run()
+	cmd := exec.Command(os.Args[0], "-test.run=^TestFatalf$")
+	cmd.Env = append(os.Environ(), "TestFatalf=1")
+	out, err := cmd.CombinedOutput()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
-		// Does not collect Stderr
-		// assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message 1 \+ message 2`), string(e.Stderr))
+		assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message 1 \+ message 2`), string(out))
 		return
 	}
 	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
 }
 
 func TestFatalFi(t *testing.T) {
-	if os.Getenv("TestFatal") == "1" {
+	if os.Getenv("TestFatalFi") == "1" {
 		log := New(DebugLevel)
 		log.FatalFi("message", "a", "b", 1, 2)
 		return
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=^TestFatal$")
-	cmd.Env = append(os.Environ(), "TestFatal=1")
-	err := cmd.Run()
+	cmd := exec.Command(os.Args[0], "-test.run=^TestFatalFi$")
+	cmd.Env = append(os.Environ(), "TestFatalFi=1")
+	out, err := cmd.CombinedOutput()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
-		// Does not collect Stderr
-		// assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message: a "b", 1 "2"`), string(e.Stderr))
+		assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message: a "b", 1 "2"`), string(out))
 		return
 	}
 	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
