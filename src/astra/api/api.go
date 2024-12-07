@@ -76,10 +76,10 @@ func (h handler) SetCategories(idxCategoryMap []lo.Entry[int, astra.Category]) {
 	for _, entry := range idxCategoryMap {
 		err := h.SetCategory(entry.Key, entry.Value)
 		if err == nil {
-			h.log.InfoCFi("Successfully set category", "name", entry.Value.Name, "groups",
+			h.log.InfoFi("Successfully set category", "name", entry.Value.Name, "groups",
 				fmt.Sprintf("%+v", entry.Value.Groups), "remove", entry.Value.Remove)
 		} else {
-			h.log.ErrorCFi("Failed to set category", "name", entry.Value.Name, "groups",
+			h.log.ErrorFi("Failed to set category", "name", entry.Value.Name, "groups",
 				fmt.Sprintf("%+v", entry.Value.Groups), "remove", entry.Value.Remove, "error", err)
 		}
 	}
@@ -118,9 +118,9 @@ func (h handler) SetStreams(streams []astra.Stream) {
 	for _, stream := range streams {
 		err := h.SetStream(stream.ID, stream)
 		if err == nil {
-			h.log.InfoCFi("Successfully set stream", "ID", stream.ID, "name", stream.Name)
+			h.log.InfoFi("Successfully set stream", "ID", stream.ID, "name", stream.Name)
 		} else {
-			h.log.ErrorCFi("Failed to set stream", "ID", stream.ID, "name", stream.Name, "error", err)
+			h.log.ErrorFi("Failed to set stream", "ID", stream.ID, "name", stream.Name, "error", err)
 		}
 	}
 }
@@ -170,7 +170,7 @@ func (h handler) request(method string, path string, cmd any) ([]byte, error) {
 		return nil, errors.Wrap(err, "Encode request to API")
 	}
 
-	req, err := http.NewRequest(method, h.address + path, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(method, h.address+path, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, errors.Wrap(err, "Create HTTP request instance to API")
 	}

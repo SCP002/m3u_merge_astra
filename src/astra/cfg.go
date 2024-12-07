@@ -51,7 +51,7 @@ func (r repo) UpdateCategories(cats []Category, streams []Stream) []Category {
 			return c.Name == sCat.Name
 		})
 		cats[idx].Groups = slice.AppendNew(cats[idx].Groups, func(g Group) {
-			r.log.InfoCFi("Updating categories field with", "category", sCat.Name, "group", g.Name)
+			r.log.InfoFi("Updating categories field with", "category", sCat.Name, "group", g.Name)
 		}, sCat.Groups...)
 	}
 

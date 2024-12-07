@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/zenizh/go-capturer"
 )
@@ -146,7 +145,7 @@ func TestUpdateStreamInput(t *testing.T) {
 }
 
 func TestHasInput(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	s := Stream{Inputs: []string{"http://other/input", "http://known/input#a"}}
 
@@ -1209,7 +1208,7 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 }
 
 func TestProgressRemoveDeadInputs(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	handleSleep2Sec := func(w http.ResponseWriter, req *http.Request) {
 		log.Debugf("Got request to %v", req.URL)

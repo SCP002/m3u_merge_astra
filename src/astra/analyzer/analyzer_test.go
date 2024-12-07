@@ -7,12 +7,11 @@ import (
 
 	"m3u_merge_astra/util/logger"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	analyzer := New(log, "127.0.0.1", time.Second)
 	assert.Exactly(t, log, analyzer.log, "should set logger for analyzer")
 	assert.Exactly(t, "ws://127.0.0.1/api/", analyzer.url, "should set analyzer URL")
@@ -21,7 +20,7 @@ func TestNew(t *testing.T) {
 
 // Requires a running astra analyzer
 func TestCheck(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	handshakeTimeout := time.Second * 3
 	watchTime := time.Second * 15
 	maxAttempts := 3

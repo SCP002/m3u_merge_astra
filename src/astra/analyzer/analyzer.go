@@ -211,7 +211,7 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 	var result Result
 	var err error
 	iter.Times(maxAttempts, func(attempt int) bool {
-		a.log.DebugCFi("Analyzing", "url", urlToCheck, "attempt", attempt)
+		a.log.DebugFi("Analyzing", "url", urlToCheck, "attempt", attempt)
 		ctx, cancel := context.WithTimeout(context.Background(), watchTime)
 		defer cancel()
 		result, err = check(ctx, urlToCheck)

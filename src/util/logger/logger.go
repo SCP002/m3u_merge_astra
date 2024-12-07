@@ -2,87 +2,178 @@ package logger
 
 import (
 	"fmt"
+	"io"
 	"os"
-	"runtime"
-	"slices"
 	"strings"
 	"time"
 
-	"github.com/acarl005/stripansi"
 	"github.com/cockroachdb/errors"
 	"github.com/fatih/color"
+	pLog "github.com/phuslu/log"
 	"github.com/samber/lo"
-	"github.com/sirupsen/logrus"
-	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
-// Logger represents wrapper over logrus
+// levelColorMap represents mapping between log level string and it's version for console writer
+var levelColorMap = map[string]string{
+	"trace": color.BlueString("TRACE"),
+	"debug": color.BlueString("DEBUG"),
+	"info":  color.GreenString("INFO"),
+	"warn":  color.YellowString("WARN"),
+	"error": color.RedString("ERROR"),
+	"fatal": color.RedString("FATAL"),
+	"panic": color.RedString("PANIC"),
+}
+
+// keyValue represents phuslu log key/value pair type alias
+type keyValue = struct {
+	Key       string
+	Value     string
+	ValueType byte
+}
+
+// Level represents log level
+type Level uint32
+
+const (
+	TraceLevel Level = Level(pLog.TraceLevel) // 1
+	DebugLevel Level = Level(pLog.DebugLevel) // 2
+	InfoLevel  Level = Level(pLog.InfoLevel)  // 3
+	WarnLevel  Level = Level(pLog.WarnLevel)  // 4
+	ErrorLevel Level = Level(pLog.ErrorLevel) // 5
+	FatalLevel Level = Level(pLog.FatalLevel) // 6
+	PanicLevel Level = Level(pLog.PanicLevel) // 7
+)
+
+// Logger represents wrapper over logging library
 type Logger struct {
-	*logrus.Logger
+	writer *pLog.MultiEntryWriter
+	*pLog.Logger
 }
 
 // New returns new configured logger with log level <lvl>
-func New(lvl logrus.Level) *Logger {
-	formatter := prefixed.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: time.Stamp,
-		ForceFormatting: true,
+func New(lvl Level) *Logger {
+	writer := pLog.MultiEntryWriter{
+		&pLog.ConsoleWriter{
+			Formatter: newConsoleFormatter(true, time.DateTime),
+			Writer:    os.Stderr,
+		},
 	}
-	log := logrus.Logger{
-		Out:       os.Stderr,
-		Formatter: &formatter,
-		Level:     lvl,
-		Hooks:     make(logrus.LevelHooks),
+	log := pLog.Logger{
+		Level:  pLog.Level(lvl),
+		Writer: &writer,
 	}
-	return &Logger{&log}
+	return &Logger{Logger: &log, writer: &writer}
 }
 
-// InfoCFi prints info level <msg> with formatted and colored <fields>
-func (l Logger) InfoCFi(msg string, fields ...any) {
-	l.Logger.Infof("%v: %v", msg, buildFields(fields))
+// Trace prints trace level <msg> with caller
+func (l Logger) Trace(msg any) {
+	l.Logger.Trace().Caller(2).Msg(fmt.Sprint(msg))
 }
 
-// WarnCFi prints warning level <msg> with formatted and colored <fields>
-func (l Logger) WarnCFi(msg string, fields ...any) {
-	l.Logger.Warnf("%v: %v", msg, buildFields(fields))
+// Tracef prints trace level message from <args> in given <format>
+func (l Logger) Tracef(format string, args ...any) {
+	l.Logger.Trace().Caller(2).Msgf(format, args...)
 }
 
-// ErrorCFi prints error level <msg> with formatted and colored <fields>
-func (l Logger) ErrorCFi(msg string, fields ...any) {
-	l.Logger.Errorf("%v: %v", msg, buildFields(fields))
+// TraceFi prints trace level <msg> with caller and formatted and colored <fields>
+func (l Logger) TraceFi(msg string, fields ...any) {
+	print(l.Logger.Trace().Caller(2), msg, fields)
 }
 
-// Debug prints debug level <msg>.
-//
-// Output is prefixed with caller info.
+// Debug prints debug level <msg> with caller
 func (l Logger) Debug(msg any) {
-	msgWithCaller := fmt.Sprintf(`(%v): %v`, getCallerInfo(2), msg)
-
-	l.Logger.Debug(msgWithCaller)
+	l.Logger.Debug().Caller(2).Msg(fmt.Sprint(msg))
 }
 
-// Debugf prints debug level message <args> formatted according to a <format> specifier.
-//
-// Output is prefixed with caller info.
+// Debugf prints debug level message from <args> in given <format>
 func (l Logger) Debugf(format string, args ...any) {
-	formatWithCaller := fmt.Sprintf(`(%v): %v`, getCallerInfo(2), format)
-
-	l.Logger.Debugf(formatWithCaller, args...)
+	l.Logger.Debug().Caller(2).Msgf(format, args...)
 }
 
-// DebugCFi prints debug level <msg> with formatted and colored <fields>.
-//
-// Output is prefixed with caller info.
-func (l Logger) DebugCFi(msg string, fields ...any) {
-	msgWithCaller := fmt.Sprintf(`(%v): %v`, getCallerInfo(2), msg)
-
-	l.Logger.Debugf("%v: %v", msgWithCaller, buildFields(fields))
+// DebugFi prints debug level <msg> with caller and formatted and colored <fields>
+func (l Logger) DebugFi(msg string, fields ...any) {
+	print(l.Logger.Debug().Caller(2), msg, fields)
 }
 
-// AddFileHook creates log file at <filePath> and adds file hook to logrus.
+// Info prints info level <msg>
+func (l Logger) Info(msg any) {
+	l.Logger.Info().Msg(fmt.Sprint(msg))
+}
+
+// Infof prints info level message from <args> in given <format>
+func (l Logger) Infof(format string, args ...any) {
+	l.Logger.Info().Msgf(format, args...)
+}
+
+// InfoFi prints info level <msg> with formatted and colored <fields>
+func (l Logger) InfoFi(msg string, fields ...any) {
+	print(l.Logger.Info(), msg, fields)
+}
+
+// Warn prints warning level <msg>
+func (l Logger) Warn(msg any) {
+	l.Logger.Warn().Msg(fmt.Sprint(msg))
+}
+
+// Warnf prints warning level message from <args> in given <format>
+func (l Logger) Warnf(format string, args ...any) {
+	l.Logger.Warn().Msgf(format, args...)
+}
+
+// WarnFi prints warning level <msg> with formatted and colored <fields>
+func (l Logger) WarnFi(msg string, fields ...any) {
+	print(l.Logger.Warn(), msg, fields)
+}
+
+// Error prints error level <msg>
+func (l Logger) Error(msg any) {
+	l.Logger.Error().Msg(fmt.Sprint(msg))
+}
+
+// Errorf prints error level message from <args> in given <format>
+func (l Logger) Errorf(format string, args ...any) {
+	l.Logger.Error().Msgf(format, args...)
+}
+
+// ErrorFi prints error level <msg> with formatted and colored <fields>
+func (l Logger) ErrorFi(msg string, fields ...any) {
+	print(l.Logger.Error(), msg, fields)
+}
+
+// Fatal prints fatal level <msg> and exits the program
+func (l Logger) Fatal(msg any) {
+	l.Logger.Fatal().Msg(fmt.Sprint(msg))
+}
+
+// Fatalf prints fatal level message from <args> in given <format> and exits the program
+func (l Logger) Fatalf(format string, args ...any) {
+	l.Logger.Fatal().Msgf(format, args...)
+}
+
+// FatalFi prints fatal level <msg> with formatted and colored <fields> and exits the program
+func (l Logger) FatalFi(msg string, fields ...any) {
+	print(l.Logger.Fatal(), msg, fields)
+}
+
+// Panic prints panic level <msg> and panics
+func (l Logger) Panic(msg any) {
+	l.Logger.Panic().Msg(fmt.Sprint(msg))
+}
+
+// Panicf prints panic level message from <args> in given <format> and panics
+func (l Logger) Panicf(format string, args ...any) {
+	l.Logger.Panic().Msgf(format, args...)
+}
+
+// PanicFi prints panic level <msg> with formatted and colored <fields> and panics
+func (l Logger) PanicFi(msg string, fields ...any) {
+	print(l.Logger.Panic(), msg, fields)
+}
+
+// AddFileWriter creates log file at <filePath> and adds file writer to logger.
 //
 // If <filePath> is empty string, it does nothing and returns nil error.
-func (l Logger) AddFileHook(filePath string) (*os.File, error) {
+func (l Logger) AddFileWriter(filePath string) (*os.File, error) {
 	if filePath == "" {
 		return nil, nil
 	}
@@ -91,75 +182,85 @@ func (l Logger) AddFileHook(filePath string) (*os.File, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Open or create log file")
 	}
-	l.AddHook(fileHook{file: logFile})
+	*l.writer = append(*l.writer, &pLog.IOWriter{
+		Writer: logFile,
+	})
 
 	return logFile, nil
 }
 
-// fileHook represents logrus file hook
-type fileHook struct {
-	file *os.File
-}
-
-// Levels returns which levels to fire the hook at.
-//
-// Used to implement logrus Hook interface.
-func (h fileHook) Levels() []logrus.Level {
-	return logrus.AllLevels
-}
-
-// Fire is executed when the hook runs, writing formatted <entry> to file.
-//
-// Used to implement logrus Hook interface.
-func (h fileHook) Fire(entry *logrus.Entry) error {
-	time := entry.Time.Format("2006.01.02 15:04:05")
-	level := strings.ToUpper(entry.Level.String())
-
-	// Start building message and remove ANSI escape codes from it to cleanup after InfoCFi etc. calls
-	msg := fmt.Sprintf("%s %s %s", time, level, stripansi.Strip(entry.Message))
-
-	// Format and add fields
-	if len(entry.Data) > 0 {
-		var sb strings.Builder
-		keys := lo.Keys(entry.Data)
-		slices.Sort(keys)
-		for _, key := range keys {
-			val := entry.Data[key]
-			sb.WriteString(fmt.Sprintf("%s=%+v, ", key, val))
-		}
-		msg = fmt.Sprintf("%s: %+v", msg, sb.String())
-		msg = strings.TrimRight(msg, ", ")
-	}
-
-	_, err := h.file.WriteString(msg + "\n")
-	return err
-}
-
-// buildFields returns comma separated <fields> with every second field quoted and colored
-func buildFields(fields []any) string {
-	cyan := color.New(color.FgHiCyan).SprintFunc()
-	var sb strings.Builder
-
+// print adds message <msg> and <fields> to <entry> and prints it
+func print(entry *pLog.Entry, msg string, fields []any) {
+	// Not using entry.KeysAndValues() as it will not add keys which can't be converted to string by type assertion
+	var key string
 	for i, field := range fields {
-		fieldStr := fmt.Sprint(field)
-		if i % 2 == 0 {
-			sb.WriteString(fieldStr)
-			sb.WriteRune(' ')
+		if i%2 == 0 {
+			key = fmt.Sprint(field)
 		} else {
-			sb.WriteRune('"')
-			sb.WriteString(cyan(fieldStr))
-			sb.WriteRune('"')
-			if i < len(fields) - 1 {
-				sb.WriteString(", ")
+			entry.Any(key, field)
+		}
+	}
+	entry.Msg(msg)
+}
+
+// newConsoleFormatter returns formatter funtion with <timeFormat> for console writer.
+//
+// If <colorize> is true, add colors to output.
+func newConsoleFormatter(colorize bool, timeFormat string) func(io.Writer, *pLog.FormatterArgs) (int, error) {
+	return func(w io.Writer, a *pLog.FormatterArgs) (int, error) {
+		gray := color.RGB(118, 118, 118).SprintFunc()
+		var messageSb strings.Builder
+
+		formatterTime, err := time.Parse(time.RFC3339Nano, a.Time) // Get time object from FormatterArgs
+		if err != nil {
+			return 0, err
+		}
+		properTime := formatterTime.Format(timeFormat)
+		if colorize {
+			messageSb.WriteString(gray(properTime))
+		} else {
+			messageSb.WriteString(properTime)
+		}
+		messageSb.WriteRune(' ')
+
+		if colorize {
+			messageSb.WriteString(levelColorMap[a.Level])
+		} else {
+			messageSb.WriteString(strings.ToUpper(a.Level))
+		}
+		messageSb.WriteRune(' ')
+
+		if a.Caller != "" {
+			if colorize {
+				messageSb.WriteString(gray(a.Caller))
+			} else {
+				messageSb.WriteString(a.Caller)
+			}
+			messageSb.WriteRune(' ')
+		}
+
+		messageSb.WriteString(a.Message)
+
+		a.KeyValues = lo.Reject(a.KeyValues, func(kv keyValue, _ int) bool {
+			return kv.Key == "callerfunc"
+		})
+		if len(a.KeyValues) > 0 {
+			messageSb.WriteString(": ")
+		}
+		for idx, item := range a.KeyValues {
+			messageSb.WriteString(item.Key + " \"")
+			if colorize {
+				messageSb.WriteString(color.CyanString(item.Value))
+			} else {
+				messageSb.WriteString(item.Value)
+			}
+			messageSb.WriteRune('"')
+			if idx < len(a.KeyValues)-1 {
+				messageSb.WriteString(", ")
 			}
 		}
+		messageSb.WriteRune('\n')
+
+		return fmt.Fprint(w, messageSb.String())
 	}
-
-	return strings.TrimSpace(sb.String())
-}
-
-// getCallerInfo returns runtime caller info with amount of stack frames to <skip> or empty string on error
-func getCallerInfo(skip int) string {
-	pc, _, line, _ := runtime.Caller(skip)
-	return fmt.Sprintf(`%v; L%v`, runtime.FuncForPC(pc).Name(), line)
 }

@@ -2,120 +2,251 @@ package logger
 
 import (
 	"bufio"
+	"encoding/json"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	pLog "github.com/phuslu/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/zenizh/go-capturer"
 )
 
+var timeRx = `[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}`
+
 func TestNew(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(logrus.DebugLevel)
+		log := New(DebugLevel)
 		log.Trace("message")
 		log.Debug("message")
-		log.Info("message")
-		log.Warning("message")
+		log.DebugFi("message", "k", "v")
+		log.InfoFi("message", "1", 2)
+		log.Warn("message")
 		log.Error("message")
 		assert.Panics(t, func() { log.Panic("message") }, "should panic")
 	})
-	msg := "should not print trace messages with debug level logger"
-	assert.NotRegexp(t, regexp.MustCompile(`\[.*\] TRACE message`), out, msg)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\] DEBUG \(.*TestNew.*\): message`), out)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\]  INFO message`), out)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\]  WARN message`), out)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\] ERROR message`), out)
-	assert.Regexp(t, regexp.MustCompile(`\[.*\] PANIC message`), out)
+	assert.NotRegexp(t, regexp.MustCompile(`TRACE`), out, "should not print trace messages with debug level logger")
+	assert.Regexp(t, regexp.MustCompile(timeRx+` DEBUG logger\/logger_test\.go:24 message`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` DEBUG logger\/logger_test\.go:25 message: k "v"`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message: 1 "2"`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` WARN message`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` ERROR message`), out)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` PANIC message`), out)
 }
 
-func TestInfoCFi(t *testing.T) {
+func TestTrace(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(logrus.InfoLevel)
-
-		log.InfoCFi("message", "field 1", "value 1", "field 2", 10)
+		log := New(TraceLevel)
+		log.Trace("message")
 	})
-	assert.Contains(t, out, `INFO message: field 1 "value 1", field 2 "10"`)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` TRACE logger\/logger_test\.go:43 message`), out)
 }
 
-func TestWarnCFi(t *testing.T) {
+func TestTracef(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(logrus.WarnLevel)
-
-		log.WarnCFi("message", "field 1", "value 1", "field 2", 10)
+		log := New(TraceLevel)
+		log.Tracef("%v + %v", "message 1", "message 2")
 	})
-	assert.Contains(t, out, `WARN message: field 1 "value 1", field 2 "10"`)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` TRACE logger\/logger_test\.go:51 message 1 \+ message 2`), out)
 }
 
-func TestErrorCFi(t *testing.T) {
+func TestTraceFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(logrus.ErrorLevel)
-
-		log.ErrorCFi("message", "field 1", "value 1", "field 2", 10)
+		log := New(TraceLevel)
+		log.TraceFi("message", "a", "b", 1, 2)
 	})
-	assert.Contains(t, out, `ERROR message: field 1 "value 1", field 2 "10"`)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` TRACE logger\/logger_test\.go:59 message: a "b", 1 "2"`), out)
 }
 
 func TestDebug(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(logrus.DebugLevel)
-
+		log := New(DebugLevel)
 		log.Debug("message")
 	})
-	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebug.func1; L65): message`)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` DEBUG logger\/logger_test\.go:67 message`), out)
 }
 
 func TestDebugf(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(logrus.DebugLevel)
-
-		log.Debugf("_%v_", "message")
+		log := New(DebugLevel)
+		log.Debugf("%v + %v", "message 1", "message 2")
 	})
-	assert.Contains(t, out, `DEBUG (m3u_merge_astra/util/logger.TestDebugf.func1; L74): _message_`)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` DEBUG logger\/logger_test\.go:75 message 1 \+ message 2`), out)
 }
 
-func TestDebugCFi(t *testing.T) {
+func TestDebugFi(t *testing.T) {
 	out := capturer.CaptureStderr(func() {
-		log := New(logrus.DebugLevel)
-
-		log.DebugCFi("message", "field 1", "value 1", "field 2", 10)
+		log := New(DebugLevel)
+		log.DebugFi("message", "a", "b", 1, 2)
 	})
-	msg := `DEBUG (m3u_merge_astra/util/logger.TestDebugCFi.func1; L83): message: field 1 "value 1", field 2 "10"`
-	assert.Contains(t, out, msg)
+	assert.Regexp(t, regexp.MustCompile(timeRx+` DEBUG logger\/logger_test\.go:83 message: a "b", 1 "2"`), out)
 }
 
-func TestAddFileHook(t *testing.T) {
+func TestInfo(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.Info("message")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message`), out)
+}
+
+func TestInfof(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.Infof("%v + %v", "message 1", "message 2")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message 1 \+ message 2`), out)
+}
+
+func TestInfoFi(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.InfoFi("message", "a", "b", 1, 2)
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message: a "b", 1 "2"`), out)
+}
+
+func TestWarn(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.Warn("message")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` WARN message`), out)
+}
+
+func TestWarnf(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.Warnf("%v + %v", "message 1", "message 2")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` WARN message 1 \+ message 2`), out)
+}
+
+func TestWarnFi(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.WarnFi("message", "a", "b", 1, 2)
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` WARN message: a "b", 1 "2"`), out)
+}
+
+func TestError(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.Error("message")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` ERROR message`), out)
+}
+
+func TestErrorf(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.Errorf("%v + %v", "message 1", "message 2")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` ERROR message 1 \+ message 2`), out)
+}
+
+func TestErrorFi(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		log.ErrorFi("message", "a", "b", 1, 2)
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` ERROR message: a "b", 1 "2"`), out)
+}
+
+func TestFatal(t *testing.T) {
+	if os.Getenv("TestFatal") == "1" {
+		log := New(DebugLevel)
+		log.Fatal("message")
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=^TestFatal$")
+	cmd.Env = append(os.Environ(), "TestFatal=1")
+	out, err := cmd.CombinedOutput()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
+		assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message`), string(out))
+		return
+	}
+	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
+}
+
+func TestFatalf(t *testing.T) {
+	if os.Getenv("TestFatalf") == "1" {
+		log := New(DebugLevel)
+		log.Fatalf("%v + %v", "message 1", "message 2")
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=^TestFatalf$")
+	cmd.Env = append(os.Environ(), "TestFatalf=1")
+	out, err := cmd.CombinedOutput()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
+		assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message 1 \+ message 2`), string(out))
+		return
+	}
+	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
+}
+
+func TestFatalFi(t *testing.T) {
+	if os.Getenv("TestFatalFi") == "1" {
+		log := New(DebugLevel)
+		log.FatalFi("message", "a", "b", 1, 2)
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=^TestFatalFi$")
+	cmd.Env = append(os.Environ(), "TestFatalFi=1")
+	out, err := cmd.CombinedOutput()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		assert.Exactly(t, 255, e.ExitCode(), "should exit with that exit code")
+		assert.Regexp(t, regexp.MustCompile(timeRx+` FATAL message: a "b", 1 "2"`), string(out))
+		return
+	}
+	assert.Failf(t, "", "expected exec.ExitError, got '%v'", err)
+}
+
+func TestPanic(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		assert.Panics(t, func() { log.Panic("message") }, "should panic")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` PANIC message`), out)
+}
+
+func TestPanicf(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		assert.Panics(t, func() { log.Panicf("%v + %v", "message 1", "message 2") }, "should panic")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` PANIC message 1 \+ message 2`), out)
+}
+
+func TestPanicFi(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		assert.Panics(t, func() { log.PanicFi("message", "a", "b", 1, 2) }, "should panic")
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` PANIC message: a "b", 1 "2"`), out)
+}
+
+func TestAddFileWriter(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "test.log")
 
-	log := New(logrus.DebugLevel)
-	file, err := log.AddFileHook("")
+	log := New(DebugLevel)
+	file, err := log.AddFileWriter("")
 	assert.NoError(t, err, "should not return error for empty file path")
 	assert.Nil(t, file, "should return nil file for empty file path")
 
-	file, err = log.AddFileHook(path)
+	file, err = log.AddFileWriter(path)
 	assert.NoError(t, err, "should not return error")
 	assert.NotNil(t, file, "should create object")
-	defer file.Close()
-	assert.FileExists(t, path, "should create log file at given path")
-}
-
-func TestFileHookLevels(t *testing.T) {
-	assert.Exactly(t, logrus.AllLevels, fileHook{}.Levels())
-}
-
-func TestFileHookFire(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "test.log")
-
-	log := New(logrus.DebugLevel)
-	file, err := log.AddFileHook(path)
-	assert.NoError(t, err, "should not return error")
-	assert.NotNil(t, file, "should create file object")
 	assert.FileExists(t, path, "should create log file at given path")
 
-	log.WithFields(logrus.Fields{"a": "b", "c": "d"}).Info("message 1")
-	log.InfoCFi("message 2", "e", "f", "g", "h")
+	log.InfoFi("message 1", "field1", "value 1", "field2", 2)
+	log.WarnFi("message 2", "field1", "value 3", "field2", 4)
 
 	// file.Sync() does not help, content is empty, closing and opening the file again
 	file.Close()
@@ -124,28 +255,54 @@ func TestFileHookFire(t *testing.T) {
 	defer file.Close()
 	reader := bufio.NewReader(file)
 
-	line, err := reader.ReadString('\n')
-	assert.NoError(t, err, "should not return error")
-	rx := regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} INFO message 1: a=b, c=d\n$`)
-	assert.Regexp(t, rx, line, "first line in log file should match this regexp")
+	type logEntry struct {
+		Time    string `json:"time"`
+		Level   string `json:"level"`
+		Field1  string `json:"field1"`
+		Field2  int    `json:"field2"`
+		Message string `json:"message"`
+	}
 
-	line, err = reader.ReadString('\n')
+	var entry logEntry
+	timeRx := regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}\+[0-9]{2}:[0-9]{2}$`)
+
+	line, err := reader.ReadBytes('\n')
 	assert.NoError(t, err, "should not return error")
-	rx = regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} INFO message 2: e "f", g "h"\n$`)
-	assert.Regexp(t, rx, line, "second line in log file should match this regexp")
+	err = json.Unmarshal(line, &entry)
+	assert.NoError(t, err, "should not return error")
+	assert.Regexp(t, timeRx, entry.Time, "time in entry must match regexp format")
+	assert.Exactly(t, "info", entry.Level, "log severity must be that level")
+	assert.Exactly(t, "value 1", entry.Field1, "field should have this value")
+	assert.Exactly(t, 2, entry.Field2, "field should have this value")
+	assert.Exactly(t, "message 1", entry.Message, "should be that entry message")
+
+	line, err = reader.ReadBytes('\n')
+	assert.NoError(t, err, "should not return error")
+	err = json.Unmarshal(line, &entry)
+	assert.NoError(t, err, "should not return error")
+	assert.Regexp(t, timeRx, entry.Time, "time in entry must match regexp format")
+	assert.Exactly(t, "warn", entry.Level, "log severity must be that level")
+	assert.Exactly(t, "value 3", entry.Field1, "field should have this value")
+	assert.Exactly(t, 4, entry.Field2, "field should have this value")
+	assert.Exactly(t, "message 2", entry.Message, "should be that entry message")
 }
 
-func TestBuildFields(t *testing.T) {
-	assert.Exactly(t, ``, buildFields([]any{}))
-	assert.Exactly(t, ``, buildFields([]any{""}))
-	assert.Exactly(t, `a`, buildFields([]any{"a"}))
-	assert.Exactly(t, `a ""`, buildFields([]any{"a", ""}))
-	assert.Exactly(t, `"10"`, buildFields([]any{"", 10}))
-	assert.Exactly(t, `"10", b ""`, buildFields([]any{"", 10, "b", ""}))
-	assert.Exactly(t, `a "10"`, buildFields([]any{"a", 10}))
-	assert.Exactly(t, `a "10", b "c"`, buildFields([]any{"a", 10, "b", "c"}))
+func TestPrint(t *testing.T) {
+	out := capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		print(log.Logger.Info(), "message", nil)
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message`), out)
+
+	out = capturer.CaptureStderr(func() {
+		log := New(DebugLevel)
+		print(log.Logger.Info(), "message", []any{"a", "b", 1, 2})
+	})
+	assert.Regexp(t, regexp.MustCompile(timeRx+` INFO message: a "b", 1 "2"`), out)
 }
 
-func TestGetCallerInfo(t *testing.T) {
-	assert.Exactly(t, `m3u_merge_astra/util/logger.TestGetCallerInfo; L150`, getCallerInfo(1))
+func TestNewConsoleFormatter(t *testing.T) {
+	// Tested in TestNew
+	var formatter func(io.Writer, *pLog.FormatterArgs) (int, error)
+	assert.IsType(t, formatter, newConsoleFormatter(false, ""), "formatter function should have this definition")
 }

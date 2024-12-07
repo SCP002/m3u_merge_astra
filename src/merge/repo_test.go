@@ -1,9 +1,10 @@
 package merge
 
 import (
+	"reflect"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
 	"m3u_merge_astra/cfg"
@@ -12,18 +13,32 @@ import (
 
 // newDefRepo returns new repository initialized with defaults
 func newDefRepo() repo {
-	return NewRepo(logger.New(logrus.DebugLevel), cfg.NewDefCfg())
+	return NewRepo(logger.New(logger.DebugLevel), cfg.NewDefCfg())
 }
 
 func TestNewRepo(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 	cfg := cfg.NewDefCfg()
 
-	assert.Exactly(t, newDefRepo(), NewRepo(log, cfg))
+	compareOpt := cmp.FilterPath(func(p cmp.Path) bool {
+		return p.Last().String() == ".Formatter"
+	}, cmp.Ignore())
+	exportedOpt := cmp.Exporter(func(t reflect.Type) bool {
+		return true
+	})
+	reposEqual := cmp.Equal(newDefRepo(), NewRepo(log, cfg), compareOpt, exportedOpt)
+	assert.True(t, reposEqual)
 }
 
 func TestLog(t *testing.T) {
-	assert.Exactly(t, logger.New(logrus.DebugLevel), newDefRepo().Log())
+	compareOpt := cmp.FilterPath(func(p cmp.Path) bool {
+		return p.Last().String() == ".Formatter"
+	}, cmp.Ignore())
+	exportedOpt := cmp.Exporter(func(t reflect.Type) bool {
+		return true
+	})
+	loggersEqual := cmp.Equal(logger.New(logger.DebugLevel), newDefRepo().Log(), compareOpt, exportedOpt)
+	assert.True(t, loggersEqual)
 }
 
 func TestCfg(t *testing.T) {

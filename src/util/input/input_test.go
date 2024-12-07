@@ -6,12 +6,11 @@ import (
 
 	"m3u_merge_astra/util/logger"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAskYesNo(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	in := strings.NewReader("Y\n")
 	answer := AskYesNo(log, in, "prompt\n")
@@ -31,7 +30,7 @@ func TestAskYesNo(t *testing.T) {
 }
 
 func TestAsk(t *testing.T) {
-	log := logger.New(logrus.DebugLevel)
+	log := logger.New(logger.DebugLevel)
 
 	in := strings.NewReader(" 0 \n")
 	answer := ask(log, in, false, "prompt\n", func(s string) bool {

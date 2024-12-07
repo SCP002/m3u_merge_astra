@@ -96,7 +96,7 @@ func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 
 	for _, ch := range channels {
 		out = append(out, ch.replaceGroup(r.cfg.M3U, func(newGroup string) {
-			r.log.InfoCFi("Replacing group of M3U channel", "name", ch.Name, "old group", ch.Group,
+			r.log.InfoFi("Replacing group of M3U channel", "name", ch.Name, "old group", ch.Group,
 				"new group", newGroup)
 		}))
 	}
@@ -125,7 +125,7 @@ func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
 			slice.AnyRxMatch(r.cfg.M3U.ChannGroupBlacklist, ch.Group) ||
 			slice.AnyRxMatch(r.cfg.M3U.ChannURLBlacklist, ch.URL)
 		if reject {
-			r.log.InfoCFi("Removing blocked channel", "name", ch.Name, "group", ch.Group, "URL", ch.URL)
+			r.log.InfoFi("Removing blocked channel", "name", ch.Name, "group", ch.Group, "URL", ch.URL)
 		}
 		return reject
 	})

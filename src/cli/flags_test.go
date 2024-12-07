@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	goFlags "github.com/jessevdk/go-flags"
-	"github.com/sirupsen/logrus"
+	pLog "github.com/phuslu/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,22 +30,22 @@ func TestParse(t *testing.T) {
 	assert.Error(t, err, "should return error for negative log level")
 	assert.True(t, IsErrOfType(err, goFlags.ErrMarshal), "should return marshal error")
 
-	os.Args = []string{"", "--logLevel=5"}
+	os.Args = []string{"", "--logLevel=2"}
 	flags, err = Parse()
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, logrus.DebugLevel, flags.LogLevel, "flag should have this value")
+	assert.Exactly(t, pLog.DebugLevel, flags.LogLevel, "flag should have this value")
 
 	os.Args = []string{"", "--logLevel=999"}
 	flags, err = Parse()
 	assert.NoError(t, err, "should not return error")
-	assert.Exactly(t, logrus.Level(999), flags.LogLevel, "flag should have this value")
+	assert.Exactly(t, pLog.Level(999), flags.LogLevel, "flag should have this value")
 
 	os.Args = []string{"", "--noninteractive", "--logFile=/log", "--programCfgPath=/cfg/path", "--m3uPath=/m3u/path",
 		"--astraAddr=http://127.0.0.1:8005", "--astraUser=admin", "--astraPwd=admin"}
 	flags, err = Parse()
 	assert.NoError(t, err, "should not return error")
 	assert.True(t, flags.Noninteractive, "flag should have this value")
-	assert.Exactly(t, logrus.InfoLevel, flags.LogLevel, "flag should have this value")
+	assert.Exactly(t, pLog.InfoLevel, flags.LogLevel, "flag should have this value")
 	assert.Exactly(t, "/log", flags.LogFile, "flag should have this value")
 	assert.Exactly(t, "/cfg/path", flags.ProgramCfgPath, "flag should have this value")
 	assert.Exactly(t, "/m3u/path", flags.M3UPath, "flag should have this value")
