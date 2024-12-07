@@ -21,7 +21,7 @@ defined in `--programCfgPath` and sends requests to astra to modify config.
 | -h, --help           | Print help message                                                                              |
 | -n, --noninteractive | Do not ask user for input (confirmations etc.)                                                  |
 | -l, --logLevel       | Logging level. Can be from `1` (most verbose) to `7` (least verbose) [default: `3`]             |
-| -f, --logFile        | Log file. If set, mirror log to a file at the specified path                                    |
+| -f, --logFile        | Log file. If set, writes structured log to a file at the specified path                         |
 | -c, --programCfgPath | Program config file path to read from or initialize a default [default: `m3u_merge_astra.yaml`] |
 | -m, --m3uPath        | M3U file path to get channels from. Can be a local file or URL                                  |
 | -a, --astraAddr      | Astra address in format of `scheme://host:port` [default: `http://127.0.0.1:8000`]              |
