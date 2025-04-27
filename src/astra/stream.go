@@ -530,7 +530,7 @@ func (r repo) RemoveDisabledInputs(streams []Stream) (out []Stream) {
 
 	for _, s := range streams {
 		out = append(out, s.removeDisabledInputs(func(input string) {
-			r.log.InfoFi("Removing disabled input", "ID", s.ID, "name", s.Name,	"group", s.FirstGroup(), "input", input)
+			r.log.InfoFi("Removing disabled input", "ID", s.ID, "name", s.Name, "group", s.FirstGroup(), "input", input)
 		}))
 	}
 
