@@ -208,6 +208,9 @@ streams:
     # - '^.*:\/\/([^#?/]*)' # By host
     # - '^.*:\/\/.*?\/([^#?]*)' # By path
 
+  # Remove disabled inputs?
+  remove_disabled_inputs: false
+
   # List of regular expressions.
   # If any expression match URL of a stream's input, only this input will be kept and all other will be disabled.
   # If list has multiple entries, only input matching first found expression will be kept.

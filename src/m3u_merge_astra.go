@@ -29,7 +29,7 @@ func main() {
 	// Parse command line arguments
 	flags, err := cli.Parse()
 	if flags.Version {
-		fmt.Println("v2.1.0")
+		fmt.Println("v2.2.0")
 		os.Exit(0)
 	}
 	if cli.IsErrOfType(err, goFlags.ErrHelp) {
@@ -118,6 +118,9 @@ func main() {
 	}
 	if len(cfg.Streams.RemoveDuplicatedInputsByRxList) > 0 {
 		modifiedStreams = astraRepo.RemoveDuplicatedInputsByRx(modifiedStreams)
+	}
+	if cfg.Streams.RemoveDisabledInputs {
+		modifiedStreams = astraRepo.RemoveDisabledInputs(modifiedStreams)
 	}
 	if cfg.Streams.UpdateInputs {
 		modifiedStreams = mergeRepo.UpdateInputs(modifiedStreams, m3uChannels)

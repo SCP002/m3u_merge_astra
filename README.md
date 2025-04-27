@@ -217,6 +217,9 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     > Why does it exist?  
     > To be able to remove dulticated inputs per stream by specific conditions, for example by host name.
 
+  * `remove_disabled_inputs`  
+    Remove disabled inputs?
+
   * `disable_all_but_one_input_by_rx_list`  
     List of regular expressions.  
     If any expression match URL of a stream's input, only this input will be kept and all other will be disabled.  

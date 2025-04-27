@@ -235,6 +235,17 @@ func (s Stream) disableAllButOneInputByRx(cfg cfg.Streams, callback func(string)
 	return s
 }
 
+// removeDisabledInputs returns stream with all disabled inputs removed.
+//
+// Runs <callback> for every removed input.
+func (s Stream) removeDisabledInputs(callback func(string)) Stream {
+	for _, inp := range s.DisabledInputs {
+		callback(inp)
+	}
+	s.DisabledInputs = []string{}
+	return s
+}
+
 // removeBlockedInputs removes blocked inputs from stream, running <callback> for every removed input
 func (s Stream) removeBlockedInputs(cfg cfg.Streams, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
@@ -507,6 +518,19 @@ func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
 		out = append(out, s.disableAllButOneInputByRx(r.cfg.Streams, func(input string) {
 			r.log.InfoFi("Disabling other input per stream by regular expressions", "ID", s.ID, "name", s.Name,
 				"group", s.FirstGroup(), "input", input)
+		}))
+	}
+
+	return
+}
+
+// RemoveDisabledInputs returns shallow copy of <streams> with all disabled inputs removed
+func (r repo) RemoveDisabledInputs(streams []Stream) (out []Stream) {
+	r.log.Info("Removing disabled inputs")
+
+	for _, s := range streams {
+		out = append(out, s.removeDisabledInputs(func(input string) {
+			r.log.InfoFi("Removing disabled input", "ID", s.ID, "name", s.Name,	"group", s.FirstGroup(), "input", input)
 		}))
 	}
 

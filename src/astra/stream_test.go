@@ -402,6 +402,30 @@ func TestDisableAllButOneInputByRx(t *testing.T) {
 	assert.Exactly(t, expected, s2.DisabledInputs, "should add all normal removed inputs to the list of disabled ones")
 }
 
+func TestRemoveDisabledInputs(t *testing.T) {
+	s1 := Stream{
+		Inputs:         []string{"http://input/1"},
+		DisabledInputs: []string{"http://input/2", "http://input/2"},
+	}
+	s1Original := copier.TestDeep(t, s1)
+
+	removed := []string{}
+	s2 := s1.removeDisabledInputs(func(input string) {
+		removed = append(removed, input)
+	})
+	assert.NotSame(t, &s1, &s2, "should return copy of stream")
+	assert.Exactly(t, s1Original, s1, "should not modify the source")
+
+	expected := []string{"http://input/1"}
+	assert.Exactly(t, expected, s2.Inputs, "should not remove enabled inputs")
+
+	expected = []string{"http://input/2", "http://input/2"}
+	assert.Exactly(t, expected, removed, "callback should return these removed iputs")
+
+	expected = []string{}
+	assert.Exactly(t, expected, s2.DisabledInputs, "should remove all disabled inputs")
+}
+
 func TestRemoveBlockedInputs(t *testing.T) {
 	cfg := cfg.NewDefCfg().Streams
 
@@ -1564,6 +1588,65 @@ func TestAllDisableAllButOneInputByRx(t *testing.T) {
 	})
 	assert.Contains(t, out, `Disabling other input per stream by regular expressions: ID "0", name "Name 1", `+
 		`group "Cat: Grp", input "http://input/1#abc"`)
+}
+
+func TestAllRemoveDisabledInputs(t *testing.T) {
+	r := newDefRepo()
+
+	sl1 := []Stream{
+		{
+			Inputs:         []string{"http://input/1", "http://input/2"},
+			DisabledInputs: []string{"http://input/3", "http://input/4"},
+		},
+		{
+			Inputs:         []string{"http://input/5"},
+			DisabledInputs: []string{"http://input/6"},
+		},
+		{
+			Inputs:         []string{},
+			DisabledInputs: []string{},
+		},
+	}
+	sl1Original := copier.TestDeep(t, sl1)
+
+	sl2 := r.RemoveDisabledInputs(sl1)
+	assert.NotSame(t, &sl1, &sl2, "should return copy of streams")
+	assert.Exactly(t, sl1Original, sl1, "should not modify the source")
+
+	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
+
+	expected := []Stream{
+		{
+			Inputs:         []string{"http://input/1", "http://input/2"},
+			DisabledInputs: []string{},
+		},
+		{
+			Inputs:         []string{"http://input/5"},
+			DisabledInputs: []string{},
+		},
+		{
+			Inputs:         []string{},
+			DisabledInputs: []string{},
+		},
+	}
+	assert.Exactly(t, expected, sl2, "should return these streams")
+
+	// Test log output
+	out := capturer.CaptureStderr(func() {
+		r := newDefRepo()
+
+		sl1 := []Stream{
+			{
+				ID:             "0",
+				Name:           "Name 1",
+				Groups:         map[string]string{"Cat": "Grp"},
+				DisabledInputs: []string{"http://input/1"},
+			},
+		}
+
+		_ = r.RemoveDisabledInputs(sl1)
+	})
+	assert.Contains(t, out, `Removing disabled input: ID "0", name "Name 1", group "Cat: Grp", input "http://input/1"`)
 }
 
 func TestSetKeepActive(t *testing.T) {
