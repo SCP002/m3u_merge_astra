@@ -28,7 +28,7 @@ defined in `--programCfgPath` and sends requests to astra to modify config.
 | -u, --astraUser      | Astra user                                                                                      |
 | -p, --astraPwd       | Astra password                                                                                  |
 
-Unless `--programCfgPath` is specified, on first run it creates default program config in current directory and terminates.
+Unless config already exists, on first run it creates default config in current directory and terminates.
 Tweak it to suit your needs and start the program again.
 
 ## Downloads
