@@ -372,15 +372,15 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 3. Install dependencies:
 
     ```sh
-    cd src
-    go mod tidy
+    cd m3u_merge_astra/src
+    go get ./...
     ```
 
-    Or
+    Or:
 
     ```sh
-    cd src
-    go get ./...
+    cd m3u_merge_astra/src
+    go mod tidy
     ```
 
 4. Update dependencies (optional):
