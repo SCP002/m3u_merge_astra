@@ -2,7 +2,7 @@
 
 project_name="m3u_merge_astra"
 main_file="${project_name}.go"
-build_path="../build"
+build_path="./build"
 
 os_list=(
     "darwin"

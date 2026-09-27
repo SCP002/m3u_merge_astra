@@ -1,11 +1,9 @@
-# Ignore everything
-/*
+# Build output
+/build/
 
-# Not these files
-!/.gitattributes
-!/.gitignore
-!/LICENSE
-!/README.md
+# Kilo
+/.kilo/
 
-# Not these directories
-!/src
+# OS
+.DS_Store
+Thumbs.db

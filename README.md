@@ -372,14 +372,14 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 3. Install dependencies:
 
     ```sh
-    cd m3u_merge_astra/src
+    cd m3u_merge_astra
     go get ./...
     ```
 
     Or:
 
     ```sh
-    cd m3u_merge_astra/src
+    cd m3u_merge_astra
     go mod tidy
     ```
 
@@ -395,4 +395,4 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     go build -o ../build/ m3u_merge_astra.go
     ```
 
-    Or run `/src/build.sh` to build binaries for every OS / architecture pair.
+    Or run `/build.sh` to build binaries for every OS / architecture pair.
