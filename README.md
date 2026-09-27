@@ -395,4 +395,4 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     go build -o ./build/ m3u_merge_astra.go
     ```
 
-    Or run `/build.sh` to build binaries for every OS / architecture pair.
+    Or run `./build.sh` to build binaries for every OS / architecture pair.
