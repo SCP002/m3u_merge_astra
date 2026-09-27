@@ -16,6 +16,7 @@ import (
 	"m3u_merge_astra/util/logger"
 	"m3u_merge_astra/util/network"
 	"m3u_merge_astra/util/slice"
+	"m3u_merge_astra/version"
 
 	"github.com/adampresley/sigint"
 	goFlags "github.com/jessevdk/go-flags"
@@ -29,7 +30,7 @@ func main() {
 	// Parse command line arguments
 	flags, err := cli.Parse()
 	if flags.Version {
-		fmt.Println("v2.2.0")
+		fmt.Println(version.Version)
 		os.Exit(0)
 	}
 	if cli.IsErrOfType(err, goFlags.ErrHelp) {
