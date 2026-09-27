@@ -389,10 +389,10 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
     go get -u ./...
     ```
 
-5. To build a binary for current OS / architecture into `../build/` folder:
+5. To build a binary for current OS / architecture into `./build/` folder:
 
     ```sh
-    go build -o ../build/ m3u_merge_astra.go
+    go build -o ./build/ m3u_merge_astra.go
     ```
 
     Or run `/build.sh` to build binaries for every OS / architecture pair.
