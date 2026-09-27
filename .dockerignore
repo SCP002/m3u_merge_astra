@@ -1,0 +1,6 @@
+.gitignore
+compose.dev.yaml
+/.devcontainer/
+/.git/
+/.kilo/
+/build/

@@ -56,6 +56,23 @@ See [releases page](https://github.com/SCP002/m3u-merge-astra/releases)
 
 * When `streams.remove_dead_inputs` is enabled, progress of removing dead inputs from streams is printed every 30 seconds.
 
+## Docker
+
+For developement:
+
+```sh
+docker compose --file compose.dev.yaml up --detach
+docker compose --file compose.dev.yaml exec dev bash
+```
+
+to enter the devcontainer, or open the project in Visual Studio Code with `Dev Containers` extension installed.
+
+To build in container environment:
+
+```sh
+docker compose --file compose.dev.yaml run --rm --build dev bash ./build.sh
+```
+
 ## Program config settings
 
 * `general`  
@@ -392,7 +409,7 @@ See [releases page](https://github.com/SCP002/m3u-merge-astra/releases)
 5. To build a binary for current OS / architecture into `./build/` folder:
 
     ```sh
-    go build -o ./build/ m3u-merge-astra.go
+    go build -o build/ .
     ```
 
     Or run `./build.sh` to build binaries for every OS / architecture pair.
