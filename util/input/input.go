@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"m3u_merge_astra/util/logger"
+	"m3u-merge-astra/util/logger"
 
 	"github.com/cockroachdb/errors"
 	"github.com/samber/lo"

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"m3u_merge_astra/util/logger"
+	"m3u-merge-astra/util/logger"
 
 	"github.com/stretchr/testify/assert"
 )

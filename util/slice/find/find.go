@@ -1,9 +1,9 @@
 package find
 
 import (
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/compare"
-	"m3u_merge_astra/util/slice"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/compare"
+	"m3u-merge-astra/util/slice"
 
 	"github.com/samber/lo"
 )

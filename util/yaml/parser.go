@@ -2,9 +2,9 @@ package yaml
 
 import (
 	"fmt"
-	"m3u_merge_astra/util/parse"
-	"m3u_merge_astra/util/scan"
-	"m3u_merge_astra/util/slice"
+	"m3u-merge-astra/util/parse"
+	"m3u-merge-astra/util/scan"
+	"m3u-merge-astra/util/slice"
 	"reflect"
 	"regexp"
 	"slices"

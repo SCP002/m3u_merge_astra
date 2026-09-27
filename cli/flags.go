@@ -24,7 +24,7 @@ func Parse() (Flags, error) {
 	flags := Flags{
 		// Set defaults
 		LogLevel:       pLog.InfoLevel,
-		ProgramCfgPath: "m3u_merge_astra.yaml",
+		ProgramCfgPath: "m3u-merge-astra.yaml",
 		AstraAddr:      "http://127.0.0.1:8000",
 	}
 	parser := goFlags.NewParser(&flags, goFlags.Options(goFlags.Default))

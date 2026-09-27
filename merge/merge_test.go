@@ -2,10 +2,10 @@ package merge
 
 import (
 	"fmt"
-	"m3u_merge_astra/astra"
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/m3u"
-	"m3u_merge_astra/util/copier"
+	"m3u-merge-astra/astra"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/m3u"
+	"m3u-merge-astra/util/copier"
 	"regexp"
 	"strconv"
 	"strings"

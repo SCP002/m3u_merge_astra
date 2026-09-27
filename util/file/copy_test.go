@@ -8,7 +8,7 @@ import (
 )
 
 func TestCopy(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "m3u_merge_astra_copy_test.txt")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra_copy_test.txt")
 	
 	err := Copy("copy_test.txt", path)
 	assert.NoError(t, err, "should not return error")

@@ -1,8 +1,8 @@
 package m3u
 
 import (
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/copier"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/copier"
 	"regexp"
 	"testing"
 

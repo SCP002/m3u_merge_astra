@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/slice"
-	urlUtil "m3u_merge_astra/util/url"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/slice"
+	urlUtil "m3u-merge-astra/util/url"
 
 	"github.com/samber/lo"
 )

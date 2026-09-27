@@ -1,10 +1,10 @@
 package merge
 
 import (
-	"m3u_merge_astra/astra"
-	"m3u_merge_astra/m3u"
-	"m3u_merge_astra/util/rnd"
-	"m3u_merge_astra/util/slice/find"
+	"m3u-merge-astra/astra"
+	"m3u-merge-astra/m3u"
+	"m3u-merge-astra/util/rnd"
+	"m3u-merge-astra/util/slice/find"
 
 	"github.com/samber/lo"
 )

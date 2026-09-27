@@ -1,9 +1,9 @@
 package cfg
 
 import (
-	"m3u_merge_astra/util/copier"
-	"m3u_merge_astra/util/file"
-	"m3u_merge_astra/util/logger"
+	"m3u-merge-astra/util/copier"
+	"m3u-merge-astra/util/file"
+	"m3u-merge-astra/util/logger"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -51,7 +51,7 @@ func TestBadRegexpError(t *testing.T) {
 func TestInitDefault(t *testing.T) {
 	log := logger.New(logger.DebugLevel)
 
-	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
 	// Test creation of the default config
 	actual, isNewCfg, err := Init(log, path)
@@ -73,7 +73,7 @@ func TestInitDefault(t *testing.T) {
 func TestInitAddMissing(t *testing.T) {
 	log := logger.New(logger.DebugLevel)
 
-	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
 	// Test reading exising non-default config and adding missing fields
 	err := file.Copy("init_input_test.yaml", path)
@@ -100,7 +100,7 @@ func TestInitAddMissing(t *testing.T) {
 func TestInitDamaged(t *testing.T) {
 	log := logger.New(logger.DebugLevel)
 
-	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
 	// Test reading damaged config
 	err := file.Copy("init_damaged_test.yaml", path)
@@ -125,7 +125,7 @@ func TestInitDamaged(t *testing.T) {
 func TestInitValidateCaptureGroups(t *testing.T) {
 	log := logger.New(logger.DebugLevel)
 
-	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
 	// Test reading config with 'remove_duplicated_inputs_by_rx_list'
 	err := file.Copy("init_validate_capture_groups_test.yaml", path)
@@ -145,7 +145,7 @@ func TestInitValidateCaptureGroups(t *testing.T) {
 func TestInitSimplifyAliases(t *testing.T) {
 	log := logger.New(logger.DebugLevel)
 
-	path := filepath.Join(t.TempDir(), "m3u_merge_astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
 	// Test reading config with name aliases and simplification of them
 	err := file.Copy("init_simplify_aliases_test.yaml", path)

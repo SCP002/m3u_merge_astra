@@ -1,9 +1,9 @@
 package find
 
 import (
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/copier"
-	"m3u_merge_astra/util/slice"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/copier"
+	"m3u-merge-astra/util/slice"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

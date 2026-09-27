@@ -1,7 +1,7 @@
 package network
 
 import (
-	"m3u_merge_astra/util/logger"
+	"m3u-merge-astra/util/logger"
 	"net/http"
 	"testing"
 	"time"

@@ -1,4 +1,4 @@
-module m3u_merge_astra
+module m3u-merge-astra
 
 go 1.23
 

@@ -18,10 +18,10 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/samber/lo"
 
-	"m3u_merge_astra/util/logger"
-	"m3u_merge_astra/util/parse"
-	"m3u_merge_astra/util/simplify"
-	yamlUtil "m3u_merge_astra/util/yaml"
+	"m3u-merge-astra/util/logger"
+	"m3u-merge-astra/util/parse"
+	"m3u-merge-astra/util/simplify"
+	yamlUtil "m3u-merge-astra/util/yaml"
 )
 
 //go:embed default.yaml

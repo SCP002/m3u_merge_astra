@@ -3,7 +3,7 @@ package astra
 import (
 	"testing"
 
-	"m3u_merge_astra/util/copier"
+	"m3u-merge-astra/util/copier"
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"

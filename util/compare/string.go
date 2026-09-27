@@ -1,8 +1,8 @@
 package compare
 
 import (
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/simplify"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/simplify"
 	"strings"
 
 	"github.com/samber/lo"

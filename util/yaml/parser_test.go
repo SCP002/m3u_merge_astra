@@ -1,8 +1,8 @@
 package yaml
 
 import (
-	"m3u_merge_astra/util/copier"
-	"m3u_merge_astra/util/slice"
+	"m3u-merge-astra/util/copier"
+	"m3u-merge-astra/util/slice"
 	"os"
 	"testing"
 

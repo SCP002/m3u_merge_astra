@@ -1,7 +1,7 @@
 package slice
 
 import (
-	"m3u_merge_astra/util/copier"
+	"m3u-merge-astra/util/copier"
 	"sort"
 )
 

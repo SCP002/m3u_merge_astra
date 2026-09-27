@@ -7,8 +7,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/logger"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/logger"
 )
 
 // newDefRepo returns new repository initialized with defaults

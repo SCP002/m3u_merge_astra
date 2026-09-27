@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"m3u_merge_astra/astra"
-	"m3u_merge_astra/util/logger"
+	"m3u-merge-astra/astra"
+	"m3u-merge-astra/util/logger"
 
 	json "github.com/SCP002/jsonexraw"
 	"github.com/cockroachdb/errors"

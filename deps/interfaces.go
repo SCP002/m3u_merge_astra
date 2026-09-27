@@ -1,8 +1,8 @@
 package deps
 
 import (
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/logger"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/logger"
 )
 
 // Global represents global dependencies holder interface

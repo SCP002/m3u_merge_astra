@@ -2,12 +2,12 @@ package astra
 
 import (
 	"fmt"
-	"m3u_merge_astra/astra/analyzer"
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/copier"
-	"m3u_merge_astra/util/logger"
-	"m3u_merge_astra/util/network"
-	"m3u_merge_astra/util/slice"
+	"m3u-merge-astra/astra/analyzer"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/copier"
+	"m3u-merge-astra/util/logger"
+	"m3u-merge-astra/util/network"
+	"m3u-merge-astra/util/slice"
 	"net/http"
 	"regexp"
 	"strconv"

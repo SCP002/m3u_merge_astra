@@ -1,12 +1,12 @@
 package main
 
 import (
-	"m3u_merge_astra/astra"
-	"m3u_merge_astra/astra/api"
-	"m3u_merge_astra/cfg"
-	"m3u_merge_astra/util/file"
-	"m3u_merge_astra/util/logger"
-	"m3u_merge_astra/util/network"
+	"m3u-merge-astra/astra"
+	"m3u-merge-astra/astra/api"
+	"m3u-merge-astra/cfg"
+	"m3u-merge-astra/util/file"
+	"m3u-merge-astra/util/logger"
+	"m3u-merge-astra/util/network"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,14 +17,14 @@ import (
 
 // Requires running astra
 func TestMain(t *testing.T) {
-	programCfgPath := filepath.Join(t.TempDir(), "m3u_merge_astra_main_test.yaml")
+	programCfgPath := filepath.Join(t.TempDir(), "m3u-merge-astra_main_test.yaml")
 
 	// Create program config file
 	err := file.Copy(filepath.Join("cfg", "default.yaml"), programCfgPath)
 	assert.NoError(t, err, "should copy default program config")
 
 	// Create M3U file
-	m3uPath := filepath.Join(t.TempDir(), "m3u_merge_astra_main_test.m3u")
+	m3uPath := filepath.Join(t.TempDir(), "m3u-merge-astra_main_test.m3u")
 	m3uBytes := []byte(`#EXTM3U
 	#EXTINF:-1 group-title="Group 3",Channel 3
 	http://url/3

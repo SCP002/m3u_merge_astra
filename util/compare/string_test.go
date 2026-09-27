@@ -1,7 +1,7 @@
 package compare
 
 import (
-	"m3u_merge_astra/cfg"
+	"m3u-merge-astra/cfg"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -1,4 +1,4 @@
-# m3u_merge_astra
+# m3u-merge-astra
 
 ## What is this?
 
@@ -22,7 +22,7 @@ defined in `--programCfgPath` and sends requests to astra to modify config.
 | -n, --noninteractive | Do not ask user for input (confirmations etc.)                                                  |
 | -l, --logLevel       | Logging level. Can be from `1` (most verbose) to `7` (least verbose) [default: `3`]             |
 | -f, --logFile        | Log file. If set, writes structured log to a file at the specified path                         |
-| -c, --programCfgPath | Program config file path to read from or initialize a default [default: `m3u_merge_astra.yaml`] |
+| -c, --programCfgPath | Program config file path to read from or initialize a default [default: `m3u-merge-astra.yaml`] |
 | -m, --m3uPath        | M3U file path to get channels from. Can be a local file or URL                                  |
 | -a, --astraAddr      | Astra address in format of `scheme://host:port` [default: `http://127.0.0.1:8000`]              |
 | -u, --astraUser      | Astra user                                                                                      |
@@ -33,7 +33,7 @@ Tweak it to suit your needs and start the program again.
 
 ## Downloads
 
-See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
+See [releases page](https://github.com/SCP002/m3u-merge-astra/releases)
 
 ## Tips
 
@@ -43,7 +43,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 * It is possible to add streams from one instance of astra to another one, for example:  
 
   ```sh
-  m3u_merge_astra -m http://another_astra:8005/playlist.m3u8 -a 127.0.0.1:8002 -u admin -p admin
+  m3u-merge-astra -m http://another_astra:8005/playlist.m3u8 -a 127.0.0.1:8002 -u admin -p admin
   ```
 
 * It is possible to use dummy M3U file to run independent tasks
@@ -51,7 +51,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 
   ```sh
   touch dummy.m3u
-  m3u_merge_astra -m dummy.m3u -u admin -p admin
+  m3u-merge-astra -m dummy.m3u -u admin -p admin
   ```
 
 * When `streams.remove_dead_inputs` is enabled, progress of removing dead inputs from streams is printed every 30 seconds.
@@ -366,20 +366,20 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 2. Download the source code:  
 
     ```sh
-    git clone https://github.com/SCP002/m3u_merge_astra.git
+    git clone https://github.com/SCP002/m3u-merge-astra.git
     ```
 
 3. Install dependencies:
 
     ```sh
-    cd m3u_merge_astra
+    cd m3u-merge-astra
     go get ./...
     ```
 
     Or:
 
     ```sh
-    cd m3u_merge_astra
+    cd m3u-merge-astra
     go mod tidy
     ```
 
@@ -392,7 +392,7 @@ See [releases page](https://github.com/SCP002/m3u_merge_astra/releases)
 5. To build a binary for current OS / architecture into `./build/` folder:
 
     ```sh
-    go build -o ./build/ m3u_merge_astra.go
+    go build -o ./build/ m3u-merge-astra.go
     ```
 
     Or run `./build.sh` to build binaries for every OS / architecture pair.
