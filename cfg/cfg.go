@@ -835,7 +835,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerVideoOnlyBitrateThreshold = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[15]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerAudioOnlyBitrateThreshold
@@ -855,7 +855,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerAudioOnlyBitrateThreshold = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[16]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerCCErrorsThreshold
@@ -878,7 +878,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerCCErrorsThreshold = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[17]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerPCRErrorsThreshold
@@ -900,7 +900,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerPCRErrorsThreshold = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[18]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerPESErrorsThreshold
@@ -922,7 +922,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerPESErrorsThreshold = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[19]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.DisableDeadInputs
@@ -940,7 +940,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.DisableDeadInputs = defVal
 	}
-	// v1.5.0 to v2.0.0
+	// v1.5.0 to v2.0.0.
 	knownField = knownFields[20]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.General.AstraAPIRespTimeout
@@ -954,7 +954,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.General.AstraAPIRespTimeout = defVal
 	}
-	// v1.5.0 to v2.0.0
+	// v1.5.0 to v2.0.0.
 	knownField = knownFields[21]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.General.MergeCategories
@@ -970,7 +970,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.General.MergeCategories = defVal
 	}
-	// v1.5.0 to v2.0.0
+	// v1.5.0 to v2.0.0.
 	knownField = knownFields[22]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerMaxAttempts
@@ -988,7 +988,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerMaxAttempts = defVal
 	}
-	// v2.0.0 to v2.1.0
+	// v2.0.0 to v2.1.0.
 	knownField = knownFields[23]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.DisableAllButOneInputByRxList
@@ -1014,7 +1014,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.DisableAllButOneInputByRxList = defVal
 	}
-	// v2.1.0 to v2.2.0
+	// v2.1.0 to v2.2.0.
 	knownField = knownFields[24]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.RemoveDisabledInputs
