@@ -17,14 +17,14 @@ import (
 
 // Requires running astra.
 func TestMain(t *testing.T) {
-	programCfgPath := filepath.Join(t.TempDir(), "m3u-merge-astra_main_test.yaml")
+	programCfgPath := filepath.Join(t.TempDir(), "m3u-merge-astra-main-test.yaml")
 
 	// Create program config file.
 	err := file.Copy(filepath.Join("cfg", "default.yaml"), programCfgPath)
 	assert.NoError(t, err, "should copy default program config")
 
 	// Create M3U file.
-	m3uPath := filepath.Join(t.TempDir(), "m3u-merge-astra_main_test.m3u")
+	m3uPath := filepath.Join(t.TempDir(), "m3u-merge-astra-main-test.m3u")
 	m3uBytes := []byte(`#EXTM3U
 	#EXTINF:-1 group-title="Group 3",Channel 3
 	http://url/3

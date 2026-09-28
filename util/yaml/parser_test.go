@@ -21,7 +21,7 @@ func TestBadDataError(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
-	input, err := os.ReadFile("insert_input_test.yaml")
+	input, err := os.ReadFile("insert-input-test.yaml")
 	assert.NoError(t, err, "should read input file")
 	inputOriginal := copier.TestDeep(t, input)
 
@@ -346,13 +346,13 @@ func TestInsert(t *testing.T) {
 	assert.NoError(t, err, "should not return error")
 
 	// Compare result with the expected one.
-	expected, err := os.ReadFile("insert_expected_test.yaml")
+	expected, err := os.ReadFile("insert-expected-test.yaml")
 	assert.NoError(t, err, "should read expected file")
 	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
 }
 
 func TestSetIndent(t *testing.T) {
-	inputBytes, err := os.ReadFile("set_indent_input_test.yaml")
+	inputBytes, err := os.ReadFile("set-indent-input-test.yaml")
 	assert.NoError(t, err, "should read input file")
 	input := []rune(string(inputBytes))
 	inputOriginal := copier.TestDeep(t, input)
@@ -362,18 +362,18 @@ func TestSetIndent(t *testing.T) {
 	assert.NotSame(t, &input, &output, "should return copy of input")
 	assert.Exactly(t, inputOriginal, input, "should not modify the source")
 
-	expected, err := os.ReadFile("set_indent_2_expected_test.yaml")
+	expected, err := os.ReadFile("set-indent-2-expected-test.yaml")
 	assert.NoError(t, err, "should read expected file")
 	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
 
 	output = setIndent(input, 4)
-	expected, err = os.ReadFile("set_indent_4_expected_test.yaml")
+	expected, err = os.ReadFile("set-indent-4-expected-test.yaml")
 	assert.NoError(t, err, "should read expected file")
 	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
 }
 
 func TestInsertIndex(t *testing.T) {
-	inputBytes, err := os.ReadFile("insert_input_test.yaml")
+	inputBytes, err := os.ReadFile("insert-input-test.yaml")
 	assert.NoError(t, err, "should read input file")
 	input := []rune(string(inputBytes))
 

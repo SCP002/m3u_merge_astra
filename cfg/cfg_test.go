@@ -51,7 +51,7 @@ func TestBadRegexpError(t *testing.T) {
 func TestInitDefault(t *testing.T) {
 	log := logger.New(logger.DebugLevel, os.Stderr)
 
-	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra-init-test.yaml")
 
 	// Test creation of the default config.
 	actual, isNewCfg, err := Init(log, path)
@@ -73,10 +73,10 @@ func TestInitDefault(t *testing.T) {
 func TestInitAddMissing(t *testing.T) {
 	log := logger.New(logger.DebugLevel, os.Stderr)
 
-	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra-init-test.yaml")
 
 	// Test reading exising non-default config and adding missing fields.
-	err := file.Copy("init_input_test.yaml", path)
+	err := file.Copy("init-input-test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
 	actual, isNewCfg, err := Init(log, path)
@@ -91,7 +91,7 @@ func TestInitAddMissing(t *testing.T) {
 	actualBytes, err := os.ReadFile(path)
 	assert.NoError(t, err, "should read actual config bytes")
 
-	expectedBytes, err := os.ReadFile("init_expected_test.yaml")
+	expectedBytes, err := os.ReadFile("init-expected-test.yaml")
 	assert.NoError(t, err, "should read expected config bytes")
 
 	assert.Exactly(t, string(expectedBytes), string(actualBytes), "should add missing fields to config file")
@@ -100,10 +100,10 @@ func TestInitAddMissing(t *testing.T) {
 func TestInitDamaged(t *testing.T) {
 	log := logger.New(logger.DebugLevel, os.Stderr)
 
-	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra-init-test.yaml")
 
 	// Test reading damaged config.
-	err := file.Copy("init_damaged_test.yaml", path)
+	err := file.Copy("init-damaged-test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
 	_, isNewCfg, err := Init(log, path)
@@ -125,10 +125,10 @@ func TestInitDamaged(t *testing.T) {
 func TestInitValidateCaptureGroups(t *testing.T) {
 	log := logger.New(logger.DebugLevel, os.Stderr)
 
-	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra-init-test.yaml")
 
 	// Test reading config with 'remove_duplicated_inputs_by_rx_list'.
-	err := file.Copy("init_validate_capture_groups_test.yaml", path)
+	err := file.Copy("init-validate-capture-groups-test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
 	_, isNewCfg, err := Init(log, path)
@@ -145,10 +145,10 @@ func TestInitValidateCaptureGroups(t *testing.T) {
 func TestInitSimplifyAliases(t *testing.T) {
 	log := logger.New(logger.DebugLevel, os.Stderr)
 
-	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
+	path := filepath.Join(t.TempDir(), "m3u-merge-astra-init-test.yaml")
 
 	// Test reading config with name aliases and simplification of them.
-	err := file.Copy("init_simplify_aliases_test.yaml", path)
+	err := file.Copy("init-simplify-aliases-test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
 	actual, isNewCfg, err := Init(log, path)
