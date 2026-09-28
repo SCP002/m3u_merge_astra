@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 	analyzer := New(log, "127.0.0.1", time.Second)
 	assert.Exactly(t, log, analyzer.log, "should set logger for analyzer")
 	assert.Exactly(t, "ws://127.0.0.1/api/", analyzer.url, "should set analyzer URL")
@@ -20,7 +21,7 @@ func TestNew(t *testing.T) {
 
 // Requires a running astra analyzer.
 func TestCheck(t *testing.T) {
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 	handshakeTimeout := time.Second * 3
 	watchTime := time.Second * 15
 	maxAttempts := 3

@@ -1,6 +1,7 @@
 package astra
 
 import (
+	"os"
 	"reflect"
 	"testing"
 
@@ -13,11 +14,11 @@ import (
 
 // newDefRepo returns new repository initialized with defaults.
 func newDefRepo() repo {
-	return NewRepo(logger.New(logger.DebugLevel), cfg.NewDefCfg())
+	return NewRepo(logger.New(logger.DebugLevel, os.Stderr), cfg.NewDefCfg())
 }
 
 func TestNewRepo(t *testing.T) {
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 	cfg := cfg.NewDefCfg()
 
 	compareOpt := cmp.FilterPath(func(p cmp.Path) bool {
@@ -37,7 +38,7 @@ func TestLog(t *testing.T) {
 	exportedOpt := cmp.Exporter(func(t reflect.Type) bool {
 		return true
 	})
-	loggersEqual := cmp.Equal(logger.New(logger.DebugLevel), newDefRepo().Log(), compareOpt, exportedOpt)
+	loggersEqual := cmp.Equal(logger.New(logger.DebugLevel, os.Stderr), newDefRepo().Log(), compareOpt, exportedOpt)
 	assert.True(t, loggersEqual)
 }
 

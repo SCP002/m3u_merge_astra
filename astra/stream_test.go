@@ -2,18 +2,20 @@ package astra
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
 	"m3u-merge-astra/astra/analyzer"
 	"m3u-merge-astra/cfg"
 	"m3u-merge-astra/util/copier"
 	"m3u-merge-astra/util/logger"
 	"m3u-merge-astra/util/network"
 	"m3u-merge-astra/util/slice"
-	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
-	"testing"
-	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
@@ -145,7 +147,7 @@ func TestUpdateStreamInput(t *testing.T) {
 }
 
 func TestHasInput(t *testing.T) {
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 
 	s := Stream{Inputs: []string{"http://other/input", "http://known/input#a"}}
 
@@ -1232,7 +1234,7 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 }
 
 func TestProgressRemoveDeadInputs(t *testing.T) {
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 
 	handleSleep2Sec := func(w http.ResponseWriter, req *http.Request) {
 		log.Debugf("Got request to %v", req.URL)
