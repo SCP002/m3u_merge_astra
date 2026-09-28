@@ -13,11 +13,11 @@ func TestIsNameSame(t *testing.T) {
 		SimilarTranslitMap: cfg.DefSimilarTranslitMap(),
 	}
 
-	// Test name simplification regex: the + sign
+	// Test name simplification regex: the + sign.
 	assert.False(t, IsNameSame(cfg, "Some Thing (+2)", "@Something2"), "should not discard the + symbol")
 
-	// Test transliteration and name simplification
-	// Left "НТВ" is a cyrillic visually similar to latin
+	// Test transliteration and name simplification.
+	// Left "НТВ" is a cyrillic visually similar to latin.
 	cfg.SimilarTranslit = false
 	cfg.FullTranslit = false
 	assert.False(t, IsNameSame(cfg, "НТВ HD", "htb hd"), "names should not be equvalent")
@@ -46,7 +46,7 @@ func TestIsNameSame(t *testing.T) {
 	assert.True(t, IsNameSame(cfg, "Some Thing", "@Something"), "names should be equvalent")
 	assert.True(t, IsNameSame(cfg, "TV1000 Русское кино", "ТВ 1000 Русское кино"), "names should be equvalent")
 
-	// Test name aliases
+	// Test name aliases.
 	cfg.NameAliasList = [][]string{
 		{"Name 1", "Name 1 var 2", "Name 1 var 3"},
 		{"Name 2", "Name 2 var 2"},

@@ -103,7 +103,7 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	return
 }
 
-// AddNewStreams returns `streams` with new streams generated from `channels` if no such found in `streams`
+// AddNewStreams returns `streams` with new streams generated from `channels` if no such found in `streams`.
 func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []astra.Stream {
 	r.log.Info("Adding new streams")
 
@@ -124,7 +124,7 @@ func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []as
 	return streams
 }
 
-// generateUID returns 4 symbols long ID unique for `streams`
+// generateUID returns 4 symbols long ID unique for `streams`.
 func generateUID(streams []astra.Stream) string {
 	for {
 		uid := rnd.String(4, false, true)

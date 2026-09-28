@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 	assert.Exactly(t, time.Second, analyzer.dialer.HandshakeTimeout, "should set analyzer handshake timeout")
 }
 
-// Requires a running astra analyzer
+// Requires a running astra analyzer.
 func TestCheck(t *testing.T) {
 	log := logger.New(logger.DebugLevel)
 	handshakeTimeout := time.Second * 3
@@ -52,7 +52,7 @@ func TestCheck(t *testing.T) {
 	// 	assert.NoError(t, err)
 	// }()
 
-	// Regular file
+	// Regular file.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -64,7 +64,7 @@ func TestCheck(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	// Bad url to check
+	// Bad url to check.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -76,7 +76,7 @@ func TestCheck(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	// Bad analyzer address and url to check
+	// Bad analyzer address and url to check.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

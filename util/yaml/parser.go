@@ -15,32 +15,32 @@ import (
 	"github.com/samber/lo"
 )
 
-// PathNotFoundError represents error thrown if specified path not found in given YAML
+// PathNotFoundError represents error thrown if specified path not found in given YAML.
 type PathNotFoundError struct {
 	Path string
 }
 
-// Error is used to satisfy golang error interface
+// Error is used to satisfy golang error interface.
 func (e PathNotFoundError) Error() string {
 	return fmt.Sprintf("Can not find the specified path: %v", e.Path)
 }
 
-// BadDataError represents error thrown if specified node data is incorrect
+// BadDataError represents error thrown if specified node data is incorrect.
 type BadDataError struct {
 	Data   any
 	Reason string
 }
 
-// Error is used to satisfy golang error interface
+// Error is used to satisfy golang error interface.
 func (e BadDataError) Error() string {
 	return e.Reason
 }
 
-// Node represents YAML comment, key and value
+// Node represents YAML comment, key and value.
 type Node struct {
 	StartNewline bool // Add new line character(s) before content?
 	HeadComment  []string
-	Data         any  // Keys and values. Can be types from values.go
+	Data         any  // Keys and values. Can be types from values.go.
 	EndNewline   bool // Add new line character(s) after content?
 }
 
@@ -52,7 +52,7 @@ type Node struct {
 //
 // Can return errors defined in this package: BadDataError, PathNotFoundError.
 func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) {
-	// Return error if node data is not nil and keys or values are empty
+	// Return error if node data is not nil and keys or values are empty.
 	{
 		errMsg := "Can not set empty key or value, use nil instead"
 		err := errors.Wrap(BadDataError{Data: node.Data, Reason: errMsg}, "Validate node data")
@@ -127,7 +127,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 		}
 	}
 
-	// Prepare and get insert location
+	// Prepare and get insert location.
 	output := []rune(string(input))
 
 	step := 2
@@ -138,24 +138,24 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	}
 
 	indent := strings.Repeat(" ", step*depth)
-	newlineSeq := "\n" // Prefer LF
+	newlineSeq := "\n" // Prefer LF.
 	commentSeq := "# "
 	listValSeq := "- "
 	listAlignSeq := "  "
 	keyValDelimSeq := ": "
 	var chunk strings.Builder
 
-	// Add top newline
+	// Add top newline.
 	if node.StartNewline {
 		chunk.WriteString(newlineSeq)
 	}
 
-	// Add comment
+	// Add comment.
 	for _, line := range node.HeadComment {
 		chunk.WriteString(indent + commentSeq + line + newlineSeq)
 	}
 
-	// Add keys and values
+	// Add keys and values.
 	switch data := node.Data.(type) {
 	case nil:
 		//
@@ -204,15 +204,15 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 			if branch.Value.Commented {
 				chunk.WriteString(commentSeq)
 			}
-			// Add extra spaces on top of regular indent to align deep values
+			// Add extra spaces on top of regular indent to align deep values.
 			chunk.WriteString(strings.Repeat(listAlignSeq, branch.depth-1))
-			// Add hyphens based on how deep value is
+			// Add hyphens based on how deep value is.
 			chunk.WriteString(strings.Repeat(listValSeq, maxDepth-branch.depth+1))
 			chunk.WriteString(branch.Value.Value + newlineSeq)
 		}
 	case Map:
 		chunk.WriteString(indent + data.Key + ":" + newlineSeq)
-		// Transform map to slice and sort it to ensure key order
+		// Transform map to slice and sort it to ensure key order.
 		pairs := lo.MapToSlice(data.Map, func(key string, value Value) Pair {
 			return Pair{Key: key, Value: value.Value, Commented: value.Commented}
 		})
@@ -228,20 +228,20 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 		}
 	}
 
-	// Add bottom newline
+	// Add bottom newline.
 	if node.EndNewline {
 		chunk.WriteString(newlineSeq)
 	}
 
-	// Insert chunk into output
+	// Insert chunk into output.
 	output = slices.Insert(output, insertIdx, []rune(chunk.String())...)
 
 	return []byte(string(output)), nil
 }
 
-// setIndent returns copy of `input` with the specified `tIndent` set
+// setIndent returns copy of `input` with the specified `tIndent` set.
 func setIndent(input []rune, tIndent int) []rune {
-	// indentPair represents integer pair
+	// indentPair represents integer pair.
 	type indentPair struct {
 		old int
 		new int
@@ -249,9 +249,9 @@ func setIndent(input []rune, tIndent int) []rune {
 
 	var parentsIndents []indentPair
 
-	// getParentIndent returns new indent of the parent of the `line` or 0 if not found (indentPair.new default value)
+	// getParentIndent returns new indent of the parent of the `line` or 0 if not found (indentPair.new default value).
 	getParentIndent := func(line string) int {
-		// Find closest section header which old indent is lower than `line` has
+		// Find closest section header which old indent is lower than `line` has.
 		indent, _ := lo.Find(parentsIndents, func(parentIndent indentPair) bool {
 			return parentIndent.old < parse.GetIndent(line)
 		})
@@ -260,7 +260,7 @@ func setIndent(input []rune, tIndent int) []rune {
 
 	listRx := regexp.MustCompile(`^ *(- )+`)
 
-	// getHyphensAmount returns amount of starting "- " in the `line`
+	// getHyphensAmount returns amount of starting "- " in the `line`.
 	getHyphensAmount := func(line string) int {
 		hyphens := 0
 		if matchList := listRx.FindStringSubmatch(line); len(matchList) > 0 {
@@ -287,13 +287,13 @@ func setIndent(input []rune, tIndent int) []rune {
 		if cIndent > 0 {
 			newIndent += tIndent
 			if isSeqValue {
-				newIndent += 2 // Add 2 to align sequence keys and values
+				newIndent += 2 // Add 2 to align sequence keys and values.
 			}
 		}
 		if isFolder {
 			parentsIndents = slice.Prepend(parentsIndents, indentPair{old: cIndent, new: newIndent})
 		} else if hypensAmount > 1 {
-			// Indent nested lists with two spaces regardless of `tIndent`
+			// Indent nested lists with two spaces regardless of `tIndent`.
 			parentsIndents = slice.Prepend(parentsIndents, indentPair{old: cIndent, new: parentIndent + 2})
 		}
 
@@ -343,7 +343,8 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 
 	depth := 0
 	folderIdx := 0
-	lastIndent := -tIndent // Set initial indent to negative target so first folder with indent 0 will have proper depth
+	// Set initial indent to negative target so first folder with indent 0 will have proper depth.
+	lastIndent := -tIndent
 	sc := scan.New(input, 0)
 	for sc.Lines(true) {
 		cIndent := parse.GetIndent(sc.Line)
@@ -354,7 +355,7 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 			continue
 		}
 		isFolder := strings.HasSuffix(sc.Line, ":")
-		// If folder and depth not grew
+		// If folder and depth not grew.
 		if isFolder && cIndent <= lastIndent {
 			return 0, 0, err
 		}
@@ -362,12 +363,12 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 		sc.Line = strings.ReplaceAll(sc.Line, `"`, ``)
 		sc.Line = strings.ReplaceAll(sc.Line, `'`, ``)
 
-		// If path entry with correct name is found and it's indent is equal to previous + 1 depth level
+		// If path entry with correct name is found and it's indent is equal to previous + 1 depth level.
 		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent+tIndent {
 			if isFolder {
 				depth++
 			}
-			// If last path entry
+			// If last path entry.
 			if folderIdx == len(folders)-1 {
 				if sectionEnd && depth > 0 {
 					depth--
@@ -385,9 +386,9 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 	return 0, 0, err
 }
 
-// flatten returns `tree` as a single level deep slice and sets maximum depth of the `tree` in `maxDepth`
+// flatten returns `tree` as a single level deep slice and sets maximum depth of the `tree` in `maxDepth`.
 func flatten(tree ValueTree, maxDepth *int) (out []ValueTree) {
-	// If value is empty (root), do not append it to output and do not increase depth
+	// If value is empty (root), do not append it to output and do not increase depth.
 	if tree.Value.Value != "" {
 		tree.depth++
 		out = append(out, tree)

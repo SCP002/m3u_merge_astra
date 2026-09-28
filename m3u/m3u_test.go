@@ -121,7 +121,7 @@ func TestReplaceGroups(t *testing.T) {
 	expected = Channel{Group: "To Group 1"}
 	assert.Exactly(t, expected, cl2[2], "should replace known group")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -193,7 +193,7 @@ func TestRemoveBlocked(t *testing.T) {
 
 	assert.Exactly(t, Channel{}, cl2[1], "should keep empty channel")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 

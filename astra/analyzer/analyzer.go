@@ -15,7 +15,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// startReq represets start request to analyzer
+// startReq represets start request to analyzer.
 type startReq struct {
 	Cmd     string `json:"cmd"`
 	Address string `json:"address"`
@@ -31,7 +31,7 @@ type startResp struct {
 	Streams []stream `json:"streams"`
 }
 
-// total represents aggregated information about stream since previous response
+// total represents aggregated information about stream since previous response.
 type total struct {
 	BitrateLimit int  `json:"bitrate_limit"`
 	CCErrors     int  `json:"cc_errors"`
@@ -43,7 +43,7 @@ type total struct {
 	PESErrors    int  `json:"pes_errors"`
 }
 
-// stream respresents elementary stream (audio or video)
+// stream respresents elementary stream (audio or video).
 type stream struct {
 	Descriptors []any  `json:"descriptors"`
 	TypeID      int    `json:"type_id"`
@@ -51,7 +51,7 @@ type stream struct {
 	TypeName    string `json:"type_name"`
 }
 
-// Result represents check result containing averages of info such as bitrate and various errors
+// Result represents check result containing averages of info such as bitrate and various errors.
 type Result struct {
 	Bitrate   int // Kbit/s
 	CCErrors  int
@@ -62,17 +62,17 @@ type Result struct {
 	HasVideo  bool
 }
 
-// stopReq represets stop request to analyzer
+// stopReq represets stop request to analyzer.
 type stopReq struct {
 	Cmd string `json:"cmd"`
 }
 
-// Analyzer represents astra analyzer client interface
+// Analyzer represents astra analyzer client interface.
 type Analyzer interface {
 	Check(watchTime time.Duration, maxAttempts int, urlToCheck string) (Result, error)
 }
 
-// analyzer represents astra analyzer client
+// analyzer represents astra analyzer client.
 type analyzer struct {
 	url    string
 	dialer *websocket.Dialer
@@ -101,7 +101,7 @@ func New(log *logger.Logger, address string, handshakeTimeout time.Duration) *an
 //
 // Does Not return error if `urlToCheck` is dead or invalid, rely on bitrate == 0.
 func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck string) (Result, error) {
-	// Does the same as it's parent but without retry logic and returns when `ctx` is done
+	// Does the same as it's parent but without retry logic and returns when `ctx` is done.
 	check := func(ctx context.Context, urlToCheck string) (Result, error) {
 		conn, _, err := a.dialer.Dial(a.url, nil)
 		if err != nil {
@@ -109,7 +109,7 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 		}
 		defer conn.Close()
 
-		// Read responses
+		// Read responses.
 		readErrCh := make(chan error)
 		readRespCh := make(chan startResp)
 
@@ -132,7 +132,7 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 			}
 		}()
 
-		// Send start request
+		// Send start request.
 		startReqBytes, err := json.Marshal(startReq{Cmd: "start", Address: urlToCheck})
 		if err != nil {
 			return Result{}, errors.Wrap(err, "Encode start request")
@@ -142,20 +142,20 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 			return Result{}, errors.Wrap(err, "Send start request")
 		}
 
-		// Collect, calculate and return the result when context deadline exceeded
+		// Collect, calculate and return the result when context deadline exceeded.
 		totalResponsesCount := 0
 		var result Result
 		for {
 			select {
 			case err := <-readErrCh:
-				// Return on error
+				// Return on error.
 				return Result{}, err
 			case resp := <-readRespCh:
-				// Collect results
+				// Collect results.
 				if resp.Total != nil {
 					totalResponsesCount++
 					result.Scrambled = resp.Total.Scrambled
-					// Build sums to calculate averages later
+					// Build sums to calculate averages later.
 					result.Bitrate += resp.Total.Bitrate
 					result.CCErrors += resp.Total.CCErrors
 					result.PCRErrors += resp.Total.PCRErrors
@@ -174,8 +174,8 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 					}
 				}
 			case <-ctx.Done():
-				// Deadline exceeded
-				// Send stop request
+				// Deadline exceeded.
+				// Send stop request.
 				stopReqBytes, err := json.Marshal(stopReq{Cmd: "stop"})
 				if err != nil {
 					return Result{}, errors.Wrap(err, "Encode stop request")
@@ -184,18 +184,18 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 				if err != nil {
 					return Result{}, errors.Wrap(err, "Send stop request")
 				}
-				// Send close message
+				// Send close message.
 				closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")
 				err = conn.WriteMessage(websocket.CloseMessage, closeMsg)
 				if err != nil {
 					return Result{}, errors.Wrap(err, "Send close message")
 				}
-				// Wait (with timeout) for the server to close the connection (deferred close)
+				// Wait (with timeout) for the server to close the connection (deferred close).
 				select {
 				case <-readErrCh:
 				case <-time.After(time.Second):
 				}
-				// Calculate averages and return the result
+				// Calculate averages and return the result.
 				if totalResponsesCount != 0 {
 					result.Bitrate = result.Bitrate / totalResponsesCount
 					result.CCErrors = result.CCErrors / totalResponsesCount
@@ -207,7 +207,7 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 		}
 	}
 
-	// Make attempts
+	// Make attempts.
 	var result Result
 	var err error
 	iter.Times(maxAttempts, func(attempt int) bool {
@@ -216,7 +216,7 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 		defer cancel()
 		result, err = check(ctx, urlToCheck)
 		if result.Bitrate > 0 || err != nil {
-			return false // Stop trying
+			return false // Stop trying.
 		}
 		return true
 	})
@@ -224,24 +224,24 @@ func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck str
 	return result, err
 }
 
-// fakeAnalyzer represents fake astra analyzer client
+// fakeAnalyzer represents fake astra analyzer client.
 type fakeAnalyzer struct {
 	urlResultMap map[string]Result
 }
 
-// NewFake returns new fake astra analyzer client
+// NewFake returns new fake astra analyzer client.
 func NewFake() *fakeAnalyzer {
 	return &fakeAnalyzer{
 		urlResultMap: map[string]Result{},
 	}
 }
 
-// AddResult adds new `result` to return when checking `url`
+// AddResult adds new `result` to return when checking `url`.
 func (a fakeAnalyzer) AddResult(url string, result Result) {
 	a.urlResultMap[url] = result
 }
 
-// Check returns fake result for `urlToCheck` and nil error
+// Check returns fake result for `urlToCheck` and nil error.
 func (a fakeAnalyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck string) (Result, error) {
 	return a.urlResultMap[urlToCheck], nil
 }

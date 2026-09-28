@@ -14,38 +14,38 @@ import (
 	"github.com/samber/lo"
 )
 
-// loadReq respresents request to load config
+// loadReq respresents request to load config.
 type loadReq struct {
 	Cmd string `json:"cmd"`
 }
 
-// setStreamReq represents request to set stream
+// setStreamReq represents request to set stream.
 type setStreamReq struct {
 	Cmd    string       `json:"cmd"`
 	ID     string       `json:"id"`
 	Stream astra.Stream `json:"stream"`
 }
 
-// setStreamResp represents response to setting stream
+// setStreamResp represents response to setting stream.
 type setStreamResp struct {
 	Status string `json:"set-stream"`
 	Error  string `json:"error"`
 }
 
-// setCategoryReq represents request to set category
+// setCategoryReq represents request to set category.
 type setCategoryReq struct {
 	Cmd      string         `json:"cmd"`
 	ID       *int           `json:"id,omitempty"`
 	Category astra.Category `json:"category"`
 }
 
-// setCategoryResp represents response to setting category
+// setCategoryResp represents response to setting category.
 type setCategoryResp struct {
 	Status string `json:"set-category"`
 	Error  string `json:"error"`
 }
 
-// handler holds dependencies and credentials to access astra API
+// handler holds dependencies and credentials to access astra API.
 type handler struct {
 	log        *logger.Logger
 	httpClient *http.Client
@@ -54,7 +54,7 @@ type handler struct {
 	password   string
 }
 
-// NewHandler returns new astra API handler
+// NewHandler returns new astra API handler.
 func NewHandler(log *logger.Logger, httpClient *http.Client, address string, user string, password string) handler {
 	return handler{log: log, httpClient: httpClient, address: address, user: user, password: password}
 }
@@ -111,7 +111,7 @@ func (h handler) SetCategory(idx int, category astra.Category) error {
 	return nil
 }
 
-// SetStreams makes a requests to API setting `streams` synchronously
+// SetStreams makes a requests to API setting `streams` synchronously.
 func (h handler) SetStreams(streams []astra.Stream) {
 	h.log.Info("Sending changed streams to astra")
 
@@ -125,7 +125,7 @@ func (h handler) SetStreams(streams []astra.Stream) {
 	}
 }
 
-// SetStream makes a request to API setting stream with `id` to `stream`
+// SetStream makes a request to API setting stream with `id` to `stream`.
 func (h handler) SetStream(id string, stream astra.Stream) error {
 	respBytes, err := h.request("POST", "/control/", setStreamReq{Cmd: "set-stream", ID: id, Stream: stream})
 	if err != nil {
@@ -147,7 +147,7 @@ func (h handler) SetStream(id string, stream astra.Stream) error {
 	return nil
 }
 
-// FetchCfg makes a request to API and returns astra config
+// FetchCfg makes a request to API and returns astra config.
 func (h handler) FetchCfg() (astra.Cfg, error) {
 	respBytes, err := h.request("POST", "/control/", loadReq{Cmd: "load"})
 	if err != nil {
@@ -163,7 +163,7 @@ func (h handler) FetchCfg() (astra.Cfg, error) {
 	return cfg, nil
 }
 
-// request makes a request to astra API sending struct `cmd` in reqest body and returns response body as bytes
+// request makes a request to astra API sending struct `cmd` in reqest body and returns response body as bytes.
 func (h handler) request(method string, path string, cmd any) ([]byte, error) {
 	reqBody, err := json.Marshal(cmd)
 	if err != nil {

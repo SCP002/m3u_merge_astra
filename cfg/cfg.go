@@ -27,16 +27,16 @@ import (
 //go:embed default.yaml
 var defCfgBytes []byte
 
-// Root represents root settings of the program
+// Root represents root settings of the program.
 type Root struct {
 	General General `koanf:"general"`
 	M3U     M3U     `koanf:"m3u"`
 	Streams Streams `koanf:"streams"`
 }
 
-// General represents general settings of the program
+// General represents general settings of the program.
 type General struct {
-	// FullTranslit specifies if name transliteration should be used to detect which M3U channel corresponds a stream
+	// FullTranslit specifies if name transliteration should be used to detect which M3U channel corresponds a stream.
 	FullTranslit bool `koanf:"full_translit"`
 
 	// FullTranslitMap represents source to destination character mapping.
@@ -57,7 +57,7 @@ type General struct {
 	// Key: From. Value: To.
 	SimilarTranslitMap map[string]string `koanf:"similar_translit_map"`
 
-	// NameAliases specifies if name aliases should be used to detect which M3U channel corresponds a stream
+	// NameAliases specifies if name aliases should be used to detect which M3U channel corresponds a stream.
 	NameAliases bool `koanf:"name_aliases"`
 
 	// NameAliasList represents the list of lists.
@@ -73,10 +73,10 @@ type General struct {
 	// This field will not be included into config and used to improve performance of util/compare.IsNameSame().
 	SimpleNameAliasList [][]string
 
-	// AstraAPIRespTimeout represents astra API response timeout
+	// AstraAPIRespTimeout represents astra API response timeout.
 	AstraAPIRespTimeout time.Duration `koanf:"astra_api_resp_timeout"`
 
-	// MergeCategories specifies if duplicated categories should be removed with unique groups combined per category
+	// MergeCategories specifies if duplicated categories should be removed with unique groups combined per category.
 	MergeCategories bool `koanf:"merge_categories"`
 }
 
@@ -92,9 +92,9 @@ func (c General) SimplifyAliases() (out [][]string) {
 	return
 }
 
-// M3U represents M3U related settings of the program
+// M3U represents M3U related settings of the program.
 type M3U struct {
-	// RespTimeout represents M3U playlist URL response timeout
+	// RespTimeout represents M3U playlist URL response timeout.
 	RespTimeout time.Duration `koanf:"resp_timeout"`
 
 	// ChannNameBlacklist represens the list of regular expressions.
@@ -120,21 +120,21 @@ type M3U struct {
 	ChannGroupMap map[string]string `koanf:"chann_group_map"`
 }
 
-// Streams represents astra streams related settings of the program
+// Streams represents astra streams related settings of the program.
 type Streams struct {
-	// AddedPrefix represents new stream name prefix
+	// AddedPrefix represents new stream name prefix.
 	AddedPrefix string `koanf:"added_prefix"`
 
-	// AddNew specifies if new astra streams should be added if streams does not contain M3U channel name
+	// AddNew specifies if new astra streams should be added if streams does not contain M3U channel name.
 	AddNew bool `koanf:"add_new"`
 
-	// AddGroupsToNew specifies if groups should be added to new astra streams
+	// AddGroupsToNew specifies if groups should be added to new astra streams.
 	AddGroupsToNew bool `koanf:"add_groups_to_new"`
 
-	// GroupsCategoryForNew represents category name to use for groups of new astra streams
+	// GroupsCategoryForNew represents category name to use for groups of new astra streams.
 	GroupsCategoryForNew string `koanf:"groups_category_for_new"`
 
-	// AddNewWithKnownInputs specifies if new astra streams should be added if streams contain M3U channel URL
+	// AddNewWithKnownInputs specifies if new astra streams should be added if streams contain M3U channel URL.
 	AddNewWithKnownInputs bool `koanf:"add_new_with_known_inputs"`
 
 	// MakeNewEnabled specifies if new streams should be enabled.
@@ -150,7 +150,7 @@ type Streams struct {
 	// NewKeepActive represents delay before stop stream if no active connections for new streams.
 	NewKeepActive int `koanf:"new_keep_active"`
 
-	// DisabledPrefix represents disabled stream name prefix
+	// DisabledPrefix represents disabled stream name prefix.
 	DisabledPrefix string `koanf:"disabled_prefix"`
 
 	// RemoveWithoutInputs specifies if streams without inputs should be removed.
@@ -165,20 +165,20 @@ type Streams struct {
 	// (but not removed).
 	EnableOnInputUpdate bool `koanf:"enable_on_input_update"`
 
-	// Rename specifies if astra streams should be renamed as M3U channels if their standartized names are equal
+	// Rename specifies if astra streams should be renamed as M3U channels if their standartized names are equal.
 	Rename bool `koanf:"rename"`
 
-	// AddNewInputs specifies if new inputs of astra streams should be added if such found in M3U channels
+	// AddNewInputs specifies if new inputs of astra streams should be added if such found in M3U channels.
 	AddNewInputs bool `koanf:"add_new_inputs"`
 
-	// UniteInputs specifies if inputs of streams with the same names should be moved to the first stream found
+	// UniteInputs specifies if inputs of streams with the same names should be moved to the first stream found.
 	UniteInputs bool `koanf:"unite_inputs"`
 
 	// HashCheckOnAddNewInputs specifies if new inputs of astra streams should be added even if M3U channel and
 	// stream input only differ by hash (everything after #).
 	HashCheckOnAddNewInputs bool `koanf:"hash_check_on_add_new_inputs"`
 
-	// SortInputs specifies if inputs of astra streams should be sorted
+	// SortInputs specifies if inputs of astra streams should be sorted.
 	SortInputs bool `koanf:"sort_inputs"`
 
 	// InputWeightToTypeMap represents Mapping of how high stream input should appear in the list after sorting.
@@ -186,7 +186,7 @@ type Streams struct {
 	// Any unspecified input will have weight of maximum - 1 (right before the last entry).
 	InputWeightToTypeMap map[int]regexp.Regexp `koanf:"input_weight_to_type_map"`
 
-	// UnknownInputWeight represents Default weight of unknown inputs
+	// UnknownInputWeight represents Default weight of unknown inputs.
 	UnknownInputWeight int `koanf:"unknown_input_weight"`
 
 	// InputBlacklist represens the list of regular expressions.
@@ -207,7 +207,7 @@ type Streams struct {
 	// This setting is not controlled by 'remove_duplicated_inputs'.
 	RemoveDuplicatedInputsByRxList []regexp.Regexp `koanf:"remove_duplicated_inputs_by_rx_list"`
 
-	// RemoveDisabledInputs specifies if disabled inputs should be removed
+	// RemoveDisabledInputs specifies if disabled inputs should be removed.
 	RemoveDisabledInputs bool `koanf:"remove_disabled_inputs"`
 
 	// DisableAllButOneInputByRxList represens the list of regular expressions.
@@ -241,7 +241,7 @@ type Streams struct {
 	// Use more than 1 with caution. It may result in false positives if server consider frequent requests as spam.
 	InputMaxConns int `koanf:"input_max_conns"`
 
-	// InputRespTimeout represents astra stream input response timeout
+	// InputRespTimeout represents astra stream input response timeout.
 	InputRespTimeout time.Duration `koanf:"input_resp_timeout"`
 
 	// UseAnalyzer specifies if astra analyzer (astra --analyze -p `port`) should be used to check for dead inputs.
@@ -249,10 +249,10 @@ type Streams struct {
 	// Supports HTTP(S), UDP, RTP, RTSP.
 	UseAnalyzer bool `koanf:"use_analyzer"`
 
-	// AnalyzerAddr represents astra analyzer address in format of 'host:port'
+	// AnalyzerAddr represents astra analyzer address in format of 'host:port'.
 	AnalyzerAddr string `koanf:"analyzer_addr"`
 
-	// AnalyzerWatchTime represents amount of time per attempt that astra analyzer should spend collecting results
+	// AnalyzerWatchTime represents amount of time per attempt that astra analyzer should spend collecting results.
 	AnalyzerWatchTime time.Duration `koanf:"analyzer_watch_time"`
 
 	// AnalyzerMaxAttempts represents maximum amount of attempts that astra analyzer should perform trying to get
@@ -311,7 +311,7 @@ type Streams struct {
 	// InputUpdateMap.
 	UpdateInputs bool `koanf:"update_inputs"`
 
-	// KeepInputHash specifies if old URL hash should be kept on updating inputs of astra streams
+	// KeepInputHash specifies if old URL hash should be kept on updating inputs of astra streams.
 	KeepInputHash bool `koanf:"keep_input_hash"`
 
 	// RemoveInputsByUpdateMap specifies if inputs of astra streams which match at least one InputUpdateMap.From
@@ -352,25 +352,25 @@ type Streams struct {
 	InputToKeepActiveMap []KeepActiveAddRule `koanf:"input_to_keep_active_map"`
 }
 
-// UpdateRecord represents astra stream input update rule
+// UpdateRecord represents astra stream input update rule.
 type UpdateRecord struct {
 	From regexp.Regexp `koanf:"from"`
 	To   regexp.Regexp `koanf:"to"`
 }
 
-// HashAddRule represents astra stream input hash adding rule
+// HashAddRule represents astra stream input hash adding rule.
 type HashAddRule struct {
 	By   regexp.Regexp `koanf:"by"`
 	Hash string        `koanf:"hash"`
 }
 
-// KeepActiveAddRule represents astra stream 'keep active' adding rule
+// KeepActiveAddRule represents astra stream 'keep active' adding rule.
 type KeepActiveAddRule struct {
 	By         regexp.Regexp `koanf:"by"`
 	KeepActive int           `koanf:"keep_active"`
 }
 
-// StreamType represents astra stream type
+// StreamType represents astra stream type.
 type StreamType string
 
 const (
@@ -378,24 +378,24 @@ const (
 	MPTS StreamType = "mpts"
 )
 
-// DamagedConfigError represents error thrown if program config is missing unexpected fields
+// DamagedConfigError represents error thrown if program config is missing unexpected fields.
 type DamagedConfigError struct {
 	MissingFields []string
 }
 
-// Error is used to satisfy golang error interface
+// Error is used to satisfy golang error interface.
 func (e DamagedConfigError) Error() string {
 	msg := "Existing program config is missing unexpected fields. Create new config or add missing fields manually"
 	return fmt.Sprintf("%v: %v", msg, strings.Join(e.MissingFields, ", "))
 }
 
-// BadRegexpError represents error thrown if program config has invalid regular expression
+// BadRegexpError represents error thrown if program config has invalid regular expression.
 type BadRegexpError struct {
 	Reason string
 	Regexp regexp.Regexp
 }
 
-// Error is used to satisfy golang error interface
+// Error is used to satisfy golang error interface.
 func (e BadRegexpError) Error() string {
 	return fmt.Sprintf("%v; Regular expression: %v", e.Reason, e.Regexp.String())
 }
@@ -420,7 +420,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		return os.WriteFile(cfgFilePath, defCfgBytes, 0644)
 	}
 
-	// Load config file into koanf or create a new if not exist
+	// Load config file into koanf or create a new if not exist.
 	var root Root
 	if err := loadConfig(); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -434,9 +434,9 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 	}
 
-	// Decode loaded config file into structure
+	// Decode loaded config file into structure.
 	decoder := mapstructure.ComposeDecodeHookFunc(
-		// Compile regular expressions
+		// Compile regular expressions.
 		func(from, to reflect.Type, fromData any) (any, error) {
 			if to == reflect.TypeOf(regexp.Regexp{}) {
 				rxStr := reflect.ValueOf(fromData).String()
@@ -444,7 +444,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 			}
 			return fromData, nil
 		},
-		// Default decoders
+		// Default decoders.
 		mapstructure.StringToTimeDurationHookFunc(),
 		mapstructure.StringToSliceHookFunc(","),
 	)
@@ -464,7 +464,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		return root, false, errors.Wrap(err, "Decode config")
 	}
 
-	// Check if config is damaged (there are more missing fields than was added since v1.0.0)
+	// Check if config is damaged (there are more missing fields than was added since v1.0.0).
 	knownFields := []string{
 		/*  0 */ "streams.add_groups_to_new",
 		/*  1 */ "streams.groups_category_for_new",
@@ -496,21 +496,21 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 	internalFields := []string{
 		"general.SimpleNameAliasList",
 	}
-	// Remove internal fields from missing to prevent false positive DamagedConfigError
+	// Remove internal fields from missing to prevent false positive DamagedConfigError.
 	missingFields, _ = lo.Difference(missingFields, internalFields)
 	if len(missingFields) > 0 {
 		err := DamagedConfigError{MissingFields: missingFields}
 		return root, false, errors.Wrap(err, "Check config")
 	}
 
-	// Add missing known fields
-	cfgBytes, err := os.ReadFile(cfgFilePath) // Broken if read with ko.Bytes("")
+	// Add missing known fields.
+	cfgBytes, err := os.ReadFile(cfgFilePath) // Broken if read with ko.Bytes("").
 	if err != nil {
 		return root, false, errors.Wrap(err, "Read config")
 	}
 	defCfg := NewDefCfg()
 
-	// v1.0.0 to v1.1.0
+	// v1.0.0 to v1.1.0.
 	knownField := knownFields[0]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AddGroupsToNew
@@ -525,7 +525,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AddGroupsToNew = defVal
 	}
-	// v1.0.0 to v1.1.0
+	// v1.0.0 to v1.1.0.
 	knownField = knownFields[1]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.GroupsCategoryForNew
@@ -540,7 +540,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.GroupsCategoryForNew = defVal
 	}
-	// v1.1.0 to v1.2.0
+	// v1.1.0 to v1.2.0.
 	knownField = knownFields[2]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.EnableOnInputUpdate
@@ -555,7 +555,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.EnableOnInputUpdate = defVal
 	}
-	// v1.2.0 to v1.3.0
+	// v1.2.0 to v1.3.0.
 	knownField = knownFields[3]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.General.NameAliases
@@ -569,7 +569,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.General.NameAliases = defVal
 	}
-	// v1.2.0 to v1.3.0
+	// v1.2.0 to v1.3.0.
 	knownField = knownFields[4]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.General.NameAliasList
@@ -609,7 +609,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.General.NameAliasList = defVal
 	}
-	// v1.3.0 to v1.4.0
+	// v1.3.0 to v1.4.0.
 	knownField = knownFields[5]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.RemoveDuplicatedInputsByRxList
@@ -638,7 +638,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.RemoveDuplicatedInputsByRxList = defVal
 	}
-	// v1.3.0 to v1.4.0
+	// v1.3.0 to v1.4.0.
 	knownField = knownFields[6]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.NewKeepActive
@@ -653,7 +653,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.NewKeepActive = defVal
 	}
-	// v1.3.0 to v1.4.0
+	// v1.3.0 to v1.4.0.
 	knownField = knownFields[7]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.NameToKeepActiveMap
@@ -684,7 +684,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.NameToKeepActiveMap = defVal
 	}
-	// v1.3.0 to v1.4.0
+	// v1.3.0 to v1.4.0.
 	knownField = knownFields[8]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.GroupToKeepActiveMap
@@ -715,7 +715,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.GroupToKeepActiveMap = defVal
 	}
-	// v1.3.0 to v1.4.0
+	// v1.3.0 to v1.4.0.
 	knownField = knownFields[9]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.InputToKeepActiveMap
@@ -748,7 +748,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.InputToKeepActiveMap = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[10]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.UseAnalyzer
@@ -767,7 +767,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.UseAnalyzer = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[11]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerAddr
@@ -782,7 +782,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerAddr = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[12]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerWatchTime
@@ -797,7 +797,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerWatchTime = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[13]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerBitrateThreshold
@@ -816,7 +816,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 		root.Streams.AnalyzerBitrateThreshold = defVal
 	}
-	// v1.4.0 to v1.5.0
+	// v1.4.0 to v1.5.0.
 	knownField = knownFields[14]
 	if lo.Contains(metadata.Unset, knownField) {
 		defVal := defCfg.Streams.AnalyzerVideoOnlyBitrateThreshold
@@ -1031,7 +1031,7 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		root.Streams.RemoveDisabledInputs = defVal
 	}
 
-	// Validate amount of capture groups
+	// Validate amount of capture groups.
 	for _, rx := range root.Streams.RemoveDuplicatedInputsByRxList {
 		if rx.NumSubexp() < 1 {
 			msg := "Expecting at least one capture group"
@@ -1039,12 +1039,12 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		}
 	}
 
-	// Write modified config
+	// Write modified config.
 	if err = os.WriteFile(cfgFilePath, cfgBytes, 0644); err != nil {
 		return root, false, errors.Wrap(err, "Write modified config")
 	}
 
-	// Build simple aliases list
+	// Build simple aliases list.
 	if root.General.NameAliases {
 		root.General.SimpleNameAliasList = root.General.SimplifyAliases()
 	}
@@ -1074,7 +1074,7 @@ func DefSimilarTranslitMap() map[string]string {
 	}
 }
 
-// NewDefCfg returns default config as written in "default.yaml" file
+// NewDefCfg returns default config as written in "default.yaml" file.
 func NewDefCfg() Root {
 	return Root{
 		General: General{

@@ -13,19 +13,19 @@ import (
 	"github.com/samber/lo"
 )
 
-// Channel represents M3U channel object
+// Channel represents M3U channel object.
 type Channel struct {
 	Name  string
 	Group string
 	URL   string
 }
 
-// GetName used to satisfy util/slice.Named interface
+// GetName used to satisfy util/slice.Named interface.
 func (ch Channel) GetName() string {
 	return ch.Name
 }
 
-// replaceGroup returns channel with group taken from `cfg`, running `callback` with new group on change
+// replaceGroup returns channel with group taken from `cfg`, running `callback` with new group on change.
 func (ch Channel) replaceGroup(cfg cfg.M3U, callback func(string)) Channel {
 	newGroup := cfg.ChannGroupMap[ch.Group]
 	if ch.Group != newGroup && newGroup != "" {
@@ -35,7 +35,7 @@ func (ch Channel) replaceGroup(cfg cfg.M3U, callback func(string)) Channel {
 	return ch
 }
 
-// Parse parses `rawChannels` into []Channel
+// Parse parses `rawChannels` into []Channel.
 func (r repo) Parse(rawChannels io.ReadCloser) (out []Channel) {
 	r.log.Info("Parsing M3U channels")
 
@@ -67,7 +67,7 @@ func (r repo) Parse(rawChannels io.ReadCloser) (out []Channel) {
 		if !strings.HasPrefix(line, "#") && name != "" {
 			ch := Channel{
 				Name: name,
-				// group-title have a priority over #EXTGRP
+				// group-title have a priority over #EXTGRP.
 				Group: lo.Ternary(groupTitle != "", groupTitle, lastExtGrp),
 				URL:   line,
 			}
@@ -81,7 +81,7 @@ func (r repo) Parse(rawChannels io.ReadCloser) (out []Channel) {
 	return
 }
 
-// Sort returns deep copy of `channels` sorted by name
+// Sort returns deep copy of `channels` sorted by name.
 func (r repo) Sort(channels []Channel) (out []Channel) {
 	r.log.Info("Sorting M3U channels")
 
@@ -90,7 +90,7 @@ func (r repo) Sort(channels []Channel) (out []Channel) {
 	return
 }
 
-// ReplaceGroups returns shallow copy of `channels` with groups taken from map in config
+// ReplaceGroups returns shallow copy of `channels` with groups taken from map in config.
 func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 	r.log.Info("Replacing groups of M3U channels")
 
@@ -104,11 +104,11 @@ func (r repo) ReplaceGroups(channels []Channel) (out []Channel) {
 	return
 }
 
-// RemoveBlocked returns shallow copy of `channels` without blocked ones
+// RemoveBlocked returns shallow copy of `channels` without blocked ones.
 func (r repo) RemoveBlocked(channels []Channel) (out []Channel) {
 	r.log.Info("Removing blocked channels")
 
-	// getAliases returns aliases for the `name` or slice of a single `name` if not found
+	// getAliases returns aliases for the `name` or slice of a single `name` if not found.
 	getAliases := func(name string) []string {
 		aliases, found := lo.Find(r.cfg.General.NameAliasList, func(set []string) bool {
 			return lo.Contains(set, name)

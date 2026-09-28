@@ -1,11 +1,11 @@
 package slice
 
-// Named used to ensure implementing struct has GetName method for functions in find.go and sort.go
+// Named used to ensure implementing struct has GetName method for functions in find.go and sort.go.
 type Named interface {
 	GetName() string
 }
 
-// Interface for testing purposes
+// Interface for testing purposes.
 type TestNamedStruct struct {
 	Name string
 	Slice []int

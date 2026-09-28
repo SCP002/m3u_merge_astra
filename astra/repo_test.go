@@ -11,7 +11,7 @@ import (
 	"m3u-merge-astra/util/logger"
 )
 
-// newDefRepo returns new repository initialized with defaults
+// newDefRepo returns new repository initialized with defaults.
 func newDefRepo() repo {
 	return NewRepo(logger.New(logger.DebugLevel), cfg.NewDefCfg())
 }

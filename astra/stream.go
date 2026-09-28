@@ -26,7 +26,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// Stream represents astra stream object
+// Stream represents astra stream object.
 type Stream struct {
 	DisabledInputs []string          `json:"_input,omitempty"`
 	Enabled        bool              `json:"enable"`
@@ -42,7 +42,7 @@ type Stream struct {
 	MarkDisabled   bool              `json:"-"`               // Set disabled name prefix after processing?
 }
 
-// NewStream returns new stream with default config
+// NewStream returns new stream with default config.
 func NewStream(cfg cfg.Streams, id, name, group string, inputs []string) Stream {
 	var groups map[string]string = nil
 	if cfg.AddGroupsToNew {
@@ -62,12 +62,12 @@ func NewStream(cfg cfg.Streams, id, name, group string, inputs []string) Stream 
 	}
 }
 
-// GetName used to satisfy util/slice.Named interface
+// GetName used to satisfy util/slice.Named interface.
 func (s Stream) GetName() string {
 	return s.Name
 }
 
-// FirstGroup returns alphabetically first "category: group" pair or empty string if groups are empty
+// FirstGroup returns alphabetically first "category: group" pair or empty string if groups are empty.
 func (s Stream) FirstGroup() string {
 	if len(s.Groups) == 0 {
 		return ""
@@ -132,7 +132,7 @@ func (s Stream) HasInput(log *logger.Logger, tURLStr string, withHash bool) bool
 	})
 }
 
-// AddInput adds new `url` to stream inputs
+// AddInput adds new `url` to stream inputs.
 func (s Stream) AddInput(url string) Stream {
 	s.Inputs = slice.Prepend(s.Inputs, url)
 	return s
@@ -147,19 +147,19 @@ func (s Stream) KnownInputs(config cfg.Streams) []string {
 	})
 }
 
-// InputsUpdateNote returns note if stream is disabled and enabling on inputs update is off
+// InputsUpdateNote returns note if stream is disabled and enabling on inputs update is off.
 func (s Stream) InputsUpdateNote(cfg cfg.Streams) string {
 	return lo.Ternary(!s.Enabled && !cfg.EnableOnInputUpdate, "Stream is disabled", "")
 }
 
-// Enable enables the stream and sets MarkDisabled field to false
+// Enable enables the stream and sets MarkDisabled field to false.
 func (s Stream) Enable() Stream {
 	s.Enabled = true
 	s.MarkDisabled = false
 	return s
 }
 
-// RemoveInputs removes all stream inputs equal `tInp`, running `callback` for every input removed
+// RemoveInputs removes all stream inputs equal `tInp`, running `callback` for every input removed.
 func (s Stream) RemoveInputsCb(tInp string, callback func()) Stream {
 	rejectFn := func(cInp string, _ int) bool {
 		if cInp == tInp {
@@ -172,12 +172,12 @@ func (s Stream) RemoveInputsCb(tInp string, callback func()) Stream {
 	return s
 }
 
-// removeInputs is the same as RemoveInputsCb but without callback
+// removeInputs is the same as RemoveInputsCb but without callback.
 func (s Stream) removeInputs(tInp string) Stream {
 	return s.RemoveInputsCb(tInp, func() {})
 }
 
-// Disable disables stream and sets MarkDisabled field to true
+// Disable disables stream and sets MarkDisabled field to true.
 func (s Stream) disable() Stream {
 	s.Enabled = false
 	s.MarkDisabled = true
@@ -246,7 +246,7 @@ func (s Stream) removeDisabledInputs(callback func(string)) Stream {
 	return s
 }
 
-// removeBlockedInputs removes blocked inputs from stream, running `callback` for every removed input
+// removeBlockedInputs removes blocked inputs from stream, running `callback` for every removed input.
 func (s Stream) removeBlockedInputs(cfg cfg.Streams, callback func(string)) Stream {
 	rejectFn := func(input string, _ int) bool {
 		reject := slice.AnyRxMatch(cfg.InputBlacklist, input)
@@ -261,23 +261,23 @@ func (s Stream) removeBlockedInputs(cfg cfg.Streams, callback func(string)) Stre
 	return s
 }
 
-// hasNoInputs reurns true if stream has no inputs
+// hasNoInputs reurns true if stream has no inputs.
 func (s Stream) hasNoInputs() bool {
 	return len(s.Inputs) == 0
 }
 
-// hasPrefix returns true if name of the stream has `prefix`
+// hasPrefix returns true if name of the stream has `prefix`.
 func (s Stream) hasPrefix(prefix string) bool {
 	return prefix != "" && strings.HasPrefix(s.Name, prefix)
 }
 
-// setPrefix returns stream named starting with `prefix`
+// setPrefix returns stream named starting with `prefix`.
 func (s Stream) setPrefix(prefix string) Stream {
 	s.Name = prefix + s.Name
 	return s
 }
 
-// removePrefix returns stream named starting without `prefix`
+// removePrefix returns stream named starting without `prefix`.
 func (s Stream) removePrefix(prefix string) Stream {
 	s.Name = strings.TrimPrefix(s.Name, prefix)
 	return s
@@ -293,7 +293,7 @@ func (r repo) HasInput(streams []Stream, inp string, withHash bool) bool {
 }
 
 // RemoveNamePrefixes returns shallow copy of `streams` without name prefixes on every stream and MarkAdded or
-// MarkDisabled fields set instead
+// MarkDisabled fields set instead.
 func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 	r.log.Info("Temporarily removing name prefixes from streams")
 
@@ -319,7 +319,7 @@ func (r repo) RemoveNamePrefixes(streams []Stream) (out []Stream) {
 	return
 }
 
-// Sort returns deep copy of `streams` sorted by name
+// Sort returns deep copy of `streams` sorted by name.
 func (r repo) Sort(streams []Stream) (out []Stream) {
 	r.log.Info("Sorting astra streams")
 
@@ -328,7 +328,7 @@ func (r repo) Sort(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveBlockedInputs returns shallow copy of `streams` without blocked inputs
+// RemoveBlockedInputs returns shallow copy of `streams` without blocked inputs.
 func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing blocked inputs from streams")
 
@@ -342,7 +342,7 @@ func (r repo) RemoveBlockedInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveDuplicatedInputs returns shallow copy of `streams` with only unique inputs
+// RemoveDuplicatedInputs returns shallow copy of `streams` with only unique inputs.
 func (r repo) RemoveDuplicatedInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing duplicated inputs from streams")
 
@@ -411,19 +411,19 @@ func (r repo) UniteInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// SortInputs returns deep copy of `streams` with all inputs sorted by InputWeightToTypeMap in config
+// SortInputs returns deep copy of `streams` with all inputs sorted by InputWeightToTypeMap in config.
 func (r repo) SortInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Sorting inputs of streams")
 
 	out = copier.MustDeep(streams)
 	for _, s := range out {
 		sort.SliceStable(s.Inputs, func(i, j int) bool {
-			// Set default weight
+			// Set default weight.
 			leftInpWeight := r.cfg.Streams.UnknownInputWeight
 			rightInpWeight := r.cfg.Streams.UnknownInputWeight
 
 			for weight, rx := range r.cfg.Streams.InputWeightToTypeMap {
-				// Assign weight from map if match found
+				// Assign weight from map if match found.
 				leftInpWeight = lo.Ternary(rx.MatchString(s.Inputs[i]), weight, leftInpWeight)
 				rightInpWeight = lo.Ternary(rx.MatchString(s.Inputs[j]), weight, rightInpWeight)
 			}
@@ -451,7 +451,7 @@ func (r repo) DisableDeadInputs(httpClient *http.Client, analyzer analyzer.Analy
 	return r.removeDeadInputs(httpClient, analyzer, streams, true)
 }
 
-// AddHashes returns deep copy of `streams` with hashes added to every input as defined in config with *ToInputHashMap
+// AddHashes returns deep copy of `streams` with hashes added to every input as defined in config with *ToInputHashMap.
 func (r repo) AddHashes(streams []Stream) (out []Stream) {
 	r.log.Info("Adding hashes to inputs of streams")
 
@@ -460,7 +460,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 
 	for sIdx, s := range out {
 		for inpIdx, inp := range s.Inputs {
-			// By inputs
+			// By inputs.
 			for _, rule := range r.cfg.Streams.InputToInputHashMap {
 				if rule.By.MatchString(inp) {
 					var err error
@@ -474,7 +474,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 					}
 				}
 			}
-			// By name
+			// By name.
 			for _, rule := range r.cfg.Streams.NameToInputHashMap {
 				if rule.By.MatchString(s.Name) {
 					var err error
@@ -488,7 +488,7 @@ func (r repo) AddHashes(streams []Stream) (out []Stream) {
 					}
 				}
 			}
-			// By group
+			// By group.
 			for _, rule := range r.cfg.Streams.GroupToInputHashMap {
 				if rule.By.MatchString(s.FirstGroup()) {
 					var err error
@@ -524,7 +524,7 @@ func (r repo) DisableAllButOneInputByRx(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveDisabledInputs returns shallow copy of `streams` with all disabled inputs removed
+// RemoveDisabledInputs returns shallow copy of `streams` with all disabled inputs removed.
 func (r repo) RemoveDisabledInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing disabled inputs")
 
@@ -543,7 +543,7 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 	r.log.Info("Setting keep active on streams")
 
 	for _, s := range streams {
-		// By inputs
+		// By inputs.
 		for _, rule := range r.cfg.Streams.InputToKeepActiveMap {
 			if slice.RxMatchAny(rule.By, s.Inputs...) {
 				keepActiveStr := strconv.Itoa(rule.KeepActive)
@@ -555,7 +555,7 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 				goto Append
 			}
 		}
-		// By name
+		// By name.
 		for _, rule := range r.cfg.Streams.NameToKeepActiveMap {
 			if rule.By.MatchString(s.Name) {
 				keepActiveStr := strconv.Itoa(rule.KeepActive)
@@ -567,7 +567,7 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 				goto Append
 			}
 		}
-		// By group
+		// By group.
 		for _, rule := range r.cfg.Streams.GroupToKeepActiveMap {
 			if rule.By.MatchString(s.FirstGroup()) {
 				keepActiveStr := strconv.Itoa(rule.KeepActive)
@@ -586,7 +586,7 @@ func (r repo) SetKeepActive(streams []Stream) (out []Stream) {
 	return
 }
 
-// RemoveWithoutInputs returns shallow copy of `streams` with Remove field set to true on streams which have no inputs
+// RemoveWithoutInputs returns shallow copy of `streams` with Remove field set to true on streams which have no inputs.
 func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Removing streams without inputs")
 
@@ -601,7 +601,7 @@ func (r repo) RemoveWithoutInputs(streams []Stream) (out []Stream) {
 	return
 }
 
-// DisableWithoutInputs returns shallow copy of `streams` with all streams disabled if they have no inputs
+// DisableWithoutInputs returns shallow copy of `streams` with all streams disabled if they have no inputs.
 func (r repo) DisableWithoutInputs(streams []Stream) (out []Stream) {
 	r.log.Info("Disabling streams without inputs")
 
@@ -639,7 +639,7 @@ func (r repo) AddNamePrefixes(streams []Stream) (out []Stream) {
 	return
 }
 
-// ChangedStreams returns new and changed streams from `newStreams`, which are not in `oldStreams`
+// ChangedStreams returns new and changed streams from `newStreams`, which are not in `oldStreams`.
 func (r repo) ChangedStreams(oldStreams, newStreams []Stream) (out []Stream) {
 	r.log.Info("Building changed streams list")
 
@@ -681,7 +681,7 @@ func (r repo) ChangedStreams(oldStreams, newStreams []Stream) (out []Stream) {
 // Supports HTTP(S), UDP, RTP, RTSP.
 func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyzer, streams []Stream,
 	disable bool) (out []Stream) {
-	// canCheck returns true if `inp` can be checked
+	// canCheck returns true if `inp` can be checked.
 	canCheck := func(inp string) bool {
 		if slice.AnyRxMatch(r.cfg.Streams.DeadInputsCheckBlacklist, inp) {
 			return false
@@ -695,7 +695,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 		return false
 	}
 
-	// getRemovalReason returns reason why `inp` should be removed
+	// getRemovalReason returns reason why `inp` should be removed.
 	getRemovalReason := func(inp string) string {
 		if r.cfg.Streams.UseAnalyzer {
 			result, err := analyzer.Check(r.cfg.Streams.AnalyzerWatchTime, r.cfg.Streams.AnalyzerMaxAttempts, inp)
@@ -703,7 +703,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 				r.log.Errorf("Failed to run analyzer: %v. Ignoring input %v", err, inp)
 				return ""
 			}
-			// Check bitrate
+			// Check bitrate.
 			hasVideoOnly := result.HasVideo && !result.HasAudio
 			hasAudioOnly := !result.HasVideo && result.HasAudio
 			bitrate := result.Bitrate
@@ -718,7 +718,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 			} else if bitrate < r.cfg.Streams.AnalyzerBitrateThreshold {
 				return fmt.Sprintf("Bitrate %v < %v", bitrate, r.cfg.Streams.AnalyzerBitrateThreshold)
 			}
-			// Check errors
+			// Check errors.
 			ccErrorsThreshold := r.cfg.Streams.AnalyzerCCErrorsThreshold
 			pcrErrorsThreshold := r.cfg.Streams.AnalyzerPCRErrorsThreshold
 			pesErrorsThreshold := r.cfg.Streams.AnalyzerPESErrorsThreshold
@@ -736,8 +736,9 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 			if err == nil {
 				defer resp.Body.Close()
 			}
-			// Not checking Content-Type header as server can return text/html but stream still will be playable
-			// Not checking response body as some streams can periodically respond with no content but still be playable
+			// Not checking Content-Type header as server can return text/html but stream still will be playable.
+			// Not checking response body as some streams can periodically respond with no content but still be
+			// playable.
 			if err != nil {
 				errType := network.GetErrType(err)
 				return lo.Ternary(errType == network.Unknown, err.Error(), string(errType))
@@ -753,7 +754,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 	inputsAmount := getInputsAmount(streams)
 	inputsDone := 0
 
-	// getProgress returns formatted progress of inputs processed
+	// getProgress returns formatted progress of inputs processed.
 	getProgress := func() string {
 		mut.Lock()
 		percent := (inputsDone * 100) / inputsAmount
@@ -808,7 +809,7 @@ func (r repo) removeDeadInputs(httpClient *http.Client, analyzer analyzer.Analyz
 	return
 }
 
-// getInputsAmount returns total amount of inputs in `streams`
+// getInputsAmount returns total amount of inputs in `streams`.
 func getInputsAmount(streams []Stream) int {
 	return lo.SumBy(streams, func(s Stream) int {
 		return len(s.Inputs)

@@ -60,7 +60,7 @@ func TestFirstGroup(t *testing.T) {
 			"Category 4": "Group 4",
 		},
 	}
-	for i := 0; i < 10000; i++ { // Test if logic relies on unstable iteration over maps
+	for i := 0; i < 10000; i++ { // Test if logic relies on unstable iteration over maps.
 		if ok := assert.Exactly(t, "Category 1: Group 1", s.FirstGroup(), "should return first group"); !ok {
 			t.FailNow()
 		}
@@ -314,8 +314,8 @@ func TestRemoveDuplicatedInputsByRx(t *testing.T) {
 	r := newDefRepo()
 
 	r.cfg.Streams.RemoveDuplicatedInputsByRxList = []regexp.Regexp{
-		*regexp.MustCompile(`^.*:\/\/([^#?/]*)`),     // By host
-		*regexp.MustCompile(`^.*:\/\/.*?\/([^#?]*)`), // By path
+		*regexp.MustCompile(`^.*:\/\/([^#?/]*)`),     // By host.
+		*regexp.MustCompile(`^.*:\/\/.*?\/([^#?]*)`), // By path.
 	}
 
 	s1 := Stream{Inputs: []string{
@@ -603,7 +603,7 @@ func TestRemoveNamePrefixes(t *testing.T) {
 
 	assert.Exactly(t, sl1[6], sl2[6], "should not change the stream with prefix strings in the middle of the name")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		addedPrefix := r.cfg.Streams.AddedPrefix
@@ -659,7 +659,7 @@ func TestAllRemoveBlockedInputs(t *testing.T) {
 
 	assert.Len(t, sl2[2].Inputs, 0, "should stay 0")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -703,7 +703,7 @@ func TestRemoveDuplicatedInputs(t *testing.T) {
 	expected = []string{"http://input/6"}
 	assert.Exactly(t, expected, sl2[3].Inputs, "should remove inputs existing in previous streams")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -724,8 +724,8 @@ func TestAllRemoveDuplicatedInputsByRx(t *testing.T) {
 	r := newDefRepo()
 
 	r.cfg.Streams.RemoveDuplicatedInputsByRxList = []regexp.Regexp{
-		*regexp.MustCompile(`^.*:\/\/([^#?/]*)`),     // By host
-		*regexp.MustCompile(`^.*:\/\/.*?\/([^#?]*)`), // By path
+		*regexp.MustCompile(`^.*:\/\/([^#?/]*)`),     // By host.
+		*regexp.MustCompile(`^.*:\/\/.*?\/([^#?]*)`), // By path.
 	}
 
 	sl1 := []Stream{
@@ -753,12 +753,12 @@ func TestAllRemoveDuplicatedInputsByRx(t *testing.T) {
 	expected = []string{"http://host1/path1"}
 	assert.Exactly(t, expected, sl2[1].Inputs, "should remove inputs duplicated by path")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
 		r.cfg.Streams.RemoveDuplicatedInputsByRxList = []regexp.Regexp{
-			*regexp.MustCompile(`^.*:\/\/([^#?/]*)`), // By host
+			*regexp.MustCompile(`^.*:\/\/([^#?/]*)`), // By host.
 		}
 
 		sl1 := []Stream{
@@ -812,7 +812,7 @@ func TestUniteInputs(t *testing.T) {
 	expected = Stream{Name: "Name_2", Inputs: make([]string, 0), DisabledInputs: make([]string, 0)}
 	assert.Exactly(t, expected, sl2[5], "should remove inputs from subsequent streams duplicated by name")
 
-	// Test Streams.EnableOnInputUpdate
+	// Test Streams.EnableOnInputUpdate.
 	r.cfg.Streams.EnableOnInputUpdate = false
 	sl1 = []Stream{
 		{Enabled: false, MarkDisabled: true, Name: "Name", Inputs: []string{"http://input/a"}},
@@ -846,7 +846,7 @@ func TestUniteInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.EnableOnInputUpdate = false
@@ -879,7 +879,7 @@ func TestUniteInputs(t *testing.T) {
 func TestSortInputs(t *testing.T) {
 	r := newDefRepo()
 
-	// Multiple entries
+	// Multiple entries.
 	r.cfg.Streams.UnknownInputWeight = 25
 	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{
 		20: *regexp.MustCompile(`input/20`),
@@ -905,7 +905,7 @@ func TestSortInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1[2], sl2[2], "should not modify streams with unknown inputs")
 
-	// One entry
+	// One entry.
 	r.cfg.Streams.UnknownInputWeight = 30
 	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{
 		20: *regexp.MustCompile(`input/20`),
@@ -927,7 +927,7 @@ func TestSortInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1[1], sl2[1], "should not modify streams with unknown inputs")
 
-	// Empty map
+	// Empty map.
 	r.cfg.Streams.UnknownInputWeight = 50
 	r.cfg.Streams.InputWeightToTypeMap = map[int]regexp.Regexp{}
 	sl1 = []Stream{
@@ -948,7 +948,7 @@ func TestRemoveDeadInputs(t *testing.T) {
 	r.cfg.Streams.InputMaxConns = 100
 	r.cfg.Streams.UseAnalyzer = false
 
-	// Create request handlers
+	// Create request handlers.
 	handleAlive := func(w http.ResponseWriter, req *http.Request) {
 		r.log.Debugf("Got request to %v", req.URL)
 		w.WriteHeader(200)
@@ -963,12 +963,12 @@ func TestRemoveDeadInputs(t *testing.T) {
 	mux.HandleFunc("/dead/timeout/", handleTimeout)
 
 	// Run http & https servers as subset of current test to be able to fail it from another goroutines (servers) if any
-	// server returns error
+	// server returns error.
 	var httpSrv, httpsSrv *http.Server
 	t.Run("http_server", func(t *testing.T) {
 		httpSrv, httpsSrv = network.NewHttpServer(mux, 3434, 5656, func(err error) {
 			if !errors.Is(err, http.ErrServerClosed) {
-				// Not using logging from testing.T or else message will not be displayed
+				// Not using logging from testing.T or else message will not be displayed.
 				r.log.Errorf("Test server stopped with non-standard error: %v", err)
 				t.FailNow()
 			}
@@ -977,7 +977,7 @@ func TestRemoveDeadInputs(t *testing.T) {
 	defer httpSrv.Close()
 	defer httpsSrv.Close()
 
-	// Check results
+	// Check results.
 	r.cfg.Streams.DeadInputsCheckBlacklist = []regexp.Regexp{
 		*regexp.MustCompile(`ignore/1`),
 		*regexp.MustCompile(`ignore/2`),
@@ -1026,9 +1026,9 @@ func TestRemoveDeadInputs(t *testing.T) {
 	expected = []string{"rtp://skip/1", "rtsp://skip/2", "file:///skip/3.ts"}
 	assert.Exactly(t, expected, sl2[3].Inputs, "should not remove inputs with unsupported protocols")
 
-	// Test concurrency
+	// Test concurrency.
 	// On Windows may unexpectedly freeze after ~20 seconds of the test runnning.
-	// Use test_remove_dead_inputs.sh
+	// Use test_remove_dead_inputs.sh.
 
 	sl1 = []Stream{
 		{
@@ -1076,7 +1076,7 @@ func TestRemoveDeadInputs(t *testing.T) {
 		}
 	}
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.UseAnalyzer = false
@@ -1175,7 +1175,7 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1[3].Inputs, sl2[3].Inputs, "should not remove inputs with unsupported protocols or ignored")
 
-	// Test negative errors threshold
+	// Test negative errors threshold.
 	r.cfg.Streams.AnalyzerCCErrorsThreshold = -1
 	r.cfg.Streams.AnalyzerPCRErrorsThreshold = -1
 	r.cfg.Streams.AnalyzerPESErrorsThreshold = -1
@@ -1201,7 +1201,7 @@ func TestAnalyzerRemoveDeadInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1[0].Inputs, sl2[0].Inputs, "should not remove inputs with errors if thresholds are negative")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.UseAnalyzer = true
@@ -1243,12 +1243,12 @@ func TestProgressRemoveDeadInputs(t *testing.T) {
 	mux.HandleFunc("/sleep/2sec", handleSleep2Sec)
 
 	// Run http & https servers as subset of current test to be able to fail it from another goroutines (servers) if any
-	// server returns error
+	// server returns error.
 	var httpSrv, httpsSrv *http.Server
 	t.Run("http_server", func(t *testing.T) {
 		httpSrv, httpsSrv = network.NewHttpServer(mux, 3434, 5656, func(err error) {
 			if !errors.Is(err, http.ErrServerClosed) {
-				// Not using logging from testing.T or else message will not be displayed
+				// Not using logging from testing.T or else message will not be displayed.
 				log.Errorf("Test server stopped with non-standard error: %v", err)
 				t.FailNow()
 			}
@@ -1257,9 +1257,9 @@ func TestProgressRemoveDeadInputs(t *testing.T) {
 	defer httpSrv.Close()
 	defer httpsSrv.Close()
 
-	// Test log output
+	// Test log output.
 	// On Windows may unexpectedly freeze after ~20 seconds of the test runnning.
-	// Use test_progress_remove_dead_inputs.sh
+	// Use test_progress_remove_dead_inputs.sh.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.InputMaxConns = 1
@@ -1280,7 +1280,7 @@ func TestDisableDeadInputs(t *testing.T) {
 	r.cfg.Streams.InputMaxConns = 1
 	r.cfg.Streams.UseAnalyzer = false
 
-	// Create request handlers
+	// Create request handlers.
 	handleAlive := func(w http.ResponseWriter, req *http.Request) {
 		r.log.Debugf("Got request to %v", req.URL)
 		w.WriteHeader(200)
@@ -1290,12 +1290,12 @@ func TestDisableDeadInputs(t *testing.T) {
 	mux.HandleFunc("/alive/", handleAlive)
 
 	// Run http & https servers as subset of current test to be able to fail it from another goroutines (servers) if any
-	// server returns error
+	// server returns error.
 	var httpSrv, httpsSrv *http.Server
 	t.Run("http_server", func(t *testing.T) {
 		httpSrv, httpsSrv = network.NewHttpServer(mux, 3434, 5656, func(err error) {
 			if !errors.Is(err, http.ErrServerClosed) {
-				// Not using logging from testing.T or else message will not be displayed
+				// Not using logging from testing.T or else message will not be displayed.
 				r.log.Errorf("Test server stopped with non-standard error: %v", err)
 				t.FailNow()
 			}
@@ -1304,7 +1304,7 @@ func TestDisableDeadInputs(t *testing.T) {
 	defer httpSrv.Close()
 	defer httpsSrv.Close()
 
-	// Check results
+	// Check results.
 	r.cfg.Streams.DeadInputsCheckBlacklist = []regexp.Regexp{
 		*regexp.MustCompile(`ignore/1`),
 	}
@@ -1345,7 +1345,7 @@ func TestDisableDeadInputs(t *testing.T) {
 	expected = []string{"http://dead/no_such_host/3"}
 	assert.Exactly(t, expected, sl2[1].DisabledInputs, "should have these disabled inputs")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.UseAnalyzer = false
@@ -1382,47 +1382,47 @@ func TestAddHashes(t *testing.T) {
 	}
 
 	sl1 := []Stream{
-		{ // Index 0. Known input 1
+		{ // Index 0. Known input 1.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://known/input/1#x", "http://other/input/1"},
 		},
-		{ // Index 1. Known name 1
+		{ // Index 1. Known name 1.
 			Name:   "Known name 1",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://other/input/1#a", "http://other/input/2#x"},
 		},
-		{ // Index 2. Known group 2
+		{ // Index 2. Known group 2.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 			Inputs: []string{"http://other/input/1#a&d", "http://other/input/2"},
 		},
-		{ // Index 3. Known inputs 2 and 1
+		{ // Index 3. Known inputs 2 and 1.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://known/input/2#x", "http://known/input/1"},
 		},
-		{ // Index 4. Known name 2
+		{ // Index 4. Known name 2.
 			Name:   "Known name 2",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://other/input/1"},
 		},
-		{ // Index 5. Known group 1
+		{ // Index 5. Known group 1.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 			Inputs: []string{"http://other/input/1#c", "http://other/input/2#x"},
 		},
-		{ // Index 6. No matches
+		{ // Index 6. No matches.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://other/input/2", "http://other/input/1#a"},
 		},
-		{ // Index 7. Matches by every parameter
+		{ // Index 7. Matches by every parameter.
 			Name:   "Known name 1",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 			Inputs: []string{"http://known/input/2#x", "http://other/input/1", "http://known/input/1"},
 		},
-		{ // Index 8. Matches by group 1 and input 1
+		{ // Index 8. Matches by group 1 and input 1.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 			Inputs: []string{"http://known/input/1", "http://other/input/1"},
@@ -1436,7 +1436,7 @@ func TestAddHashes(t *testing.T) {
 
 	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
 
-	expected := Stream{ // Index 0. Known input 1
+	expected := Stream{ // Index 0. Known input 1.
 		Name:   "Other name",
 		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		Inputs: []string{"http://known/input/1#x&e", "http://other/input/1"},
@@ -1444,59 +1444,59 @@ func TestAddHashes(t *testing.T) {
 	assert.Exactly(t, expected, sl2[0], "inputs matching only by StreamInputToInputHashMap should get hashes only for"+
 		"the exact inputs")
 
-	expected = Stream{ // Index 1. Known name 1
+	expected = Stream{ // Index 1. Known name 1.
 		Name:   "Known name 1",
 		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		Inputs: []string{"http://other/input/1#a", "http://other/input/2#x&a"},
 	}
 	assert.Exactly(t, expected, sl2[1], "should add hash to every matching input")
 
-	expected = Stream{ // Index 2. Known group 2
+	expected = Stream{ // Index 2. Known group 2.
 		Name:   "Other name",
 		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 		Inputs: []string{"http://other/input/1#a&d", "http://other/input/2#d"},
 	}
 	assert.Exactly(t, expected, sl2[2], "should add hash to every matching input")
 
-	expected = Stream{ // Index 3. Known inputs 2 and 1
+	expected = Stream{ // Index 3. Known inputs 2 and 1.
 		Name:   "Other name",
 		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		Inputs: []string{"http://known/input/2#x&f", "http://known/input/1#e"},
 	}
 	assert.Exactly(t, expected, sl2[3], "should add hash to every matching input")
 
-	expected = Stream{ // Index 4. Known name 2
+	expected = Stream{ // Index 4. Known name 2.
 		Name:   "Known name 2",
 		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		Inputs: []string{"http://other/input/1#b"},
 	}
 	assert.Exactly(t, expected, sl2[4], "should add hash to matching input")
 
-	expected = Stream{ // Index 5. Known group 1
+	expected = Stream{ // Index 5. Known group 1.
 		Name:   "Other name",
 		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 		Inputs: []string{"http://other/input/1#c", "http://other/input/2#x&c"},
 	}
 	assert.Exactly(t, expected, sl2[5], "should add hash to every matching input")
 
-	// Index 6. No matches
+	// Index 6. No matches.
 	assert.Exactly(t, sl1[6], sl2[6], "should not modify stream with no matches")
 
-	expected = Stream{ // Index 7. Matches by every parameter
+	expected = Stream{ // Index 7. Matches by every parameter.
 		Name:   "Known name 1",
 		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 		Inputs: []string{"http://known/input/2#x&f&a&d", "http://other/input/1#a&d", "http://known/input/1#e&a&d"},
 	}
 	assert.Exactly(t, expected, sl2[7], "should add hash to every matching input by every parameter")
 
-	expected = Stream{ // Index 8. Matches by group 1 and input 1
+	expected = Stream{ // Index 8. Matches by group 1 and input 1.
 		Name:   "Other name",
 		Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 		Inputs: []string{"http://known/input/1#e&c", "http://other/input/1#c"},
 	}
 	assert.Exactly(t, expected, sl2[8], "should add hash to every matching input by every parameter")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.NameToInputHashMap = []cfg.HashAddRule{
@@ -1567,7 +1567,7 @@ func TestAllDisableAllButOneInputByRx(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2, "should return these streams")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -1631,7 +1631,7 @@ func TestAllRemoveDisabledInputs(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2, "should return these streams")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -1665,47 +1665,47 @@ func TestSetKeepActive(t *testing.T) {
 	}
 
 	sl1 := []Stream{
-		{ // Index 0. Known input 1
+		{ // Index 0. Known input 1.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://known/input/1", "http://other/input/1"},
 		},
-		{ // Index 1. Known name 1
+		{ // Index 1. Known name 1.
 			Name:   "Known name 1",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://other/input/1", "http://other/input/2"},
 		},
-		{ // Index 2. Known group 2
+		{ // Index 2. Known group 2.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 			Inputs: []string{"http://other/input/1", "http://other/input/2"},
 		},
-		{ // Index 3. Known inputs 2 and 1
+		{ // Index 3. Known inputs 2 and 1.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://known/input/2", "http://known/input/1"},
 		},
-		{ // Index 4. Known name 2 and group 1
+		{ // Index 4. Known name 2 and group 1.
 			Name:   "Known name 2",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 			Inputs: []string{"http://other/input/1"},
 		},
-		{ // Index 5. Known group 1
+		{ // Index 5. Known group 1.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 			Inputs: []string{"http://other/input/1", "http://other/input/2"},
 		},
-		{ // Index 6. No matches
+		{ // Index 6. No matches.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 			Inputs: []string{"http://other/input/2", "http://other/input/1"},
 		},
-		{ // Index 7. Matches by every parameter
+		{ // Index 7. Matches by every parameter.
 			Name:   "Known name 1",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 			Inputs: []string{"http://other/input/1", "http://known/input/2"},
 		},
-		{ // Index 8. Matches by group 1 and input 1
+		{ // Index 8. Matches by group 1 and input 1.
 			Name:   "Other name",
 			Groups: map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 			Inputs: []string{"http://known/input/1", "http://other/input/1"},
@@ -1719,7 +1719,7 @@ func TestSetKeepActive(t *testing.T) {
 
 	assert.Len(t, sl2, len(sl1), "amount of output streams should stay the same")
 
-	expected := Stream{ // Index 0. Known input 1
+	expected := Stream{ // Index 0. Known input 1.
 		Name:           "Other name",
 		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		HTTPKeepActive: "4",
@@ -1727,7 +1727,7 @@ func TestSetKeepActive(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[0], "should set HTTPKeepActive")
 
-	expected = Stream{ // Index 1. Known name 1
+	expected = Stream{ // Index 1. Known name 1.
 		Name:           "Known name 1",
 		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		HTTPKeepActive: "0",
@@ -1735,7 +1735,7 @@ func TestSetKeepActive(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[1], "should set HTTPKeepActive to 0")
 
-	expected = Stream{ // Index 2. Known group 2
+	expected = Stream{ // Index 2. Known group 2.
 		Name:           "Other name",
 		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 		HTTPKeepActive: "3",
@@ -1743,7 +1743,7 @@ func TestSetKeepActive(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[2], "should set HTTPKeepActive")
 
-	expected = Stream{ // Index 3. Known inputs 2 and 1
+	expected = Stream{ // Index 3. Known inputs 2 and 1.
 		Name:           "Other name",
 		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Other group"},
 		HTTPKeepActive: "4",
@@ -1751,7 +1751,7 @@ func TestSetKeepActive(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[3], "should set HTTPKeepActive by first found rule by inputs")
 
-	expected = Stream{ // Index 4. Known name 2 and group 1
+	expected = Stream{ // Index 4. Known name 2 and group 1.
 		Name:           "Known name 2",
 		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 		HTTPKeepActive: "1",
@@ -1759,7 +1759,7 @@ func TestSetKeepActive(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[4], "should set HTTPKeepActive by name")
 
-	expected = Stream{ // Index 5. Known group 1
+	expected = Stream{ // Index 5. Known group 1.
 		Name:           "Other name",
 		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 		HTTPKeepActive: "2",
@@ -1767,10 +1767,10 @@ func TestSetKeepActive(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[5], "should set HTTPKeepActive")
 
-	// Index 6. No matches
+	// Index 6. No matches.
 	assert.Exactly(t, sl1[6], sl2[6], "should not modify stream with no matches")
 
-	expected = Stream{ // Index 7. Matches by every parameter
+	expected = Stream{ // Index 7. Matches by every parameter.
 		Name:           "Known name 1",
 		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 2"},
 		HTTPKeepActive: "5",
@@ -1778,7 +1778,7 @@ func TestSetKeepActive(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[7], "should set HTTPKeepActive by first found rule by inputs")
 
-	expected = Stream{ // Index 8. Matches by group 1 and input 1
+	expected = Stream{ // Index 8. Matches by group 1 and input 1.
 		Name:           "Other name",
 		Groups:         map[string]string{r.cfg.Streams.GroupsCategoryForNew: "Known group 1"},
 		HTTPKeepActive: "4",
@@ -1786,7 +1786,7 @@ func TestSetKeepActive(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[8], "should set HTTPKeepActive by first found rule by inputs")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.NameToKeepActiveMap = []cfg.KeepActiveAddRule{
@@ -1826,7 +1826,7 @@ func TestRemoveWithoutInputs(t *testing.T) {
 
 	assert.Exactly(t, expected, sl2, "should remove streams without inputs")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -1881,7 +1881,7 @@ func TestDisableWithoutInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1[7], sl2[7], "should not modify disabled streams")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -1921,7 +1921,7 @@ func TestAddNamePrefixes(t *testing.T) {
 		Name: r.cfg.Streams.DisabledPrefix + r.cfg.Streams.AddedPrefix + "Name_4"}
 	assert.Exactly(t, expected, sl2[3], "should add both disabled and added prefixes to the name")
 
-	// Check if logs are not printed if prefixes are empty
+	// Check if logs are not printed if prefixes are empty.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.AddedPrefix = ""
@@ -1933,7 +1933,7 @@ func TestAddNamePrefixes(t *testing.T) {
 	})
 	assert.NotContains(t, out, "Name_1")
 
-	// Check if logs are not printed if prefixes are empty
+	// Check if logs are not printed if prefixes are empty.
 	out = capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -1959,21 +1959,21 @@ func TestChangedStreams(t *testing.T) {
 	sl1Original := copier.TestDeep(t, sl1)
 
 	sl2 := []Stream{
-		// No changes
+		// No changes.
 		{Name: "Stream 1", ID: "0001", Enabled: true, Inputs: []string{"A", "B"}},
-		// Changed inputs
+		// Changed inputs.
 		{Name: "Stream 2", ID: "0002", Enabled: false, Inputs: []string{"C2", "D"}},
-		// No changes
+		// No changes.
 		{Name: "Stream 3", ID: "0003", Enabled: false, Inputs: []string{"E", "F"}},
-		// Changed groups
+		// Changed groups.
 		{Name: "Stream 4", ID: "0004", Enabled: true, Inputs: []string{"G", "H"}, Groups: map[string]string{"C": "D"}},
-		// New
+		// New.
 		{Name: "Stream 7", ID: "0007", Enabled: true, Inputs: []string{"K", "L"}, Groups: map[string]string{"E": "F"}},
-		// Changed name
+		// Changed name.
 		{Name: "Stream 5*", ID: "0005"},
-		// Changed MarkAdded / MarkDisabled (no changes)
+		// Changed MarkAdded / MarkDisabled (no changes).
 		{Name: "Stream 6", ID: "0006", Enabled: true, Inputs: []string{"I", "J"}, MarkAdded: false, MarkDisabled: true},
-		// New
+		// New.
 		{Name: "Stream 8", ID: "0008", Enabled: false, DisabledInputs: []string{"A", "B"}},
 	}
 	sl2Original := copier.TestDeep(t, sl2)

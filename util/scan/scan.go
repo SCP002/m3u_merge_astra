@@ -4,17 +4,17 @@ import (
 	"strings"
 )
 
-// Scanner represents rune slice scanner
+// Scanner represents rune slice scanner.
 type Scanner struct {
 	data         []rune
 	done         bool
-	RuneIdx      int // Index of the latest rune found
+	RuneIdx      int // Index of the latest rune found.
 	Line         string
 	LineStartIdx int
 	LineEndIdx   int
 }
 
-// New returns new scanner for `data`, starting from the `startIdx`
+// New returns new scanner for `data`, starting from the `startIdx`.
 func New(data []rune, startIdx int) *Scanner {
 	return &Scanner{data: data, RuneIdx: startIdx}
 }
@@ -31,7 +31,7 @@ func (s *Scanner) Lines(skipEmpty bool) bool {
 
 	lastIdx := len(s.data) - 1
 
-	// On previous call rune index stopped at \n, advance
+	// On previous call rune index stopped at \n, advance.
 	if s.RuneIdx < lastIdx && s.data[s.RuneIdx] == '\n' {
 		s.RuneIdx++
 	}
@@ -49,16 +49,16 @@ func (s *Scanner) Lines(skipEmpty bool) bool {
 		s.Line += string(char)
 		s.LineEndIdx = s.RuneIdx
 
-		// Empty line and should skip them
+		// Empty line and should skip them.
 		if skipEmpty && strings.Trim(s.Line, "\r\n") == "" {
 			s.LineStartIdx = s.RuneIdx
 			s.Line = ""
-			// Return something once if size of `data` is 1 character
+			// Return something once if size of `data` is 1 character.
 			if len(s.data) == 1 {
 				s.done = true
 				return true
 			}
-			// Prevent returning empty line and it's boundary indexes
+			// Prevent returning empty line and it's boundary indexes.
 			if s.RuneIdx == lastIdx {
 				return false
 			}

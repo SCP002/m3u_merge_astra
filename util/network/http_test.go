@@ -25,12 +25,12 @@ func TestNewHttpServer(t *testing.T) {
 	})
 
 	// Run http & https servers as subset of current test to be able to fail it from another goroutines (servers) if any
-	// server returns error
+	// server returns error.
 	var httpSrv, httpsSrv *http.Server
 	t.Run("http_server", func(t *testing.T) {
 		httpSrv, httpsSrv = NewHttpServer(mux, 7878, 9090, func(err error) {
 			if !errors.Is(err, http.ErrServerClosed) {
-				// Not using logging from testing.T or else message will not be displayed
+				// Not using logging from testing.T or else message will not be displayed.
 				log.Errorf("Test server stopped with non-standard error: %v", err)
 				t.FailNow()
 			}
@@ -117,11 +117,11 @@ func TestNewHttpServer(t *testing.T) {
 }
 
 func TestNewHttpClient(t *testing.T) {
-	// Tested in TestNewHttpServer
+	// Tested in TestNewHttpServer.
 	assert.NotNil(t, NewHttpClient(0), "should create new http client")
 }
 
 func TestNewFakeHttpClient(t *testing.T) {
-	// Tested in TestNewHttpServer
+	// Tested in TestNewHttpServer.
 	assert.NotNil(t, NewFakeHttpClient(0), "should create new fake http client")
 }

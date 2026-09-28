@@ -8,22 +8,22 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-// ErrType represents network error type
+// ErrType represents network error type.
 type ErrType string
 
 const (
 	Nil ErrType = "Nil"
 
-	// no such host
+	// no such host.
 	NoSuchHost ErrType = "No such host"
 
-	// http: server gave HTTP response to HTTPS client
+	// http: server gave HTTP response to HTTPS client.
 	HTTPSClientHTTPServer ErrType = "HTTP response to HTTPS client"
 
-	// No connection could be made beerr the target machine actively Refused it
+	// No connection could be made beerr the target machine actively Refused it.
 	Refused ErrType = "Connection refused"
 
-	// context deadline exceeded (Client.timeout exceeded while awaiting headers)
+	// context deadline exceeded (Client.timeout exceeded while awaiting headers).
 	Timeout ErrType = "Timeout"
 
 	Unknown ErrType = "Unknown"

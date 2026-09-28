@@ -4,7 +4,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// String returns random string
+// String returns random string.
 func String(length uint, uppercase bool, numbers bool) string {
 	if length == 0 {
 		return ""

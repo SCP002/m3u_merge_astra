@@ -45,7 +45,7 @@ func TestRenameStreams(t *testing.T) {
 	expected = astra.Stream{Name: "Other name A"}
 	assert.Exactly(t, expected, sl2[2], "should not rename stream if no channel counterpart name found")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -118,7 +118,7 @@ func TestUpdateInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1[2], sl2[2], "only streams with known names should be updated")
 
-	// Test Streams.EnableOnInputUpdate
+	// Test Streams.EnableOnInputUpdate.
 	r.cfg.Streams.EnableOnInputUpdate = false
 	sl1 = []astra.Stream{
 		{Enabled: false, MarkDisabled: true, Name: "Known name", Inputs: []string{"http://known/input/1"}},
@@ -155,7 +155,7 @@ func TestUpdateInputs(t *testing.T) {
 	assert.True(t, sl2[2].MarkDisabled,
 		"MarkDisabled should stay true as it's name is not in channel list")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.EnableOnInputUpdate = false
@@ -234,7 +234,7 @@ func TestRemoveInputsByUpdateMap(t *testing.T) {
 	}
 	assert.Exactly(t, expected, sl2[2], "known inputs not found in channels should be removed, unknown should stay")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.InputUpdateMap = []cfg.UpdateRecord{{From: *regexp.MustCompile("known/input/1")}}
@@ -324,7 +324,7 @@ func TestAddNewInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1[3], sl2[3], "should not change streams with unknown names")
 
-	// Test Streams.EnableOnInputUpdate
+	// Test Streams.EnableOnInputUpdate.
 	r.cfg.Streams.EnableOnInputUpdate = false
 	sl1 = []astra.Stream{
 		{Enabled: false, MarkDisabled: true, Name: "Known name", Inputs: []string{"http://input/1"}},
@@ -356,7 +356,7 @@ func TestAddNewInputs(t *testing.T) {
 
 	assert.Exactly(t, sl1, sl2, "should stay the same because it was not updated")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.EnableOnInputUpdate = false
@@ -477,7 +477,7 @@ func TestAddNewStreams(t *testing.T) {
 	assert.Exactly(t, sl1, sl2, "should not change as AddNewStreamsWithKnownInputs = false and hash difference should"+
 		"be ignored")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 		r.cfg.Streams.AddGroupsToNew = true
@@ -497,19 +497,19 @@ func TestGenerateUID(t *testing.T) {
 
 	for i := 0; i < 10000; i++ {
 		uid := generateUID(sl)
-		// Check length
+		// Check length.
 		assert.Len(t, uid, 4, "ID should be 4 characters long")
-		// Check if not uppercase
+		// Check if not uppercase.
 		hasUpperCase := strings.ContainsAny(uid, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 		assert.False(t, hasUpperCase, "ID should not contain uppercase characters")
-		// Check if unique
+		// Check if unique.
 		contains := lo.ContainsBy(sl, func(s astra.Stream) bool {
 			return s.ID == uid
 		})
 		if contains {
 			assert.FailNow(t, "ID should be unique")
 		}
-		// Append
+		// Append.
 		sl = append(sl, astra.Stream{ID: uid})
 	}
 }

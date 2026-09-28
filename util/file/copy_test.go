@@ -13,7 +13,7 @@ func TestCopy(t *testing.T) {
 	err := Copy("copy_test.txt", path)
 	assert.NoError(t, err, "should not return error")
 
-	// Test overwrite
+	// Test overwrite.
 	err = Copy("copy_test.txt", path)
 	assert.NoError(t, err, "should not return error")
 

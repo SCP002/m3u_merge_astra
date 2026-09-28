@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetErrType(t *testing.T) {
-	// Other cases are tested in http_test.go
+	// Other cases are tested in http_test.go.
 	assert.Exactly(t, Unknown, GetErrType(&net.OpError{}), "should return unknown error type")
 	assert.Exactly(t, Nil, GetErrType(nil), "should return nil error type")
 }

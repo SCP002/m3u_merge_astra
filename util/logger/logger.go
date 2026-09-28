@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// levelColorMap represents mapping between log level string and it's version for console writer
+// levelColorMap represents mapping between log level string and it's version for console writer.
 var levelColorMap = map[string]string{
 	"trace": color.BlueString("TRACE"),
 	"debug": color.BlueString("DEBUG"),
@@ -24,14 +24,14 @@ var levelColorMap = map[string]string{
 	"panic": color.RedString("PANIC"),
 }
 
-// keyValue represents phuslu log key/value pair type alias
+// keyValue represents phuslu log key/value pair type alias.
 type keyValue = struct {
 	Key       string
 	Value     string
 	ValueType byte
 }
 
-// Level represents log level
+// Level represents log level.
 type Level uint32
 
 const (
@@ -44,13 +44,13 @@ const (
 	PanicLevel Level = Level(pLog.PanicLevel) // 7
 )
 
-// Logger represents wrapper over logging library
+// Logger represents wrapper over logging library.
 type Logger struct {
 	writer *pLog.MultiEntryWriter
 	*pLog.Logger
 }
 
-// New returns new configured logger with log level `lvl`
+// New returns new configured logger with log level `lvl`.
 func New(lvl Level) *Logger {
 	writer := pLog.MultiEntryWriter{
 		&pLog.ConsoleWriter{
@@ -65,107 +65,107 @@ func New(lvl Level) *Logger {
 	return &Logger{Logger: &log, writer: &writer}
 }
 
-// Trace prints trace level `msg` with caller
+// Trace prints trace level `msg` with caller.
 func (l Logger) Trace(msg any) {
 	l.Logger.Trace().Caller(2).Msg(fmt.Sprint(msg))
 }
 
-// Tracef prints trace level message from `args` in given `format`
+// Tracef prints trace level message from `args` in given `format`.
 func (l Logger) Tracef(format string, args ...any) {
 	l.Logger.Trace().Caller(2).Msgf(format, args...)
 }
 
-// TraceFi prints trace level `msg` with caller and formatted and colored `fields`
+// TraceFi prints trace level `msg` with caller and formatted and colored `fields`.
 func (l Logger) TraceFi(msg string, fields ...any) {
 	print(l.Logger.Trace().Caller(2), msg, fields)
 }
 
-// Debug prints debug level `msg` with caller
+// Debug prints debug level `msg` with caller.
 func (l Logger) Debug(msg any) {
 	l.Logger.Debug().Caller(2).Msg(fmt.Sprint(msg))
 }
 
-// Debugf prints debug level message from `args` in given `format`
+// Debugf prints debug level message from `args` in given `format`.
 func (l Logger) Debugf(format string, args ...any) {
 	l.Logger.Debug().Caller(2).Msgf(format, args...)
 }
 
-// DebugFi prints debug level `msg` with caller and formatted and colored `fields`
+// DebugFi prints debug level `msg` with caller and formatted and colored `fields`.
 func (l Logger) DebugFi(msg string, fields ...any) {
 	print(l.Logger.Debug().Caller(2), msg, fields)
 }
 
-// Info prints info level `msg`
+// Info prints info level `msg`.
 func (l Logger) Info(msg any) {
 	l.Logger.Info().Msg(fmt.Sprint(msg))
 }
 
-// Infof prints info level message from `args` in given `format`
+// Infof prints info level message from `args` in given `format`.
 func (l Logger) Infof(format string, args ...any) {
 	l.Logger.Info().Msgf(format, args...)
 }
 
-// InfoFi prints info level `msg` with formatted and colored `fields`
+// InfoFi prints info level `msg` with formatted and colored `fields`.
 func (l Logger) InfoFi(msg string, fields ...any) {
 	print(l.Logger.Info(), msg, fields)
 }
 
-// Warn prints warning level `msg`
+// Warn prints warning level `msg`.
 func (l Logger) Warn(msg any) {
 	l.Logger.Warn().Msg(fmt.Sprint(msg))
 }
 
-// Warnf prints warning level message from `args` in given `format`
+// Warnf prints warning level message from `args` in given `format`.
 func (l Logger) Warnf(format string, args ...any) {
 	l.Logger.Warn().Msgf(format, args...)
 }
 
-// WarnFi prints warning level `msg` with formatted and colored `fields`
+// WarnFi prints warning level `msg` with formatted and colored `fields`.
 func (l Logger) WarnFi(msg string, fields ...any) {
 	print(l.Logger.Warn(), msg, fields)
 }
 
-// Error prints error level `msg`
+// Error prints error level `msg`.
 func (l Logger) Error(msg any) {
 	l.Logger.Error().Msg(fmt.Sprint(msg))
 }
 
-// Errorf prints error level message from `args` in given `format`
+// Errorf prints error level message from `args` in given `format`.
 func (l Logger) Errorf(format string, args ...any) {
 	l.Logger.Error().Msgf(format, args...)
 }
 
-// ErrorFi prints error level `msg` with formatted and colored `fields`
+// ErrorFi prints error level `msg` with formatted and colored `fields`.
 func (l Logger) ErrorFi(msg string, fields ...any) {
 	print(l.Logger.Error(), msg, fields)
 }
 
-// Fatal prints fatal level `msg` and exits the program
+// Fatal prints fatal level `msg` and exits the program.
 func (l Logger) Fatal(msg any) {
 	l.Logger.Fatal().Msg(fmt.Sprint(msg))
 }
 
-// Fatalf prints fatal level message from `args` in given `format` and exits the program
+// Fatalf prints fatal level message from `args` in given `format` and exits the program.
 func (l Logger) Fatalf(format string, args ...any) {
 	l.Logger.Fatal().Msgf(format, args...)
 }
 
-// FatalFi prints fatal level `msg` with formatted and colored `fields` and exits the program
+// FatalFi prints fatal level `msg` with formatted and colored `fields` and exits the program.
 func (l Logger) FatalFi(msg string, fields ...any) {
 	print(l.Logger.Fatal(), msg, fields)
 }
 
-// Panic prints panic level `msg` and panics
+// Panic prints panic level `msg` and panics.
 func (l Logger) Panic(msg any) {
 	l.Logger.Panic().Msg(fmt.Sprint(msg))
 }
 
-// Panicf prints panic level message from `args` in given `format` and panics
+// Panicf prints panic level message from `args` in given `format` and panics.
 func (l Logger) Panicf(format string, args ...any) {
 	l.Logger.Panic().Msgf(format, args...)
 }
 
-// PanicFi prints panic level `msg` with formatted and colored `fields` and panics
+// PanicFi prints panic level `msg` with formatted and colored `fields` and panics.
 func (l Logger) PanicFi(msg string, fields ...any) {
 	print(l.Logger.Panic(), msg, fields)
 }
@@ -189,9 +189,9 @@ func (l Logger) AddFileWriter(filePath string) (*os.File, error) {
 	return logFile, nil
 }
 
-// print adds message `msg` and `fields` to `entry` and prints it
+// print adds message `msg` and `fields` to `entry` and prints it.
 func print(entry *pLog.Entry, msg string, fields []any) {
-	// Not using entry.KeysAndValues() as it will not add keys which can't be converted to string by type assertion
+	// Not using entry.KeysAndValues() as it will not add keys which can't be converted to string by type assertion.
 	var key string
 	for i, field := range fields {
 		if i%2 == 0 {
@@ -211,7 +211,7 @@ func newConsoleFormatter(colorize bool, timeFormat string) func(io.Writer, *pLog
 		gray := color.RGB(118, 118, 118).SprintFunc()
 		var messageSb strings.Builder
 
-		formatterTime, err := time.Parse(time.RFC3339Nano, a.Time) // Get time object from FormatterArgs
+		formatterTime, err := time.Parse(time.RFC3339Nano, a.Time) // Get time object from FormatterArgs.
 		if err != nil {
 			return 0, err
 		}

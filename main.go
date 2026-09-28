@@ -24,34 +24,34 @@ import (
 )
 
 func main() {
-	// Init default logger
+	// Init default logger.
 	log := logger.New(logger.FatalLevel)
 
-	// Parse command line arguments
+	// Parse command line arguments.
 	flags, err := cli.Parse()
 	if flags.Version {
 		fmt.Println(version.Version)
 		os.Exit(0)
 	}
 	if cli.IsErrOfType(err, goFlags.ErrHelp) {
-		// Help message will be prined by go-flags
+		// Help message will be prined by go-flags.
 		os.Exit(0)
 	}
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Setup logger
+	// Setup logger.
 	log.SetLevel(flags.LogLevel)
 	logFile, err := log.AddFileWriter(flags.LogFile)
 	if err == nil {
-		// Closing nil file does not panic
+		// Closing nil file does not panic.
 		defer logFile.Close()
 	} else {
 		log.Error(err)
 	}
 
-	// Register SIGINT and SIGTERM event handler
+	// Register SIGINT and SIGTERM event handler.
 	sigint.Listen(func() {
 		log.Info("SIGINT or SIGTERM signal received, shutting down")
 		os.Exit(0)
@@ -60,7 +60,7 @@ func main() {
 	log.InfoFi("Running with", "program config path", flags.ProgramCfgPath, "M3U path", flags.M3UPath, "astra address",
 		flags.AstraAddr)
 
-	// Read program config
+	// Read program config.
 	cfg, isNewCfg, err := cfg.Init(log, flags.ProgramCfgPath)
 	if err != nil {
 		log.Fatal(err)
@@ -70,7 +70,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Fetch astra config
+	// Fetch astra config.
 	log.Info("Fetching astra config")
 	apiHttpClient := network.NewHttpClient(cfg.General.AstraAPIRespTimeout)
 	apiHandler := api.NewHandler(log, apiHttpClient, flags.AstraAddr, flags.AstraUser, flags.AstraPwd)
@@ -79,7 +79,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Fetch M3U channels
+	// Fetch M3U channels.
 	log.Info("Fetching M3U channels")
 	m3uHttpClient := network.NewHttpClient(cfg.M3U.RespTimeout)
 	m3uResp, err := openuri.Open(flags.M3UPath, openuri.WithHTTPClient(m3uHttpClient))
@@ -88,7 +88,7 @@ func main() {
 	}
 	defer m3uResp.Close()
 
-	// Parse and preprocess M3U channels
+	// Parse and preprocess M3U channels.
 	m3uRepo := m3u.NewRepo(log, cfg)
 
 	m3uChannels := m3uRepo.Parse(m3uResp)
@@ -101,7 +101,7 @@ func main() {
 	}
 
 	// Update astra streams with data from M3U channels and run extra operations such as sorting or disabling streams
-	// without inputs
+	// without inputs.
 	astraRepo := astra.NewRepo(log, cfg)
 	mergeRepo := merge.NewRepo(log, cfg)
 
@@ -168,18 +168,18 @@ func main() {
 	}
 	modifiedStreams = astraRepo.AddNamePrefixes(modifiedStreams)
 
-	// Update astra categories
+	// Update astra categories.
 	modifiedCats := copier.MustDeep(astraCfg.Categories)
 	if cfg.General.MergeCategories {
 		modifiedCats = astraRepo.MergeCategories(modifiedCats)
 	}
 	modifiedCats = astraRepo.UpdateCategories(modifiedCats, modifiedStreams)
 
-	// Search for changes
+	// Search for changes.
 	changedCatMap := astraRepo.ChangedCategories(astraCfg.Categories, modifiedCats)
 	changedStreams := astraRepo.ChangedStreams(astraCfg.Streams, modifiedStreams)
 
-	// Sending changes to astra
+	// Sending changes to astra.
 	sendChangesAllowed := true
 	if !flags.Noninteractive {
 		sendChangesAllowed = input.AskYesNo(log, os.Stdin, "Send changes to astra (Y/N)? ")

@@ -248,7 +248,7 @@ func TestAddFileWriter(t *testing.T) {
 	log.InfoFi("message 1", "field1", "value 1", "field2", 2)
 	log.WarnFi("message 2", "field1", "value 3", "field2", 4)
 
-	// file.Sync() does not help, content is empty, closing and opening the file again
+	// file.Sync() does not help, content is empty, closing and opening the file again.
 	file.Close()
 	file, err = os.Open(path)
 	assert.NoError(t, err, "should not return error")
@@ -302,7 +302,7 @@ func TestPrint(t *testing.T) {
 }
 
 func TestNewConsoleFormatter(t *testing.T) {
-	// Tested in TestNew
+	// Tested in TestNew.
 	var formatter func(io.Writer, *pLog.FormatterArgs) (int, error)
 	assert.IsType(t, formatter, newConsoleFormatter(false, ""), "formatter function should have this definition")
 }

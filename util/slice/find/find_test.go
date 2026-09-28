@@ -70,7 +70,7 @@ func TestEverySimilar(t *testing.T) {
 	}
 	ol := []slice.TestNamedStruct{
 		/* 0 */ {Name: "Name"},
-		/* 1 */ {Name: "Name 2"}, // <- Searching similar to this starting from index 2
+		/* 1 */ {Name: "Name 2"}, // <- Searching similar to this starting from index 2.
 		/* 2 */ {Name: "Name 3"},
 		/* 3 */ {Name: "Name_2"},
 		/* 4 */ {Name: "Name_3"},
@@ -95,7 +95,7 @@ func TestGetSimilar(t *testing.T) {
 	}
 	ol1 := []slice.TestNamedStruct{
 		/* 0 */ {Name: "Name"},
-		/* 1 */ {Name: "Name 2"}, // <- Searching similar to this
+		/* 1 */ {Name: "Name 2"}, // <- Searching similar to this.
 		/* 2 */ {Name: "Name 3"},
 		/* 3 */ {Name: "Name_2"},
 		/* 4 */ {Name: "Name_3"},

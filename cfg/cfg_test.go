@@ -53,14 +53,14 @@ func TestInitDefault(t *testing.T) {
 
 	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
-	// Test creation of the default config
+	// Test creation of the default config.
 	actual, isNewCfg, err := Init(log, path)
 
 	assert.Exactly(t, Root{}, actual, "should return empty config")
 	assert.True(t, isNewCfg, "should return true")
 	assert.NoError(t, err, "should not return error")
 
-	// Test reading of the default config
+	// Test reading of the default config.
 	actual, isNewCfg, err = Init(log, path)
 
 	expected := NewDefCfg()
@@ -75,7 +75,7 @@ func TestInitAddMissing(t *testing.T) {
 
 	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
-	// Test reading exising non-default config and adding missing fields
+	// Test reading exising non-default config and adding missing fields.
 	err := file.Copy("init_input_test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
@@ -87,7 +87,7 @@ func TestInitAddMissing(t *testing.T) {
 	assert.False(t, isNewCfg, "should return false")
 	assert.NoError(t, err, "should not return error")
 
-	// Check if missing fields were added to config file
+	// Check if missing fields were added to config file.
 	actualBytes, err := os.ReadFile(path)
 	assert.NoError(t, err, "should read actual config bytes")
 
@@ -102,19 +102,19 @@ func TestInitDamaged(t *testing.T) {
 
 	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
-	// Test reading damaged config
+	// Test reading damaged config.
 	err := file.Copy("init_damaged_test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
 	_, isNewCfg, err := Init(log, path)
 
 	expectedErr := DamagedConfigError{
-		MissingFields: []string{ // All missing in default without known to be missing
-			// "general.name_aliases", // <- Known
+		MissingFields: []string{ // All missing in default without known to be missing.
+			// "general.name_aliases", // <- Known.
 			"m3u.chann_name_blacklist",
-			// "streams.add_groups_to_new", // <- Known
+			// "streams.add_groups_to_new", // <- Known.
 			"streams.input_weight_to_type_map",
-			// "streams.remove_duplicated_inputs_by_rx_list", // <- Known
+			// "streams.remove_duplicated_inputs_by_rx_list", // <- Known.
 		},
 	}
 
@@ -127,7 +127,7 @@ func TestInitValidateCaptureGroups(t *testing.T) {
 
 	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
-	// Test reading config with 'remove_duplicated_inputs_by_rx_list'
+	// Test reading config with 'remove_duplicated_inputs_by_rx_list'.
 	err := file.Copy("init_validate_capture_groups_test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
@@ -147,7 +147,7 @@ func TestInitSimplifyAliases(t *testing.T) {
 
 	path := filepath.Join(t.TempDir(), "m3u-merge-astra_init_test.yaml")
 
-	// Test reading config with name aliases and simplification of them
+	// Test reading config with name aliases and simplification of them.
 	err := file.Copy("init_simplify_aliases_test.yaml", path)
 	assert.NoError(t, err, "should copy and overwrite previous test file")
 
@@ -170,11 +170,11 @@ func newTestConfig() Root {
 			FullTranslitMap:     map[string]string{"ş": "ш", "\\n": ""},
 			SimilarTranslit:     false,
 			SimilarTranslitMap:  map[string]string(nil),
-			NameAliases:         true,             // New field in v1.3.0
-			NameAliasList:       [][]string(nil),  // New field in v1.3.0
-			SimpleNameAliasList: [][]string(nil),  // Field for internal use
-			AstraAPIRespTimeout: time.Second * 10, // New field in v2.0.0
-			MergeCategories:     false,            // New field in v2.0.0
+			NameAliases:         true,             // New field in v1.3.0.
+			NameAliasList:       [][]string(nil),  // New field in v1.3.0.
+			SimpleNameAliasList: [][]string(nil),  // Field for internal use.
+			AstraAPIRespTimeout: time.Second * 10, // New field in v2.0.0.
+			MergeCategories:     false,            // New field in v2.0.0.
 		},
 		M3U: M3U{
 			RespTimeout:         time.Second * 10,
@@ -189,16 +189,16 @@ func newTestConfig() Root {
 		Streams: Streams{
 			AddedPrefix:             "",
 			AddNew:                  true,
-			AddGroupsToNew:          false, // New field in v1.1.0
-			GroupsCategoryForNew:    "All", // New field in v1.1.0
+			AddGroupsToNew:          false, // New field in v1.1.0.
+			GroupsCategoryForNew:    "All", // New field in v1.1.0.
 			AddNewWithKnownInputs:   false,
 			MakeNewEnabled:          true,
 			NewType:                 MPTS,
-			NewKeepActive:           0, // New field in v1.4.0
+			NewKeepActive:           0, // New field in v1.4.0.
 			DisabledPrefix:          "_'DISABLED': ",
 			RemoveWithoutInputs:     true,
 			DisableWithoutInputs:    false,
-			EnableOnInputUpdate:     false, // New field in v1.2.0
+			EnableOnInputUpdate:     false, // New field in v1.2.0.
 			Rename:                  false,
 			AddNewInputs:            true,
 			UniteInputs:             false,
@@ -214,27 +214,27 @@ func newTestConfig() Root {
 				*regexp.MustCompile(`192\.168\.88\.14\/play`),
 			},
 			RemoveDuplicatedInputs:         true,
-			RemoveDuplicatedInputsByRxList: []regexp.Regexp(nil), // New field in v1.4.0
-			RemoveDisabledInputs:           false,                // New field in v2.2.0
-			DisableAllButOneInputByRxList:  []regexp.Regexp(nil), // New field in v2.1.0
+			RemoveDuplicatedInputsByRxList: []regexp.Regexp(nil), // New field in v1.4.0.
+			RemoveDisabledInputs:           false,                // New field in v2.2.0.
+			DisableAllButOneInputByRxList:  []regexp.Regexp(nil), // New field in v2.1.0.
 			RemoveDeadInputs:               false,
-			DisableDeadInputs:              false, // New field in v1.5.0
+			DisableDeadInputs:              false, // New field in v1.5.0.
 			DeadInputsCheckBlacklist: []regexp.Regexp{
 				*regexp.MustCompile(`https?:\/\/dont-check\.com\/play`),
 				*regexp.MustCompile(`192\.168\.88\.`),
 			},
 			InputMaxConns:                     10,
 			InputRespTimeout:                  time.Minute,
-			UseAnalyzer:                       false,            // New field in v1.5.0
-			AnalyzerAddr:                      "127.0.0.1:8001", // New field in v1.5.0
-			AnalyzerWatchTime:                 time.Second * 20, // New field in v1.5.0
-			AnalyzerMaxAttempts:               3,                // New field in v2.0.0
-			AnalyzerBitrateThreshold:          1,                // New field in v1.5.0
-			AnalyzerVideoOnlyBitrateThreshold: 1,                // New field in v1.5.0
-			AnalyzerAudioOnlyBitrateThreshold: 1,                // New field in v1.5.0
-			AnalyzerCCErrorsThreshold:         -1,               // New field in v1.5.0
-			AnalyzerPCRErrorsThreshold:        -1,               // New field in v1.5.0
-			AnalyzerPESErrorsThreshold:        -1,               // New field in v1.5.0
+			UseAnalyzer:                       false,            // New field in v1.5.0.
+			AnalyzerAddr:                      "127.0.0.1:8001", // New field in v1.5.0.
+			AnalyzerWatchTime:                 time.Second * 20, // New field in v1.5.0.
+			AnalyzerMaxAttempts:               3,                // New field in v2.0.0.
+			AnalyzerBitrateThreshold:          1,                // New field in v1.5.0.
+			AnalyzerVideoOnlyBitrateThreshold: 1,                // New field in v1.5.0.
+			AnalyzerAudioOnlyBitrateThreshold: 1,                // New field in v1.5.0.
+			AnalyzerCCErrorsThreshold:         -1,               // New field in v1.5.0.
+			AnalyzerPCRErrorsThreshold:        -1,               // New field in v1.5.0.
+			AnalyzerPESErrorsThreshold:        -1,               // New field in v1.5.0.
 			InputUpdateMap: []UpdateRecord{
 				{From: *regexp.MustCompile(`127\.0\.0\.1`), To: *regexp.MustCompile(`127\.0\.0\.1`)},
 				{From: *regexp.MustCompile(`some_url\.com`), To: *regexp.MustCompile(`some_url\.com`)},
@@ -254,9 +254,9 @@ func newTestConfig() Root {
 				{By: *regexp.MustCompile(`:8080`), Hash: "ua=VLC/3.0.9 LibVLC/3.0.9"},
 				{By: *regexp.MustCompile(`^rts?p:\/\/`), Hash: "no_reload"},
 			},
-			NameToKeepActiveMap:  []KeepActiveAddRule(nil), // New field in v1.4.0
-			GroupToKeepActiveMap: []KeepActiveAddRule(nil), // New field in v1.4.0
-			InputToKeepActiveMap: []KeepActiveAddRule(nil), // New field in v1.4.0
+			NameToKeepActiveMap:  []KeepActiveAddRule(nil), // New field in v1.4.0.
+			GroupToKeepActiveMap: []KeepActiveAddRule(nil), // New field in v1.4.0.
+			InputToKeepActiveMap: []KeepActiveAddRule(nil), // New field in v1.4.0.
 		},
 	}
 }

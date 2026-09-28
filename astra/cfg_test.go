@@ -46,7 +46,7 @@ func TestUpdateCategories(t *testing.T) {
 	}
 	assert.Exactly(t, expected, cl2, "should add new category with the specified groups")
 
-	// Test log output
+	// Test log output.
 	out := capturer.CaptureStderr(func() {
 		r := newDefRepo()
 
@@ -62,7 +62,7 @@ func TestUpdateCategories(t *testing.T) {
 func TestChangedCategories(t *testing.T) {
 	r := newDefRepo()
 
-	// Test with changes, categories to remove in the end of cl1
+	// Test with changes, categories to remove in the end of cl1.
 	cl1 := []Category{
 		{Name: "Category 1", Groups: []Group{{Name: "A"}}}, // 0
 		{Name: "Category 2", Groups: []Group{{Name: "B"}}}, // 1
@@ -96,7 +96,7 @@ func TestChangedCategories(t *testing.T) {
 	}
 	assert.Exactly(t, expected, changed, "should return that category map")
 
-	// Test with changes, categories to remove in the beginning of cl1
+	// Test with changes, categories to remove in the beginning of cl1.
 	cl1 = []Category{
 		{Name: "Category 1", Groups: []Group{{Name: "A"}}}, // 0
 		{Name: "Category 2", Groups: []Group{{Name: "B"}}}, // 1
@@ -130,7 +130,7 @@ func TestChangedCategories(t *testing.T) {
 	}
 	assert.Exactly(t, expected, changed, "should return that category map")
 
-	// Test without changes
+	// Test without changes.
 	cl1 = []Category{
 		{Name: "Category 1", Groups: []Group{{Name: "A"}}},
 		{Name: "Category 2", Groups: []Group{{Name: "B"}}},

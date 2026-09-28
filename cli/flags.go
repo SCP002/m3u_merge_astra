@@ -6,7 +6,7 @@ import (
 	pLog "github.com/phuslu/log"
 )
 
-// Flags represents command line flags
+// Flags represents command line flags.
 type Flags struct {
 	Version        bool       `short:"v" long:"version"        description:"Print the program version"`
 	Noninteractive bool       `short:"n" long:"noninteractive" description:"Do not ask user for input (confirmations etc.)"`
@@ -19,10 +19,10 @@ type Flags struct {
 	AstraPwd       string     `short:"p" long:"astraPwd"       description:"Astra password"`
 }
 
-// Parse returns a structure initialized with command line arguments and error if parsing failed
+// Parse returns a structure initialized with command line arguments and error if parsing failed.
 func Parse() (Flags, error) {
 	flags := Flags{
-		// Set defaults
+		// Set defaults.
 		LogLevel:       pLog.InfoLevel,
 		ProgramCfgPath: "m3u-merge-astra.yaml",
 		AstraAddr:      "http://127.0.0.1:8000",
@@ -32,7 +32,7 @@ func Parse() (Flags, error) {
 	return flags, errors.Wrap(err, "Parse CLI arguments")
 }
 
-// IsErrOfType returns true if `err` is of type `t`
+// IsErrOfType returns true if `err` is of type `t`.
 func IsErrOfType(err error, t goFlags.ErrorType) bool {
 	goFlagsErr := &goFlags.Error{}
 	if ok := errors.As(err, &goFlagsErr); ok && goFlagsErr.Type == t {

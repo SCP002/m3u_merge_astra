@@ -25,7 +25,7 @@ func TestInsert(t *testing.T) {
 	assert.NoError(t, err, "should read input file")
 	inputOriginal := copier.TestDeep(t, input)
 
-	// Error cases (bad data or path can not be found)
+	// Error cases (bad data or path can not be found).
 	afterPath := ""
 	node := Node{Data: Scalar{Value: "a"}}
 	output, err := Insert(input, afterPath, false, node)
@@ -38,7 +38,7 @@ func TestInsert(t *testing.T) {
 		Sets: [][]Pair{
 			{
 				{Key: "key_1", Value: "'val_1'"},
-				{Key: "key_2", Commented: true}, // <- Missing value here
+				{Key: "key_2", Commented: true}, // <- Missing value here.
 			},
 		},
 	}}
@@ -47,7 +47,7 @@ func TestInsert(t *testing.T) {
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
 	afterPath = "nested_section"
-	node = Node{Data: errors.EncodedError{}} // Random invalid struct
+	node = Node{Data: errors.EncodedError{}} // Random invalid struct.
 	output, err = Insert(input, afterPath, false, node)
 	assert.ErrorAs(t, err, &BadDataError{}, "should return bad data error if data type is invalid")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
@@ -79,13 +79,13 @@ func TestInsert(t *testing.T) {
 		"should not resolve node value as proper path")
 	assert.Exactly(t, input, output, "on error, output should stay the same as input")
 
-	// Overflow check, should not panic
+	// Overflow check, should not panic.
 	node = Node{Data: List{Key: "new_key", Values: slice.Filled(Value{Value: "a"}, 10000)}}
 	_, err = Insert(input, "", false, node)
 	assert.NoError(t, err, "should not return error")
 
-	// Regular behavior
-	// First change
+	// Regular behavior.
+	// First change.
 	node = Node{
 		StartNewline: true,
 		HeadComment:  []string{"New comment"},
@@ -97,7 +97,7 @@ func TestInsert(t *testing.T) {
 	assert.NotSame(t, &input, &output, "should return copy of input bytes")
 	assert.Exactly(t, inputOriginal, input, "should not modify the source input bytes")
 
-	// Futurer changes to sequences
+	// Futurer changes to sequences.
 	node = Node{
 		HeadComment: []string{"New comment line 1", "New comment line 2"},
 		Data: Sequence{
@@ -170,7 +170,7 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "sequences_section.empty_sequence_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
 
-	// Futurer changes to lists
+	// Futurer changes to lists.
 	node = Node{
 		HeadComment: []string{"New comment"},
 		Data: List{
@@ -221,7 +221,7 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "lists_section.empty_list_with_comments", true, node)
 	assert.NoError(t, err, "should not return error")
 
-	// Futurer changes to nested lists
+	// Futurer changes to nested lists.
 	node = Node{
 		StartNewline: true,
 		Data: NestedList{
@@ -292,7 +292,7 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "lists_section.new_nested_list", true, node)
 	assert.NoError(t, err, "should not return error")
 
-	// Futurer changes scalars
+	// Futurer changes scalars.
 	node = Node{
 		HeadComment: []string{"Comment"},
 		Data:        Scalar{Key: "new_int_item", Value: "1"},
@@ -306,7 +306,7 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "scalar_section.str_item", false, node)
 	assert.NoError(t, err, "should not return error")
 
-	// Add new map section to the end
+	// Add new map section to the end.
 	node = Node{
 		StartNewline: true,
 		HeadComment:  []string{"New comment"},
@@ -329,14 +329,14 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "new_map_section", false, node)
 	assert.NoError(t, err, "should not return error")
 
-	// Add new empty section to the end
+	// Add new empty section to the end.
 	node = Node{
 		Data: Key{Key: "new_empty_section"},
 	}
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
 
-	// Add comment with no data
+	// Add comment with no data.
 	node = Node{
 		StartNewline: true,
 		HeadComment:  []string{"New comment without data, line 1", "New comment without data, line 2"},
@@ -345,7 +345,7 @@ func TestInsert(t *testing.T) {
 	output, err = Insert(output, "", false, node)
 	assert.NoError(t, err, "should not return error")
 
-	// Compare result with the expected one
+	// Compare result with the expected one.
 	expected, err := os.ReadFile("insert_expected_test.yaml")
 	assert.NoError(t, err, "should read expected file")
 	assert.Exactly(t, string(expected), string(output), "should produce the following YAML config")
@@ -377,7 +377,7 @@ func TestInsertIndex(t *testing.T) {
 	assert.NoError(t, err, "should read input file")
 	input := []rune(string(inputBytes))
 
-	// Error cases (path can not be found)
+	// Error cases (path can not be found).
 	path := "unknown_root_path"
 	index, depth, err := insertIndex(input, path, true, 2)
 	assert.Exactly(t, PathNotFoundError{Path: path}, err, "should return error for unexisting paths")
@@ -414,7 +414,7 @@ func TestInsertIndex(t *testing.T) {
 	assert.Exactly(t, 0, index, "should return 0 index on error")
 	assert.Exactly(t, 0, depth, "should return 0 depth on error")
 
-	// Regular behavior
+	// Regular behavior.
 	path = ""
 	index, depth, err = insertIndex([]rune{}, path, true, 2)
 	assert.NoError(t, err, "should not return error")

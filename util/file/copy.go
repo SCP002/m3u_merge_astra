@@ -2,7 +2,7 @@ package file
 
 import "os"
 
-// Copy copies `src` file path to `dst` file path
+// Copy copies `src` file path to `dst` file path.
 func Copy(src, dst string) error {
 	input, err := os.ReadFile(src)
 	if err != nil {
