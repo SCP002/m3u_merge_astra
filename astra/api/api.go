@@ -59,12 +59,12 @@ func NewHandler(log *logger.Logger, httpClient *http.Client, address string, use
 	return handler{log: log, httpClient: httpClient, address: address, user: user, password: password}
 }
 
-// SetCategories makes a requests to API setting categories by indexes as defined in <idxCategoryMap> synchronously.
+// SetCategories makes a requests to API setting categories by indexes as defined in `idxCategoryMap` synchronously.
 //
-// Use negative key (index) in <idxCategoryMap> to create new category.
+// Use negative key (index) in `idxCategoryMap` to create new category.
 //
 // IMPORTANT: As Astra using indexes to set categories, each category which should be removed (with Remove field set to
-// true) should appear in the end of <idxCategoryMap> with indexes in decreasing order, for example:
+// true) should appear in the end of `idxCategoryMap` with indexes in decreasing order, for example:
 //
 //   - {Key: -1, Value: Category: {Name: "A"}},
 //   - {Key: -1, Value: Category: {Name: "B"}},
@@ -85,9 +85,9 @@ func (h handler) SetCategories(idxCategoryMap []lo.Entry[int, astra.Category]) {
 	}
 }
 
-// SetCategory makes a request to API setting category with <idx> to <category>.
+// SetCategory makes a request to API setting category with `idx` to `category`.
 //
-// To create new category, pass negative <idx>.
+// To create new category, pass negative `idx`.
 func (h handler) SetCategory(idx int, category astra.Category) error {
 	req := setCategoryReq{Cmd: "set-category", ID: lo.Ternary(idx >= 0, &idx, nil), Category: category}
 
@@ -111,7 +111,7 @@ func (h handler) SetCategory(idx int, category astra.Category) error {
 	return nil
 }
 
-// SetStreams makes a requests to API setting <streams> synchronously
+// SetStreams makes a requests to API setting `streams` synchronously
 func (h handler) SetStreams(streams []astra.Stream) {
 	h.log.Info("Sending changed streams to astra")
 
@@ -125,7 +125,7 @@ func (h handler) SetStreams(streams []astra.Stream) {
 	}
 }
 
-// SetStream makes a request to API setting stream with <id> to <stream>
+// SetStream makes a request to API setting stream with `id` to `stream`
 func (h handler) SetStream(id string, stream astra.Stream) error {
 	respBytes, err := h.request("POST", "/control/", setStreamReq{Cmd: "set-stream", ID: id, Stream: stream})
 	if err != nil {
@@ -163,7 +163,7 @@ func (h handler) FetchCfg() (astra.Cfg, error) {
 	return cfg, nil
 }
 
-// request makes a request to astra API sending struct <cmd> in reqest body and returns response body as bytes
+// request makes a request to astra API sending struct `cmd` in reqest body and returns response body as bytes
 func (h handler) request(method string, path string, cmd any) ([]byte, error) {
 	reqBody, err := json.Marshal(cmd)
 	if err != nil {

@@ -16,7 +16,7 @@ import (
 //
 // If user types neither 'y', 'Y', 'n' or 'N', it asks again.
 //
-// <in> is a reader to read data from. Usually it should be 'os.Stdin'.
+// `in` is a reader to read data from. Usually it should be 'os.Stdin'.
 func AskYesNo(log *logger.Logger, in io.Reader, prompt string) bool {
 	answer := ask(log, in, true, prompt, func(input string) bool {
 		switch input {
@@ -28,13 +28,13 @@ func AskYesNo(log *logger.Logger, in io.Reader, prompt string) bool {
 	return lo.Ternary(strings.ToLower(answer) == "y", true, false)
 }
 
-// ask returns user input, preliminarily printing <prompt>.
+// ask returns user input, preliminarily printing `prompt`.
 //
-// It runs forever until read is successful and <callback> returns false.
+// It runs forever until read is successful and `callback` returns false.
 //
-// If <trim> is true, trim space from user input before passing it to <callback>.
+// If `trim` is true, trim space from user input before passing it to `callback`.
 //
-// <in> is a reader to read data from. Usually it should be 'os.Stdin'.
+// `in` is a reader to read data from. Usually it should be 'os.Stdin'.
 func ask(log *logger.Logger, in io.Reader, trim bool, prompt string, callback func(string) bool) string {
 	for {
 		fmt.Print(prompt)

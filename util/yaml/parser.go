@@ -44,11 +44,11 @@ type Node struct {
 	EndNewline   bool // Add new line character(s) after content?
 }
 
-// Insert returns copy of the YAML bytes <input> with <node> inserted <afterPath>.
+// Insert returns copy of the YAML bytes `input` with `node` inserted `afterPath`.
 //
-// <afterPath> is formatted as "key.subkey".
+// `afterPath` is formatted as "key.subkey".
 //
-// If <sectionEnd> is true, insert after the indented section end, not first line.
+// If `sectionEnd` is true, insert after the indented section end, not first line.
 //
 // Can return errors defined in this package: BadDataError, PathNotFoundError.
 func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte, error) {
@@ -137,7 +137,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 		return input, errors.Wrap(err, "Get insert location")
 	}
 
-	indent := strings.Repeat(" ", step * depth)
+	indent := strings.Repeat(" ", step*depth)
 	newlineSeq := "\n" // Prefer LF
 	commentSeq := "# "
 	listValSeq := "- "
@@ -205,9 +205,9 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 				chunk.WriteString(commentSeq)
 			}
 			// Add extra spaces on top of regular indent to align deep values
-			chunk.WriteString(strings.Repeat(listAlignSeq, branch.depth - 1))
+			chunk.WriteString(strings.Repeat(listAlignSeq, branch.depth-1))
 			// Add hyphens based on how deep value is
-			chunk.WriteString(strings.Repeat(listValSeq, maxDepth - branch.depth + 1))
+			chunk.WriteString(strings.Repeat(listValSeq, maxDepth-branch.depth+1))
 			chunk.WriteString(branch.Value.Value + newlineSeq)
 		}
 	case Map:
@@ -239,7 +239,7 @@ func Insert(input []byte, afterPath string, sectionEnd bool, node Node) ([]byte,
 	return []byte(string(output)), nil
 }
 
-// setIndent returns copy of <input> with the specified <tIndent> set
+// setIndent returns copy of `input` with the specified `tIndent` set
 func setIndent(input []rune, tIndent int) []rune {
 	// indentPair represents integer pair
 	type indentPair struct {
@@ -249,9 +249,9 @@ func setIndent(input []rune, tIndent int) []rune {
 
 	var parentsIndents []indentPair
 
-	// getParentIndent returns new indent of the parent of the <line> or 0 if not found (indentPair.new default value)
+	// getParentIndent returns new indent of the parent of the `line` or 0 if not found (indentPair.new default value)
 	getParentIndent := func(line string) int {
-		// Find closest section header which old indent is lower than <line> has
+		// Find closest section header which old indent is lower than `line` has
 		indent, _ := lo.Find(parentsIndents, func(parentIndent indentPair) bool {
 			return parentIndent.old < parse.GetIndent(line)
 		})
@@ -260,7 +260,7 @@ func setIndent(input []rune, tIndent int) []rune {
 
 	listRx := regexp.MustCompile(`^ *(- )+`)
 
-	// getHyphensAmount returns amount of starting "- " in the <line>
+	// getHyphensAmount returns amount of starting "- " in the `line`
 	getHyphensAmount := func(line string) int {
 		hyphens := 0
 		if matchList := listRx.FindStringSubmatch(line); len(matchList) > 0 {
@@ -293,7 +293,7 @@ func setIndent(input []rune, tIndent int) []rune {
 		if isFolder {
 			parentsIndents = slice.Prepend(parentsIndents, indentPair{old: cIndent, new: newIndent})
 		} else if hypensAmount > 1 {
-			// Indent nested lists with two spaces regardless of <tIndent>
+			// Indent nested lists with two spaces regardless of `tIndent`
 			parentsIndents = slice.Prepend(parentsIndents, indentPair{old: cIndent, new: parentIndent + 2})
 		}
 
@@ -306,16 +306,16 @@ func setIndent(input []rune, tIndent int) []rune {
 	return output
 }
 
-// insertIndex returns index of <input> pointing at the location where new item should be inserted by <path> and it's
+// insertIndex returns index of `input` pointing at the location where new item should be inserted by `path` and it's
 // depth as the second value.
 //
-// If <sectionEnd> is true, returns index of the indented section end.
+// If `sectionEnd` is true, returns index of the indented section end.
 //
-// If <path> is empty, returns length of <input>.
+// If `path` is empty, returns length of `input`.
 //
-// To work properly, indentation used in <input> should be specified as <tIndent> (run setIndent() function).
+// To work properly, indentation used in `input` should be specified as `tIndent` (run setIndent() function).
 //
-// Returns 0, 0 and error if given <path> is not found in <input>.
+// Returns 0, 0 and error if given `path` is not found in `input`.
 func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, int, error) {
 	err := PathNotFoundError{Path: path}
 
@@ -327,8 +327,8 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 		return folder + ":"
 	})
 
-	// sectionEndIdx returns the starting index of the first line found in <input> beginning from the <startIdx> if it's
-	// indent equals to or lower than <indent>.
+	// sectionEndIdx returns the starting index of the first line found in `input` beginning from the `startIdx` if it's
+	// indent equals to or lower than `indent`.
 	//
 	// Return ending index of the last line encountered if no appropriate index found.
 	sectionEndIdx := func(startIdx, indent int) int {
@@ -363,12 +363,12 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 		sc.Line = strings.ReplaceAll(sc.Line, `'`, ``)
 
 		// If path entry with correct name is found and it's indent is equal to previous + 1 depth level
-		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent + tIndent {
+		if strings.HasPrefix(sc.Line, folders[folderIdx]) && cIndent == lastIndent+tIndent {
 			if isFolder {
 				depth++
 			}
 			// If last path entry
-			if folderIdx == len(folders) - 1 {
+			if folderIdx == len(folders)-1 {
 				if sectionEnd && depth > 0 {
 					depth--
 				}
@@ -385,7 +385,7 @@ func insertIndex(input []rune, path string, sectionEnd bool, tIndent int) (int, 
 	return 0, 0, err
 }
 
-// flatten returns <tree> as a single level deep slice and sets maximum depth of the <tree> in <maxDepth>
+// flatten returns `tree` as a single level deep slice and sets maximum depth of the `tree` in `maxDepth`
 func flatten(tree ValueTree, maxDepth *int) (out []ValueTree) {
 	// If value is empty (root), do not append it to output and do not increase depth
 	if tree.Value.Value != "" {

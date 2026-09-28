@@ -32,7 +32,7 @@ func Parse() (Flags, error) {
 	return flags, errors.Wrap(err, "Parse CLI arguments")
 }
 
-// IsErrOfType returns true if <err> is of type <t>
+// IsErrOfType returns true if `err` is of type `t`
 func IsErrOfType(err error, t goFlags.ErrorType) bool {
 	goFlagsErr := &goFlags.Error{}
 	if ok := errors.As(err, &goFlagsErr); ok && goFlagsErr.Type == t {

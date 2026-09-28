@@ -50,7 +50,7 @@ type Logger struct {
 	*pLog.Logger
 }
 
-// New returns new configured logger with log level <lvl>
+// New returns new configured logger with log level `lvl`
 func New(lvl Level) *Logger {
 	writer := pLog.MultiEntryWriter{
 		&pLog.ConsoleWriter{
@@ -65,114 +65,114 @@ func New(lvl Level) *Logger {
 	return &Logger{Logger: &log, writer: &writer}
 }
 
-// Trace prints trace level <msg> with caller
+// Trace prints trace level `msg` with caller
 func (l Logger) Trace(msg any) {
 	l.Logger.Trace().Caller(2).Msg(fmt.Sprint(msg))
 }
 
-// Tracef prints trace level message from <args> in given <format>
+// Tracef prints trace level message from `args` in given `format`
 func (l Logger) Tracef(format string, args ...any) {
 	l.Logger.Trace().Caller(2).Msgf(format, args...)
 }
 
-// TraceFi prints trace level <msg> with caller and formatted and colored <fields>
+// TraceFi prints trace level `msg` with caller and formatted and colored `fields`
 func (l Logger) TraceFi(msg string, fields ...any) {
 	print(l.Logger.Trace().Caller(2), msg, fields)
 }
 
-// Debug prints debug level <msg> with caller
+// Debug prints debug level `msg` with caller
 func (l Logger) Debug(msg any) {
 	l.Logger.Debug().Caller(2).Msg(fmt.Sprint(msg))
 }
 
-// Debugf prints debug level message from <args> in given <format>
+// Debugf prints debug level message from `args` in given `format`
 func (l Logger) Debugf(format string, args ...any) {
 	l.Logger.Debug().Caller(2).Msgf(format, args...)
 }
 
-// DebugFi prints debug level <msg> with caller and formatted and colored <fields>
+// DebugFi prints debug level `msg` with caller and formatted and colored `fields`
 func (l Logger) DebugFi(msg string, fields ...any) {
 	print(l.Logger.Debug().Caller(2), msg, fields)
 }
 
-// Info prints info level <msg>
+// Info prints info level `msg`
 func (l Logger) Info(msg any) {
 	l.Logger.Info().Msg(fmt.Sprint(msg))
 }
 
-// Infof prints info level message from <args> in given <format>
+// Infof prints info level message from `args` in given `format`
 func (l Logger) Infof(format string, args ...any) {
 	l.Logger.Info().Msgf(format, args...)
 }
 
-// InfoFi prints info level <msg> with formatted and colored <fields>
+// InfoFi prints info level `msg` with formatted and colored `fields`
 func (l Logger) InfoFi(msg string, fields ...any) {
 	print(l.Logger.Info(), msg, fields)
 }
 
-// Warn prints warning level <msg>
+// Warn prints warning level `msg`
 func (l Logger) Warn(msg any) {
 	l.Logger.Warn().Msg(fmt.Sprint(msg))
 }
 
-// Warnf prints warning level message from <args> in given <format>
+// Warnf prints warning level message from `args` in given `format`
 func (l Logger) Warnf(format string, args ...any) {
 	l.Logger.Warn().Msgf(format, args...)
 }
 
-// WarnFi prints warning level <msg> with formatted and colored <fields>
+// WarnFi prints warning level `msg` with formatted and colored `fields`
 func (l Logger) WarnFi(msg string, fields ...any) {
 	print(l.Logger.Warn(), msg, fields)
 }
 
-// Error prints error level <msg>
+// Error prints error level `msg`
 func (l Logger) Error(msg any) {
 	l.Logger.Error().Msg(fmt.Sprint(msg))
 }
 
-// Errorf prints error level message from <args> in given <format>
+// Errorf prints error level message from `args` in given `format`
 func (l Logger) Errorf(format string, args ...any) {
 	l.Logger.Error().Msgf(format, args...)
 }
 
-// ErrorFi prints error level <msg> with formatted and colored <fields>
+// ErrorFi prints error level `msg` with formatted and colored `fields`
 func (l Logger) ErrorFi(msg string, fields ...any) {
 	print(l.Logger.Error(), msg, fields)
 }
 
-// Fatal prints fatal level <msg> and exits the program
+// Fatal prints fatal level `msg` and exits the program
 func (l Logger) Fatal(msg any) {
 	l.Logger.Fatal().Msg(fmt.Sprint(msg))
 }
 
-// Fatalf prints fatal level message from <args> in given <format> and exits the program
+// Fatalf prints fatal level message from `args` in given `format` and exits the program
 func (l Logger) Fatalf(format string, args ...any) {
 	l.Logger.Fatal().Msgf(format, args...)
 }
 
-// FatalFi prints fatal level <msg> with formatted and colored <fields> and exits the program
+// FatalFi prints fatal level `msg` with formatted and colored `fields` and exits the program
 func (l Logger) FatalFi(msg string, fields ...any) {
 	print(l.Logger.Fatal(), msg, fields)
 }
 
-// Panic prints panic level <msg> and panics
+// Panic prints panic level `msg` and panics
 func (l Logger) Panic(msg any) {
 	l.Logger.Panic().Msg(fmt.Sprint(msg))
 }
 
-// Panicf prints panic level message from <args> in given <format> and panics
+// Panicf prints panic level message from `args` in given `format` and panics
 func (l Logger) Panicf(format string, args ...any) {
 	l.Logger.Panic().Msgf(format, args...)
 }
 
-// PanicFi prints panic level <msg> with formatted and colored <fields> and panics
+// PanicFi prints panic level `msg` with formatted and colored `fields` and panics
 func (l Logger) PanicFi(msg string, fields ...any) {
 	print(l.Logger.Panic(), msg, fields)
 }
 
-// AddFileWriter creates log file at <filePath> and adds file writer to logger.
+// AddFileWriter creates log file at `filePath` and adds file writer to logger.
 //
-// If <filePath> is empty string, it does nothing and returns nil error.
+// If `filePath` is empty string, it does nothing and returns nil error.
 func (l Logger) AddFileWriter(filePath string) (*os.File, error) {
 	if filePath == "" {
 		return nil, nil
@@ -189,7 +189,7 @@ func (l Logger) AddFileWriter(filePath string) (*os.File, error) {
 	return logFile, nil
 }
 
-// print adds message <msg> and <fields> to <entry> and prints it
+// print adds message `msg` and `fields` to `entry` and prints it
 func print(entry *pLog.Entry, msg string, fields []any) {
 	// Not using entry.KeysAndValues() as it will not add keys which can't be converted to string by type assertion
 	var key string
@@ -203,9 +203,9 @@ func print(entry *pLog.Entry, msg string, fields []any) {
 	entry.Msg(msg)
 }
 
-// newConsoleFormatter returns formatter funtion with <timeFormat> for console writer.
+// newConsoleFormatter returns formatter funtion with `timeFormat` for console writer.
 //
-// If <colorize> is true, add colors to output.
+// If `colorize` is true, add colors to output.
 func newConsoleFormatter(colorize bool, timeFormat string) func(io.Writer, *pLog.FormatterArgs) (int, error) {
 	return func(w io.Writer, a *pLog.FormatterArgs) (int, error) {
 		gray := color.RGB(118, 118, 118).SprintFunc()

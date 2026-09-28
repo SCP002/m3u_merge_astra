@@ -79,8 +79,8 @@ type analyzer struct {
 	log    *logger.Logger
 }
 
-// New returns new configured astra analyzer client which connects to <address> in format of 'host:port' with
-// <handshakeTimeout>.
+// New returns new configured astra analyzer client which connects to `address` in format of 'host:port' with
+// `handshakeTimeout`.
 func New(log *logger.Logger, address string, handshakeTimeout time.Duration) *analyzer {
 	url := url.URL{Scheme: "ws", Host: address, Path: "/api/"}
 
@@ -94,14 +94,14 @@ func New(log *logger.Logger, address string, handshakeTimeout time.Duration) *an
 	}
 }
 
-// Check returns check result of <urlToCheck> using astra analyzer.
+// Check returns check result of `urlToCheck` using astra analyzer.
 //
-// Returns when <watchTime> is up, up to <maxAttempts> times or earlier if average bitrate was > 0 during previous
+// Returns when `watchTime` is up, up to `maxAttempts` times or earlier if average bitrate was > 0 during previous
 // attempts.
 //
-// Does Not return error if <urlToCheck> is dead or invalid, rely on bitrate == 0.
+// Does Not return error if `urlToCheck` is dead or invalid, rely on bitrate == 0.
 func (a analyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck string) (Result, error) {
-	// Does the same as it's parent but without retry logic and returns when <ctx> is done
+	// Does the same as it's parent but without retry logic and returns when `ctx` is done
 	check := func(ctx context.Context, urlToCheck string) (Result, error) {
 		conn, _, err := a.dialer.Dial(a.url, nil)
 		if err != nil {
@@ -236,12 +236,12 @@ func NewFake() *fakeAnalyzer {
 	}
 }
 
-// AddResult adds new <result> to return when checking <url>
+// AddResult adds new `result` to return when checking `url`
 func (a fakeAnalyzer) AddResult(url string, result Result) {
 	a.urlResultMap[url] = result
 }
 
-// Check returns fake result for <urlToCheck> and nil error
+// Check returns fake result for `urlToCheck` and nil error
 func (a fakeAnalyzer) Check(watchTime time.Duration, maxAttempts int, urlToCheck string) (Result, error) {
 	return a.urlResultMap[urlToCheck], nil
 }

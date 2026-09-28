@@ -7,13 +7,13 @@ import (
 	"github.com/samber/lo"
 )
 
-// Prepend returns new slice with <elm> added to the beginning of <inp>
+// Prepend returns new slice with `elm` added to the beginning of `inp`
 func Prepend[T any](inp []T, elm T) []T {
 	return append([]T{elm}, inp...)
 }
 
-// AppendNew returns <inp> with every element of <elms> added to the end of <inp> if it's not in <inp> and runs
-// <callback>.
+// AppendNew returns `inp` with every element of `elms` added to the end of `inp` if it's not in `inp` and runs
+// `callback`.
 func AppendNew[T comparable](inp []T, callback func(T), elms ...T) []T {
 	for _, elm := range elms {
 		if !lo.Contains(inp, elm) {
@@ -26,7 +26,7 @@ func AppendNew[T comparable](inp []T, callback func(T), elms ...T) []T {
 	return inp
 }
 
-// RemoveLast returns new slice with the last occurence of <tElm> removed from <inp>
+// RemoveLast returns new slice with the last occurence of `tElm` removed from `inp`
 func RemoveLast[T any](inp []T, tElm T) (out []T) {
 	_, tIdx, _ := lo.FindLastIndexOf(inp, func(cElm T) bool {
 		return cmp.Equal(tElm, cElm)
@@ -39,7 +39,7 @@ func RemoveLast[T any](inp []T, tElm T) (out []T) {
 	return
 }
 
-// RemoveFirst returns new slice with the first occurence of <tElm> removed from <inp>
+// RemoveFirst returns new slice with the first occurence of `tElm` removed from `inp`
 func RemoveFirst[T any](inp []T, tElm T) (out []T) {
 	_, tIdx, _ := lo.FindIndexOf(inp, func(cElm T) bool {
 		return cmp.Equal(tElm, cElm)
@@ -52,7 +52,7 @@ func RemoveFirst[T any](inp []T, tElm T) (out []T) {
 	return
 }
 
-// Filled returns new slice of <times> amount of <elm>
+// Filled returns new slice of `times` amount of `elm`
 func Filled[T any](elm T, times int) []T {
 	out := []T{}
 	for i := 0; i < times; i++ {
@@ -61,30 +61,30 @@ func Filled[T any](elm T, times int) []T {
 	return out
 }
 
-// ContainsAny returns true if <inp> contains any of <elms>
+// ContainsAny returns true if `inp` contains any of `elms`
 func ContainsAny(inp string, elms ...string) bool {
 	return lo.SomeBy(elms, func(elm string) bool {
 		return strings.Contains(inp, elm)
 	})
 }
 
-// HasAnyPrefix returns true if <inp> has any prefix from <prefixes>
+// HasAnyPrefix returns true if `inp` has any prefix from `prefixes`
 func HasAnyPrefix(inp string, prefixes ...string) bool {
 	return lo.SomeBy(prefixes, func(prefix string) bool {
 		return strings.HasPrefix(inp, prefix)
 	})
 }
 
-// IsAllEmpty reurns true if every slice in <inp> is empty
+// IsAllEmpty reurns true if every slice in `inp` is empty
 func IsAllEmpty[T any](inp ...[]T) bool {
 	return len(lo.Flatten(inp)) == 0
 }
 
-// MapFindDuplBy returns <inp> with every element transformed by <transform>.
+// MapFindDuplBy returns `inp` with every element transformed by `transform`.
 //
-// <transform> invokes with element, it's index and boolean whether element is a duplicate or not.
+// `transform` invokes with element, it's index and boolean whether element is a duplicate or not.
 //
-// <by> is used to generate the criterion by which uniqueness is computed.
+// `by` is used to generate the criterion by which uniqueness is computed.
 func MapFindDuplBy[T, R any, U comparable](inp []T, by func(elm T) U, transform func(elm T, idx int, dupl bool) R) []R {
 	result := make([]R, len(inp))
 	seen := make(map[U]struct{}, len(inp))

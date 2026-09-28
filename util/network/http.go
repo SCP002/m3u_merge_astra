@@ -12,11 +12,11 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-// NewHttpServer starts http server at <httpPort> and https server at <httpsPort> with request handlers from <mux>.
+// NewHttpServer starts http server at `httpPort` and https server at `httpsPort` with request handlers from `mux`.
 //
-// Accepts <onErr> callback for errors.
+// Accepts `onErr` callback for errors.
 //
-// Returns both running servers, <httpSrv> and <httpsSrv>.
+// Returns both running servers, `httpSrv` and `httpsSrv`.
 func NewHttpServer(mux http.Handler, httpPort int, httpsPort int, onErr func(err error)) (
 	httpSrv, httpsSrv *http.Server) {
 	httpSrv = &http.Server{
@@ -51,7 +51,7 @@ func NewHttpServer(mux http.Handler, httpPort int, httpsPort int, onErr func(err
 
 // NewHttpClient returns new HTTP client.
 //
-// <timeout> is a time limit for requests made by returned client.
+// `timeout` is a time limit for requests made by returned client.
 func NewHttpClient(timeout time.Duration) *http.Client {
 	tlsCfg := &tls.Config{
 		InsecureSkipVerify: true,
@@ -67,7 +67,7 @@ func NewHttpClient(timeout time.Duration) *http.Client {
 
 // NewFakeHttpClient returns new HTTP client which make connections to localhost regardless of target host specified.
 //
-// <timeout> is a time limit for requests made by returned client.
+// `timeout` is a time limit for requests made by returned client.
 func NewFakeHttpClient(timeout time.Duration) *http.Client {
 	client := NewHttpClient(timeout)
 	tlsCfg := &tls.Config{

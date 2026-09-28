@@ -9,7 +9,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// RenameStreams returns shallow copy of <streams> with names taken from <channels> if their standardized names are
+// RenameStreams returns shallow copy of `streams` with names taken from `channels` if their standardized names are
 // equal.
 func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Renaming streams")
@@ -27,7 +27,7 @@ func (r repo) RenameStreams(streams []astra.Stream, channels []m3u.Channel) (out
 	return
 }
 
-// UpdateInputs returns shallow copy of <streams> with every first matching input of every stream replaced with matching
+// UpdateInputs returns shallow copy of `streams` with every first matching input of every stream replaced with matching
 // URL's of m3u channels according to cfg.Streams.InputUpdateMap.
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream on update.
@@ -55,8 +55,8 @@ func (r repo) UpdateInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	return
 }
 
-// RemoveInputsByUpdateMap returns shallow copy of <streams> without inputs which match at least one
-// cfg.Streams.InputUpdateMap.From expression but none found in <channels>.
+// RemoveInputsByUpdateMap returns shallow copy of `streams` without inputs which match at least one
+// cfg.Streams.InputUpdateMap.From expression but none found in `channels`.
 func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
 	r.log.Info("Removing absent inputs from streams according the update map")
 
@@ -78,7 +78,7 @@ func (r repo) RemoveInputsByUpdateMap(streams []astra.Stream, channels []m3u.Cha
 	return
 }
 
-// AddNewInputs returns shallow copy of <streams> with new inputs if such found in <channels>.
+// AddNewInputs returns shallow copy of `streams` with new inputs if such found in `channels`.
 //
 // If cfg.Streams.EnableOnInputUpdate is enabled in config, it also enables every stream with new inputs.
 func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out []astra.Stream) {
@@ -103,7 +103,7 @@ func (r repo) AddNewInputs(streams []astra.Stream, channels []m3u.Channel) (out 
 	return
 }
 
-// AddNewStreams returns <streams> with new streams generated from <channels> if no such found in <streams>
+// AddNewStreams returns `streams` with new streams generated from `channels` if no such found in `streams`
 func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []astra.Stream {
 	r.log.Info("Adding new streams")
 
@@ -124,7 +124,7 @@ func (r repo) AddNewStreams(streams []astra.Stream, channels []m3u.Channel) []as
 	return streams
 }
 
-// generateUID returns 4 symbols long ID unique for <streams>
+// generateUID returns 4 symbols long ID unique for `streams`
 func generateUID(streams []astra.Stream) string {
 	for {
 		uid := rnd.String(4, false, true)

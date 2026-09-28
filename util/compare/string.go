@@ -8,8 +8,8 @@ import (
 	"github.com/samber/lo"
 )
 
-// IsNameSame returns true if standardized <lName> is equal to standardized <rName> using transliteration settings and
-// aliases from <cfg>.
+// IsNameSame returns true if standardized `lName` is equal to standardized `rName` using transliteration settings and
+// aliases from `cfg`.
 func IsNameSame(cfg cfg.General, lName, rName string) bool {
 	if lName == rName {
 		return true
@@ -42,7 +42,7 @@ func IsNameSame(cfg cfg.General, lName, rName string) bool {
 	return false
 }
 
-// remap returns remapped <inp> using <dict>
+// remap returns remapped `inp` using `dict`
 func remap(inp string, dict map[string]string) string {
 	var sb strings.Builder
 	for _, oldChar := range inp {
@@ -56,7 +56,7 @@ func remap(inp string, dict map[string]string) string {
 	return sb.String()
 }
 
-// firstAlias returns first alias for <name> from <aliases> or <name> if not found
+// firstAlias returns first alias for `name` from `aliases` or `name` if not found
 func firstAlias(name string, aliases [][]string) string {
 	for _, set := range aliases {
 		if lo.Contains(set, name) {

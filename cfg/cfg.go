@@ -80,7 +80,7 @@ type General struct {
 	MergeCategories bool `koanf:"merge_categories"`
 }
 
-// SimplifyAliases returns simplified alias list in <c>.
+// SimplifyAliases returns simplified alias list in `c`.
 //
 // Made to improve performance of util/compare.IsNameSame().
 func (c General) SimplifyAliases() (out [][]string) {
@@ -244,7 +244,7 @@ type Streams struct {
 	// InputRespTimeout represents astra stream input response timeout
 	InputRespTimeout time.Duration `koanf:"input_resp_timeout"`
 
-	// UseAnalyzer specifies if astra analyzer (astra --analyze -p <port>) should be used to check for dead inputs.
+	// UseAnalyzer specifies if astra analyzer (astra --analyze -p `port`) should be used to check for dead inputs.
 	//
 	// Supports HTTP(S), UDP, RTP, RTSP.
 	UseAnalyzer bool `koanf:"use_analyzer"`
@@ -297,10 +297,10 @@ type Streams struct {
 
 	// InputUpdateMap represens list of regular expression pairs.
 	//
-	// If any <From> expression match URL of astra stream's input, it will be replaced with URL from according M3U
-	// channel if it matches the <To> expression.
+	// If any `From` expression match URL of astra stream's input, it will be replaced with URL from according M3U
+	// channel if it matches the `To` expression.
 	//
-	// In most cases specified <From> and <To> should be identical.
+	// In most cases specified `From` and `To` should be identical.
 	//
 	// Using InputBlacklist with AddNewInputs instead will have almost the same end result but since old
 	// URL's will be removed beforehand, original hash (#...) will be lost. Also it will be less clear which input was
@@ -348,7 +348,7 @@ type Streams struct {
 	//
 	// Only first matching rule applies per stream in the priority: By inputs -> By name -> By group.
 	//
-	// Setting will be set if at least one input matches the <By> expression.
+	// Setting will be set if at least one input matches the `By` expression.
 	InputToKeepActiveMap []KeepActiveAddRule `koanf:"input_to_keep_active_map"`
 }
 
@@ -400,7 +400,7 @@ func (e BadRegexpError) Error() string {
 	return fmt.Sprintf("%v; Regular expression: %v", e.Reason, e.Regexp.String())
 }
 
-// Init returns config instance and false if config at <cfgFilePath> already exist.
+// Init returns config instance and false if config at `cfgFilePath` already exist.
 //
 // If config does not exist, creates a default, returns empty instance and true.
 //
@@ -1020,9 +1020,9 @@ func Init(log *logger.Logger, cfgFilePath string) (Root, bool, error) {
 		defVal := defCfg.Streams.RemoveDisabledInputs
 		log.Infof("Adding missing field to config: %v: %v", knownField, defVal)
 		node := yamlUtil.Node{
-			HeadComment:  []string{"Remove disabled inputs?"},
-			Data:         yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
-			EndNewline:   true,
+			HeadComment: []string{"Remove disabled inputs?"},
+			Data:        yamlUtil.Scalar{Key: parse.LastPathItem(knownField, "."), Value: strconv.FormatBool(defVal)},
+			EndNewline:  true,
 		}
 		cfgBytes, err = yamlUtil.Insert(cfgBytes, "streams.remove_duplicated_inputs_by_rx_list", true, node)
 		if err != nil {

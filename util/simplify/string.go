@@ -15,7 +15,7 @@ var regEx regexp.Regexp = *regexp.MustCompile("[" +
 	"-!\"#$%&'()*,./:;<=>?@[\\]^_`{|}~" +
 	"]+")
 
-// Name returns simplified <inp> (lowercase, no special characters)
+// Name returns simplified `inp` (lowercase, no special characters)
 func Name(inp string) string {
 	out := strings.ToLower(inp)
 	return regEx.ReplaceAllString(out, "")

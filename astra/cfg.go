@@ -29,7 +29,7 @@ type Group struct {
 	Remove bool   `json:"remove,omitempty"` // Used by API to remove group
 }
 
-// UpdateCategories returns deep copy of categories <cats> with new and changed categories and groups from <streams>
+// UpdateCategories returns deep copy of categories `cats` with new and changed categories and groups from `streams`
 func (r repo) UpdateCategories(cats []Category, streams []Stream) []Category {
 	r.log.Info("Updating categories field with new and changed categories and groups from streams")
 
@@ -58,9 +58,9 @@ func (r repo) UpdateCategories(cats []Category, streams []Stream) []Category {
 	return cats
 }
 
-// ChangedCategories returns new and changed categories and groups from <newCats>, which are not in <oldCats>.
+// ChangedCategories returns new and changed categories and groups from `newCats`, which are not in `oldCats`.
 //
-// Key (index) in <out> is negative for new categories and actual indexes for changed categories.
+// Key (index) in `out` is negative for new categories and actual indexes for changed categories.
 func (r repo) ChangedCategories(oldCats, newCats []Category) (out []lo.Entry[int, Category]) {
 	r.log.Info("Building changed categories list")
 
@@ -91,7 +91,7 @@ func (r repo) ChangedCategories(oldCats, newCats []Category) (out []lo.Entry[int
 	return
 }
 
-// MergeCategories returns shallow copy of <cats> with unique categories and their groups set from all categories with
+// MergeCategories returns shallow copy of `cats` with unique categories and their groups set from all categories with
 // the same name.
 //
 // Categories to be removed has Remove field set to true.
