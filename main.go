@@ -25,7 +25,7 @@ import (
 
 func main() {
 	// Init default logger.
-	log := logger.New(logger.FatalLevel)
+	log := logger.New(logger.FatalLevel, os.Stderr)
 
 	// Parse command line arguments.
 	flags, err := cli.Parse()

@@ -34,7 +34,7 @@ func TestMain(t *testing.T) {
 	assert.NoError(t, err, "should write m3u file")
 
 	// Read initial astra config.
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 	apiHttpClient := network.NewHttpClient(time.Second * 10)
 	apiHandler := api.NewHandler(log, apiHttpClient, "http://127.0.0.1:8000", "admin", "admin")
 	astraCfg, err := apiHandler.FetchCfg()

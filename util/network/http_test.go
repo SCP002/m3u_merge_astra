@@ -1,17 +1,19 @@
 package network
 
 import (
-	"m3u-merge-astra/util/logger"
 	"net/http"
+	"os"
 	"testing"
 	"time"
+
+	"m3u-merge-astra/util/logger"
 
 	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewHttpServer(t *testing.T) {
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ok/", func(w http.ResponseWriter, r *http.Request) {

@@ -1,6 +1,7 @@
 package input
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func TestAskYesNo(t *testing.T) {
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 
 	in := strings.NewReader("Y\n")
 	answer := AskYesNo(log, in, "prompt\n")
@@ -30,7 +31,7 @@ func TestAskYesNo(t *testing.T) {
 }
 
 func TestAsk(t *testing.T) {
-	log := logger.New(logger.DebugLevel)
+	log := logger.New(logger.DebugLevel, os.Stderr)
 
 	in := strings.NewReader(" 0 \n")
 	answer := ask(log, in, false, "prompt\n", func(s string) bool {
